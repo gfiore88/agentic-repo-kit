@@ -1,7 +1,8 @@
 {
   "name": "agentic-repo-kit",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "license": "MIT",
   "author": "Giovanni Fiore",
   "repository": {
     "type": "git",
@@ -18,12 +19,17 @@
   "description": "Model-agnostic, multi-runtime scaffolding for governed AI-native repositories.",
   "type": "module",
   "bin": {
-    "agentic-repo": "./bin/agentic-repo.mjs"
+    "agentic-repo": "bin/agentic-repo.mjs"
   },
   "scripts": {
     "test": "node --test",
     "validate:plugin": "node ./scripts/validate-plugin.mjs",
-    "validate:skills": "node ./scripts/validate-skills.mjs"
+    "validate:skills": "node ./scripts/validate-skills.mjs",
+    "validate": "npm test && npm run validate:skills && npm run validate:plugin",
+    "prepublishOnly": "npm run validate"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=20"

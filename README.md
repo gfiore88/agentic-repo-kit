@@ -31,6 +31,23 @@ Pinned upstream revisions and license notices are generated into `.agents/source
 
 The CLI itself has no runtime dependencies and does not execute detected coding-agent binaries.
 
+## Install from npm
+
+After the first public release:
+
+```bash
+npx agentic-repo-kit init
+```
+
+Or install the CLI globally:
+
+```bash
+npm install --global agentic-repo-kit
+agentic-repo init
+```
+
+The first npm publication is currently being prepared. Until it is confirmed, use the repository installation below.
+
 ## Install for local development
 
 ```bash
@@ -218,12 +235,12 @@ The automated suite covers argument parsing, runtime detection, selective genera
 
 ## Current status
 
-Version `0.1.0` implements the governed kernel and its required workflows. The npm package remains marked private while the following release-engineering work is pending:
+Version `0.1.0` implements the governed kernel and its required workflows. Its metadata is ready for public npm distribution, but no npm version has been published yet. Remaining release and product work includes:
 
 - safe `add`, `remove`, `diff`, and three-way `upgrade` operations;
 - reviewed upstream source refresh tooling;
 - live compatibility certification against supported runtime versions;
-- CI, public package publication, migration documentation, and versioned releases.
+- first npm publication, Trusted Publisher activation, migration documentation, and versioned releases.
 
 Knowledge ingestion and querying are not missing CLI features: they intentionally happen through the coding-agent conversation.
 
@@ -236,5 +253,6 @@ The design incorporates:
 - selected material from GitHub's [awesome-copilot](https://github.com/github/awesome-copilot);
 - the complete lifecycle pack from Addy Osmani's [agent-skills](https://github.com/addyosmani/agent-skills).
 
-Third-party material retains its upstream notices. A project-level public license has not yet been declared.
+Original project material is licensed under the [MIT License](LICENSE). Third-party material remains covered by its retained upstream notices.
 
+See the [release guide](docs/releasing.md) for the controlled npm publication process.

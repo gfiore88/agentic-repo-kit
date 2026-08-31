@@ -24,3 +24,8 @@
 
 - Giovanni Fiore explicitly accepted ADR-0002.
 - Authorized creation of private repository `gfiore88/agentic-repo-kit`, initialization of `main`, README implementation, and initial push.
+
+## [2026-08-31] decision | npm release path accepted
+
+- Accepted ADR-0003: MIT licensing, public unscoped package `agentic-repo-kit`, manual first publication, and GitHub Trusted Publishing for later releases.
+- Publication remains pending human npm account authentication and identity confirmation.
