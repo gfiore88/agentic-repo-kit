@@ -35,3 +35,9 @@
 - Published the public package `agentic-repo-kit@0.1.0` to the npm registry.
 - Kept the GitHub release workflow idempotent by skipping versions already present in the registry.
 - Verified the release from registry metadata and a clean `npx` installation before tagging the source revision.
+
+## [2026-08-31] operations | npm Trusted Publishing activated
+
+- Connected `gfiore88/agentic-repo-kit` to npm through GitHub Actions OIDC.
+- Authorized `publish.yml` for `npm publish` without a long-lived npm token.
+- Human-controlled npm two-factor authentication protected the connection setup.

@@ -17,7 +17,7 @@ The publish workflow checks the registry before publishing, so recreating or syn
 
 ## Configure Trusted Publishing
 
-In the npm package settings, add a GitHub Actions trusted publisher with:
+Trusted Publishing is active for the package. Its npm GitHub Actions connection uses:
 
 - organization or user: `gfiore88`;
 - repository: `agentic-repo-kit`;

@@ -240,7 +240,7 @@ Version `0.1.0` is publicly available on npm and implements the governed kernel 
 - safe `add`, `remove`, `diff`, and three-way `upgrade` operations;
 - reviewed upstream source refresh tooling;
 - live compatibility certification against supported runtime versions;
-- Trusted Publisher activation, migration documentation, and subsequent versioned releases.
+- migration documentation and subsequent versioned releases.
 
 Knowledge ingestion and querying are not missing CLI features: they intentionally happen through the coding-agent conversation.
 
