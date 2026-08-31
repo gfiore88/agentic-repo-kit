@@ -7,7 +7,13 @@ export function sha256(content) {
 }
 
 async function collectFiles(root, current = root) {
-  const entries = await readdir(current, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await readdir(current, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === "ENOENT" && current === root) return [];
+    throw error;
+  }
   const files = [];
   for (const entry of entries) {
     const absolute = path.join(current, entry.name);

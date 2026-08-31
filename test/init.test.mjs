@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,6 +40,19 @@ test("selected adapters are generated and shared files deduplicate", async () =>
   assert.ok(paths.includes(".gemini/agents/knowledge-curator.md"));
   assert.equal(paths.filter((entry) => entry === "GEMINI.md").length, 1);
   assert.ok(!paths.includes("CLAUDE.md"));
+});
+
+test("generated-only adapters do not require a tracked static directory", async () => {
+  const fixture = await tempRepository();
+  const fixtureAssets = path.join(fixture, "assets");
+  const fixtureSkills = path.join(fixture, "skills");
+  await mkdir(path.join(fixtureAssets, "blueprints/base/.agents/agents"), { recursive: true });
+  await mkdir(fixtureSkills, { recursive: true });
+  await writeFile(path.join(fixtureAssets, "blueprints/base/AGENTS.md"), "# Contract\n", "utf8");
+  await writeFile(path.join(fixtureAssets, "blueprints/base/.agents/agents/example.md"), "---\nname: example\ndescription: Example agent.\n---\n", "utf8");
+  await writeFile(path.join(fixtureSkills, "README.md"), "# Skills\n", "utf8");
+  const plan = await buildPlan({ assetsRoot: fixtureAssets, skillsRoot: fixtureSkills, runtimes: ["codex"] });
+  assert.ok(plan.files.some((file) => file.path === ".codex/agents/example.toml"));
 });
 
 test("kernel contains official lifecycle skills and governed workflows", async () => {
