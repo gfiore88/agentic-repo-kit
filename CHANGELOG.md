@@ -4,6 +4,12 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.2.2] - 2026-08-31
+
+### Fixed
+
+- Added `agentic-repo-kit` bin mapping to `package.json` so `npx agentic-repo-kit` executes seamlessly.
+
 ## [0.2.1] - 2026-08-31
 
 ### Fixed

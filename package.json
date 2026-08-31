@@ -1,6 +1,6 @@
 {
   "name": "agentic-repo-kit",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": false,
   "license": "MIT",
   "author": "Giovanni Fiore",
@@ -40,7 +40,8 @@
   "description": "Model-agnostic, multi-runtime scaffolding for governed AI-native repositories.",
   "type": "module",
   "bin": {
-    "agentic-repo": "bin/agentic-repo.mjs"
+    "agentic-repo": "bin/agentic-repo.mjs",
+    "agentic-repo-kit": "bin/agentic-repo.mjs"
   },
   "scripts": {
     "test": "node --test",

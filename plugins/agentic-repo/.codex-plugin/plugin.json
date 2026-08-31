@@ -1,6 +1,6 @@
 {
   "name": "agentic-repo",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Bootstrap and govern model-agnostic, knowledge-first software repositories.",
   "author": {
     "name": "Giovanni Fiore",
