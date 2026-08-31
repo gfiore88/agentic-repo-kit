@@ -57,6 +57,7 @@ test("inspectGitExclude reports active status and patterns", async () => {
   assert.equal(after.active, true);
   assert.ok(after.patterns.includes(".agents/"));
   assert.ok(after.patterns.includes("AGENTS.md"));
+  assert.ok(after.patterns.includes("THIRD_PARTY_NOTICES.md"));
 });
 
 test("removeGitExclude removes managed block and preserves other rules", async () => {

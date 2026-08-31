@@ -4,6 +4,12 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-08-31
+
+### Fixed
+
+- Added `THIRD_PARTY_NOTICES.md` to default local Git exclusion patterns so no scaffolding files remain untracked after `agentic-repo exclude`.
+
 ## [0.2.0] - 2026-08-31
 
 ### Added

@@ -9,6 +9,7 @@ export const DEFAULT_EXCLUDE_PATTERNS = [
   "scaffold.yaml",
   "scaffold.lock",
   "AGENTS.md",
+  "THIRD_PARTY_NOTICES.md",
   "docs/raw/",
   "docs/wiki/",
   "docs/adr/",
