@@ -62,6 +62,12 @@
 - Published `agentic-repo-kit@0.2.0` to npm via GitHub Actions OIDC Trusted Publishing.
 - Added `--git-exclude` initialization flag and standalone `agentic-repo exclude` command.
 
+## [2026-08-31] release | npm package 0.2.1 published
+
+- Published `agentic-repo-kit@0.2.1` to npm via GitHub Actions OIDC Trusted Publishing.
+- Added `THIRD_PARTY_NOTICES.md` to default local Git exclusions so no scaffolding files remain untracked.
+
+
 
 
 
