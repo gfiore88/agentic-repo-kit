@@ -41,3 +41,9 @@
 - Connected `gfiore88/agentic-repo-kit` to npm through GitHub Actions OIDC.
 - Authorized `publish.yml` for `npm publish` without a long-lived npm token.
 - Human-controlled npm two-factor authentication protected the connection setup.
+
+## [2026-08-31] decision | Developer branding and showcase accepted
+
+- Accepted PRD-0002 for a developer tooling showcase, visual diagrams, and npm search discovery.
+- Accepted ADR-0004 for the README redesign, package metadata keywords, and 0.1.1 patch release.
+

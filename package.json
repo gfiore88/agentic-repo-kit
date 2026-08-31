@@ -1,6 +1,6 @@
 {
   "name": "agentic-repo-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "license": "MIT",
   "author": "Giovanni Fiore",
@@ -12,6 +12,27 @@
   "bugs": {
     "url": "https://github.com/gfiore88/agentic-repo-kit/issues"
   },
+  "keywords": [
+    "ai",
+    "agentic",
+    "coding-agents",
+    "claude-code",
+    "codex",
+    "github-copilot",
+    "antigravity",
+    "cursor",
+    "gemini-cli",
+    "opencode",
+    "kiro",
+    "knowledge-base",
+    "llm-wiki",
+    "adr",
+    "prd",
+    "developer-tools",
+    "scaffolding",
+    "governance",
+    "self-annealing"
+  ],
   "files": [
     "bin/",
     "plugins/agentic-repo/"
