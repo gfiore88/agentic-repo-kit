@@ -57,5 +57,11 @@
 - Accepted PRD-0003 for zero-footprint local exclusions via `.git/info/exclude` in restricted/enterprise repositories.
 - Accepted ADR-0005 for the CLI `--git-exclude` flag, standalone `exclude` command, and idempotent marker blocks.
 
+## [2026-08-31] release | npm package 0.2.0 published
+
+- Published `agentic-repo-kit@0.2.0` to npm via GitHub Actions OIDC Trusted Publishing.
+- Added `--git-exclude` initialization flag and standalone `agentic-repo exclude` command.
+
+
 
 
