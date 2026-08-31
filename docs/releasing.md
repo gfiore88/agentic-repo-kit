@@ -2,7 +2,7 @@
 
 ## First public release
 
-The first release creates and reserves the npm package. It requires a human-authenticated npm account.
+Version `0.1.0` was published on 2026-08-31 and reserved the public npm package. The bootstrap procedure was:
 
 1. Create or authenticate the npm account and enable two-factor authentication.
 2. Run `npm login --auth-type=web` locally.
@@ -13,7 +13,7 @@ The first release creates and reserves the npm package. It requires a human-auth
 7. Verify `npm view agentic-repo-kit version dist.integrity` and execute a clean `npx agentic-repo-kit --help` smoke test.
 8. Mark `0.1.0` released in `CHANGELOG.md`, commit, tag `v0.1.0`, push the tag, and create the GitHub release.
 
-Do not create the GitHub release before the first npm publication: the release workflow is reserved for Trusted Publishing after npm has been configured.
+The publish workflow checks the registry before publishing, so recreating or synchronizing an existing GitHub release never attempts to overwrite an npm version.
 
 ## Configure Trusted Publishing
 

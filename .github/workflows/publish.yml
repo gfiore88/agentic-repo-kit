@@ -25,4 +25,16 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: node ./scripts/verify-release-tag.mjs
-      - run: npm publish --access public --provenance
+      - name: Check whether the version is already published
+        id: registry
+        shell: bash
+        run: |
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if npm view "agentic-repo-kit@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish with provenance
+        if: steps.registry.outputs.already_published != 'true'
+        run: npm publish --access public --provenance

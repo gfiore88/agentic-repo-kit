@@ -4,7 +4,7 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-08-31
 
 ### Added
 
@@ -15,4 +15,3 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Mandatory human-approved task ADR workflow.
 - Deterministic repository diagnosis, knowledge linting, and governed artifact creation.
 - Pinned upstream provenance and third-party license notices.
-

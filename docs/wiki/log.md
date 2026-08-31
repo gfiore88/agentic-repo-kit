@@ -28,4 +28,10 @@
 ## [2026-08-31] decision | npm release path accepted
 
 - Accepted ADR-0003: MIT licensing, public unscoped package `agentic-repo-kit`, manual first publication, and GitHub Trusted Publishing for later releases.
-- Publication remains pending human npm account authentication and identity confirmation.
+- Giovanni Fiore authenticated the verified npm account `gfiore88` and authorized the first publication.
+
+## [2026-08-31] release | npm package 0.1.0 published
+
+- Published the public package `agentic-repo-kit@0.1.0` to the npm registry.
+- Kept the GitHub release workflow idempotent by skipping versions already present in the registry.
+- Verified the release from registry metadata and a clean `npx` installation before tagging the source revision.

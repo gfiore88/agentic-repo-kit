@@ -33,7 +33,7 @@ The CLI itself has no runtime dependencies and does not execute detected coding-
 
 ## Install from npm
 
-After the first public release:
+Run the current public release without installing it globally:
 
 ```bash
 npx agentic-repo-kit init
@@ -46,7 +46,7 @@ npm install --global agentic-repo-kit
 agentic-repo init
 ```
 
-The first npm publication is currently being prepared. Until it is confirmed, use the repository installation below.
+Package: [`agentic-repo-kit` on npm](https://www.npmjs.com/package/agentic-repo-kit).
 
 ## Install for local development
 
@@ -56,7 +56,7 @@ cd agentic-repo-kit
 npm link
 ```
 
-This makes `agentic-repo` available locally. Until the package is published, it can also be run directly:
+This makes `agentic-repo` available locally. It can also be run directly:
 
 ```bash
 node ./bin/agentic-repo.mjs --help
@@ -235,12 +235,12 @@ The automated suite covers argument parsing, runtime detection, selective genera
 
 ## Current status
 
-Version `0.1.0` implements the governed kernel and its required workflows. Its metadata is ready for public npm distribution, but no npm version has been published yet. Remaining release and product work includes:
+Version `0.1.0` is publicly available on npm and implements the governed kernel and its required workflows. Remaining product work includes:
 
 - safe `add`, `remove`, `diff`, and three-way `upgrade` operations;
 - reviewed upstream source refresh tooling;
 - live compatibility certification against supported runtime versions;
-- first npm publication, Trusted Publisher activation, migration documentation, and versioned releases.
+- Trusted Publisher activation, migration documentation, and subsequent versioned releases.
 
 Knowledge ingestion and querying are not missing CLI features: they intentionally happen through the coding-agent conversation.
 
