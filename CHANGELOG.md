@@ -4,6 +4,14 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-08-31
+
+### Added
+
+- Added `--git-exclude` flag to `agentic-repo init` for zero-footprint local initialization in enterprise/restricted repositories.
+- Added standalone `agentic-repo exclude` command to inspect (`--list`), add, or remove (`--remove`) managed `.git/info/exclude` rules.
+- Documented local git exclude architecture in `PRD-0003` and `ADR-0005`.
+
 ## [0.1.1] - 2026-08-31
 
 ### Changed

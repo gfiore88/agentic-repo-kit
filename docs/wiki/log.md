@@ -52,4 +52,10 @@
 - Published `agentic-repo-kit@0.1.1` to npm via GitHub Actions OIDC Trusted Publishing.
 - Live package page now displays the developer tooling showcase README and updated keywords.
 
+## [2026-08-31] decision | Local Git exclude governance accepted
+
+- Accepted PRD-0003 for zero-footprint local exclusions via `.git/info/exclude` in restricted/enterprise repositories.
+- Accepted ADR-0005 for the CLI `--git-exclude` flag, standalone `exclude` command, and idempotent marker blocks.
+
+
 

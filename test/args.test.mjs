@@ -28,3 +28,12 @@ test("governed workflow commands require their exact subcommand", () => {
   assert.equal(parseArgs(["adr", "new", "--title", "Database boundary"]).title, "Database boundary");
   assert.throws(() => parseArgs(["anneal", "apply"]), /requires subcommand: new/);
 });
+
+test("init recognizes --git-exclude and exclude command", () => {
+  assert.equal(parseArgs(["init", "--git-exclude"]).gitExclude, true);
+  assert.equal(parseArgs(["init", "--exclude"]).gitExclude, true);
+  assert.equal(parseArgs(["exclude"]).command, "exclude");
+  assert.equal(parseArgs(["exclude", "--remove"]).remove, true);
+  assert.equal(parseArgs(["exclude", "--list"]).list, true);
+});
+

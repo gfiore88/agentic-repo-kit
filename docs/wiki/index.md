@@ -6,6 +6,7 @@ Read this page first and open only the documents relevant to the active task.
 
 - [Agentic Repository Kernel PRD](../product/prd-0001-agentic-repository-kernel.md): product outcomes, requirements, and rollout.
 - [Developer Branding and Showcase PRD](../product/prd-0002-developer-branding-and-showcase.md): developer showcase, visual standards, and npm discovery.
+- [Local Git Exclude Governance PRD](../product/prd-0003-local-git-exclude-governance.md): zero-footprint local exclusions via `.git/info/exclude` for enterprise and client repositories.
 
 ## Architecture
 
@@ -13,6 +14,7 @@ Read this page first and open only the documents relevant to the active task.
 - [GitHub publication and README baseline](../adr/adr-0002-github-repository-publication-and-readme-baseline.md): accepted repository visibility, first push, and documentation decision.
 - [npm publication, license, and automation](../adr/adr-0003-npm-publication-license-and-release-automation.md): accepted package name, MIT license, first publication, and Trusted Publishing decision.
 - [README redesign, showcase assets, and patch release](../adr/adr-0004-readme-redesign-visual-assets-and-patch-release.md): accepted developer showcase layout, metadata keywords, and 0.1.1 release plan.
+- [Local Git exclude for restricted repositories](../adr/adr-0005-local-git-exclude-for-restricted-repositories.md): accepted `.git/info/exclude` management, CLI flags, and delimiter block format.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.

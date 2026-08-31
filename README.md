@@ -91,6 +91,9 @@ agentic-repo init --dry-run
 # Explicitly choose target runtime adapters
 agentic-repo init --runtime claude-code,github-copilot,cursor
 
+# Install in enterprise/client repositories without polluting Git (.git/info/exclude)
+agentic-repo init --git-exclude
+
 # Install only the universal kernel without runtime-specific files
 agentic-repo init --runtime none
 
@@ -99,6 +102,8 @@ agentic-repo init --yes --cwd /path/to/project
 ```
 
 > **Safe by design:** Existing files with identical content are safely skipped. If any file has divergent content, the CLI stops before writing anything and reports the conflicts.
+>
+> **Enterprise / Local-first ready:** Use `--git-exclude` to automatically add all generated files to `.git/info/exclude`. This lets you use AI agents on strict client repositories without modifying `.gitignore` or pushing files upstream.
 
 ---
 
@@ -201,6 +206,11 @@ agentic-repo doctor
 # Check wiki health (broken links, unindexed pages, uncited facts)
 agentic-repo knowledge lint
 agentic-repo knowledge lint --json
+
+# Manage local .git/info/exclude (add, list, or remove)
+agentic-repo exclude
+agentic-repo exclude --list
+agentic-repo exclude --remove
 
 # Create a new Architectural Decision Record (starts as Proposed)
 agentic-repo adr new --title "Event bus boundary"

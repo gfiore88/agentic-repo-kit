@@ -20,6 +20,9 @@ export function parseArgs(argv) {
     runtime: "auto",
     title: null,
     target: null,
+    gitExclude: false,
+    remove: false,
+    list: false,
     yes: false,
     dryRun: false,
     json: false,
@@ -32,6 +35,9 @@ export function parseArgs(argv) {
     else if (arg === "--dry-run") options.dryRun = true;
     else if (arg === "--json") options.json = true;
     else if (arg === "--help" || arg === "-h") options.help = true;
+    else if (arg === "--git-exclude" || arg === "--exclude" || arg === "-e") options.gitExclude = true;
+    else if (arg === "--remove") options.remove = true;
+    else if (arg === "--list") options.list = true;
     else if (arg === "--cwd") {
       options.cwd = takeValue(args, index, arg);
       index += 1;
@@ -51,7 +57,7 @@ export function parseArgs(argv) {
     else throw new Error(`Unknown option: ${arg}`);
   }
 
-  if (!["init", "doctor", "knowledge", "adr", "prd", "anneal", "help"].includes(options.command)) {
+  if (!["init", "doctor", "knowledge", "adr", "prd", "anneal", "exclude", "help"].includes(options.command)) {
     throw new Error(`Unknown command: ${options.command}`);
   }
   const allowedSubcommands = { knowledge: "lint", adr: "new", prd: "new", anneal: "new" };

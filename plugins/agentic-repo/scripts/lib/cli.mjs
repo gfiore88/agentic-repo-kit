@@ -10,16 +10,43 @@ import { applyPlan, inspectPlan } from "./writer.mjs";
 import { runDoctor } from "./doctor.mjs";
 import { createGovernedArtifact } from "./artifacts.mjs";
 import { lintKnowledge } from "./knowledge.mjs";
+import { applyGitExclude, inspectGitExclude, removeGitExclude } from "./exclude.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const assetsRoot = path.resolve(moduleDir, "../../assets");
 const skillsRoot = path.resolve(moduleDir, "../../skills");
 
 function helpText() {
-  return `Agentic Repository Kernel\n\nUsage:\n  agentic-repo init [options]\n  agentic-repo doctor [options]\n  agentic-repo knowledge lint [options]\n  agentic-repo adr new --title <title> [options]\n  agentic-repo prd new --title <title> [options]\n  agentic-repo anneal new --title <title> --target <file> [options]\n\nOptions:\n  --runtime <ids|auto|none>  Override runtime selection (default: auto)\n  --cwd <path>               Target repository (default: current directory)\n  --yes, -y                  Confirm writes non-interactively\n  --dry-run                  Show the plan without writing\n  --json                     Emit machine-readable output\n  --title <text>             Governed artifact title\n  --target <path>            Canonical directive targeted by annealing\n  --help, -h                 Show help\n\nRuntime IDs:\n  ${runtimeIds().join(", ")}\n`;
+  return `Agentic Repository Kernel
+
+Usage:
+  agentic-repo init [options]
+  agentic-repo doctor [options]
+  agentic-repo exclude [options]
+  agentic-repo knowledge lint [options]
+  agentic-repo adr new --title <title> [options]
+  agentic-repo prd new --title <title> [options]
+  agentic-repo anneal new --title <title> --target <file> [options]
+
+Options:
+  --runtime <ids|auto|none>  Override runtime selection (default: auto)
+  --git-exclude, --exclude   Add generated paths to .git/info/exclude
+  --remove                   Remove managed excludes from .git/info/exclude
+  --list                     List active local exclusions
+  --cwd <path>               Target repository (default: current directory)
+  --yes, -y                  Confirm writes non-interactively
+  --dry-run                  Show the plan without writing
+  --json                     Emit machine-readable output
+  --title <text>             Governed artifact title
+  --target <path>            Canonical directive targeted by annealing
+  --help, -h                 Show help
+
+Runtime IDs:
+  ${runtimeIds().join(", ")}
+`;
 }
 
-function printPlan({ cwd, runtimes, detected, inspection, detectionMode }) {
+function printPlan({ cwd, runtimes, detected, inspection, detectionMode, gitExclude }) {
   output.write(`Target: ${cwd}\n`);
   if (detected.length > 0) {
     output.write("Detected runtimes:\n");
@@ -30,6 +57,7 @@ function printPlan({ cwd, runtimes, detected, inspection, detectionMode }) {
   } else if (detectionMode === "auto") output.write("Detected runtimes: none; universal kernel only.\n");
   else output.write("Runtime detection: skipped because selection is explicit.\n");
   output.write(`Selected adapters: ${runtimes.length > 0 ? runtimes.join(", ") : "none"}\n`);
+  if (gitExclude) output.write("Local git exclude: enabled (.git/info/exclude)\n");
   output.write(`Create: ${inspection.created.length}, unchanged: ${inspection.skipped.length}, conflicts: ${inspection.conflicts.length}\n`);
   for (const conflict of inspection.conflicts) output.write(`  conflict: ${conflict}\n`);
 }
@@ -53,8 +81,8 @@ async function runInit(options) {
   const inspection = await inspectPlan(cwd, plan);
 
   if (options.json) {
-    output.write(`${JSON.stringify({ cwd, detected, runtimes, ...inspection }, null, 2)}\n`);
-  } else printPlan({ cwd, runtimes, detected, inspection, detectionMode: selection.mode });
+    output.write(`${JSON.stringify({ cwd, detected, runtimes, gitExclude: options.gitExclude, ...inspection }, null, 2)}\n`);
+  } else printPlan({ cwd, runtimes, detected, inspection, detectionMode: selection.mode, gitExclude: options.gitExclude });
 
   if (inspection.conflicts.length > 0) {
     if (!options.json) output.write("No files written because preflight found conflicts.\n");
@@ -70,8 +98,48 @@ async function runInit(options) {
   }
 
   const result = await applyPlan(cwd, plan);
+  if (options.gitExclude) {
+    const excludeResult = await applyGitExclude(cwd);
+    if (!options.json) {
+      if (excludeResult.ok) output.write("Applied local exclusions to .git/info/exclude.\n");
+      else output.write("Notice: .git directory not found; skipped .git/info/exclude.\n");
+    }
+  }
   if (!options.json) output.write(`Initialization complete. Created ${result.created.length} file(s).\n`);
   return 0;
+}
+
+async function excludeCommand(options) {
+  const cwd = path.resolve(options.cwd);
+  if (options.remove) {
+    const result = await removeGitExclude(cwd);
+    if (options.json) output.write(`${JSON.stringify({ cwd, ...result }, null, 2)}\n`);
+    else {
+      if (result.ok) output.write("Removed managed exclusions from .git/info/exclude.\n");
+      else output.write("Notice: .git directory not found.\n");
+    }
+    return result.ok ? 0 : 1;
+  }
+
+  if (options.list) {
+    const result = await inspectGitExclude(cwd);
+    if (options.json) output.write(`${JSON.stringify({ cwd, ...result }, null, 2)}\n`);
+    else {
+      output.write(`Target: ${cwd}\n`);
+      output.write(`Active: ${result.active ? "yes" : "no"}\n`);
+      output.write(`Excluded patterns: ${result.patterns.length}\n`);
+      for (const pattern of result.patterns) output.write(`  - ${pattern}\n`);
+    }
+    return result.ok ? 0 : 1;
+  }
+
+  const result = await applyGitExclude(cwd);
+  if (options.json) output.write(`${JSON.stringify({ cwd, ...result }, null, 2)}\n`);
+  else {
+    if (result.ok) output.write(`Applied ${result.patterns.length} local exclusions to .git/info/exclude.\n`);
+    else output.write("Notice: .git directory not found.\n");
+  }
+  return result.ok ? 0 : 1;
 }
 
 async function doctorCommand(options) {
@@ -127,6 +195,7 @@ export async function runCli(argv) {
       return 0;
     }
     if (options.command === "init") return await runInit(options);
+    if (options.command === "exclude") return await excludeCommand(options);
     if (options.command === "doctor") return await doctorCommand(options);
     if (options.command === "knowledge") return await knowledgeCommand(options);
     return await artifactCommand(options);
