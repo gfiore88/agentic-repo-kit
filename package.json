@@ -1,0 +1,31 @@
+{
+  "name": "agentic-repo-kit",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Giovanni Fiore",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gfiore88/agentic-repo-kit.git"
+  },
+  "homepage": "https://github.com/gfiore88/agentic-repo-kit#readme",
+  "bugs": {
+    "url": "https://github.com/gfiore88/agentic-repo-kit/issues"
+  },
+  "files": [
+    "bin/",
+    "plugins/agentic-repo/"
+  ],
+  "description": "Model-agnostic, multi-runtime scaffolding for governed AI-native repositories.",
+  "type": "module",
+  "bin": {
+    "agentic-repo": "./bin/agentic-repo.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "validate:plugin": "node ./scripts/validate-plugin.mjs",
+    "validate:skills": "node ./scripts/validate-skills.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

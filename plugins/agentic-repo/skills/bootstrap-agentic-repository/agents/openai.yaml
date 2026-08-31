@@ -1,0 +1,3 @@
+interface:
+  display_name: "Bootstrap Agentic Repository"
+  short_description: "Initialize the governed repository kernel"

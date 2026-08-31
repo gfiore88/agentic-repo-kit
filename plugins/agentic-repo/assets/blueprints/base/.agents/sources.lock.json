@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "resolvedAt": "2026-08-31",
+  "sources": [
+    {
+      "name": "github/awesome-copilot",
+      "revision": "c956566a35c3c2e635f019e7a1bfa59d9497e8b1",
+      "license": "MIT",
+      "includes": ["skills/create-architectural-decision-record", "skills/prd"]
+    },
+    {
+      "name": "addyosmani/agent-skills",
+      "revision": "d2c37ef6225dd8726cdd369a8030307f48592d26",
+      "license": "MIT",
+      "includes": ["skills/*", "agents/*", "commands/*", "references/*"]
+    },
+    {
+      "name": "karpathy/llm-wiki",
+      "revision": "ac46de1ad27f92b28ac95459c782c07f6b8c964a",
+      "includes": ["architecture and operating pattern"]
+    },
+    {
+      "name": "gfiore88/governed-agent-self-annealing",
+      "revision": "12c83455239216316b1606fd040cf9dd2acc1180",
+      "includes": ["governance and two-stage annealing workflow"]
+    }
+  ]
+}

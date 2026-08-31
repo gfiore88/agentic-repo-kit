@@ -1,0 +1,3 @@
+interface:
+  display_name: "Govern Development Task"
+  short_description: "Apply PRD, ADR, and delivery gates"

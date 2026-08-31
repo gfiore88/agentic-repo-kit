@@ -1,0 +1,3 @@
+interface:
+  display_name: "Anneal Agent Directives"
+  short_description: "Propose evidence-backed directive improvements"
