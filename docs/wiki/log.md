@@ -47,3 +47,9 @@
 - Accepted PRD-0002 for a developer tooling showcase, visual diagrams, and npm search discovery.
 - Accepted ADR-0004 for the README redesign, package metadata keywords, and 0.1.1 patch release.
 
+## [2026-08-31] release | npm package 0.1.1 published
+
+- Published `agentic-repo-kit@0.1.1` to npm via GitHub Actions OIDC Trusted Publishing.
+- Live package page now displays the developer tooling showcase README and updated keywords.
+
+
