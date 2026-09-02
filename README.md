@@ -101,9 +101,19 @@ agentic-repo init --runtime none
 agentic-repo init --yes --cwd /path/to/project
 ```
 
-> **Safe by design:** Existing files with identical content are safely skipped. If any file has divergent content, the CLI stops before writing anything and reports the conflicts.
->
-> **Enterprise / Local-first ready:** Use `--git-exclude` to automatically add all generated files to `.git/info/exclude`. This lets you use AI agents on strict client repositories without modifying `.gitignore` or pushing files upstream.
+### 3. Update an existing repository
+
+Upgrade kernel skills, workflows, operating contracts, and runtime adapters to the latest release without overwriting your customized project documentation (`docs/wiki/`, `docs/adr/`, `docs/product/`, `docs/raw/`):
+
+```bash
+npx agentic-repo-kit update
+```
+
+> **Zero Knowledge Loss:** `update` exclusively refreshes the operating kernel (`.agents/skills/`, `.agents/workflows/`, `AGENTS.md`, adapters) and preserves all your project wiki pages and decisions. If you use `--git-exclude`, your local Git exclusions are refreshed automatically.
+
+> **Safe by design:** During `init`, existing files with identical content are safely skipped. If any file has divergent content, `init` stops before writing anything and reports the conflicts. Use `update` to upgrade the kernel while preserving user knowledge.
+
+> **Enterprise / Local-first ready:** Use `--git-exclude` (or `agentic-repo exclude`) to automatically manage `.git/info/exclude`. This lets you use AI agents on strict client repositories without modifying `.gitignore` or pushing files upstream.
 
 ---
 

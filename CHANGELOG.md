@@ -4,6 +4,13 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-09-02
+
+### Added
+
+- Added `agentic-repo update` (alias `upgrade`) command to upgrade kernel rules, skills, workflows, and runtime adapters without overwriting project-specific user documentation (`docs/wiki/`, `docs/adr/`, `docs/product/`, `docs/raw/`).
+- Documented non-destructive kernel update architecture in `PRD-0005` and `ADR-0007`.
+
 ## [0.3.1] - 2026-09-02
 
 ### Fixed

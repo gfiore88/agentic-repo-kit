@@ -1,12 +1,13 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readFile } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { parseArgs, parseRuntimeSelection } from "./args.mjs";
 import { RUNTIME_CATALOG, runtimeIds } from "./catalog.mjs";
 import { detectRuntimes } from "./detect.mjs";
 import { buildPlan } from "./plan.mjs";
-import { applyPlan, inspectPlan } from "./writer.mjs";
+import { applyPlan, applyUpdate, inspectPlan, inspectUpdate } from "./writer.mjs";
 import { runDoctor } from "./doctor.mjs";
 import { createGovernedArtifact } from "./artifacts.mjs";
 import { lintKnowledge } from "./knowledge.mjs";
@@ -21,6 +22,7 @@ function helpText() {
 
 Usage:
   agentic-repo init [options]
+  agentic-repo update [options]
   agentic-repo doctor [options]
   agentic-repo exclude [options]
   agentic-repo knowledge lint [options]
@@ -60,6 +62,16 @@ function printPlan({ cwd, runtimes, detected, inspection, detectionMode, gitExcl
   if (gitExclude) output.write("Local git exclude: enabled (.git/info/exclude)\n");
   output.write(`Create: ${inspection.created.length}, unchanged: ${inspection.skipped.length}, conflicts: ${inspection.conflicts.length}\n`);
   for (const conflict of inspection.conflicts) output.write(`  conflict: ${conflict}\n`);
+}
+
+function printUpdatePlan({ cwd, runtimes, inspection, gitExclude }) {
+  output.write(`Target: ${cwd}\n`);
+  output.write(`Selected adapters: ${runtimes.length > 0 ? runtimes.join(", ") : "none"}\n`);
+  if (gitExclude) output.write("Local git exclude: enabled (.git/info/exclude)\n");
+  output.write(`Update: ${inspection.updated.length}, create: ${inspection.created.length}, unchanged: ${inspection.unchanged.length}, preserved: ${inspection.preserved.length}\n`);
+  for (const item of inspection.updated) output.write(`  update: ${item}\n`);
+  for (const item of inspection.created) output.write(`  create: ${item}\n`);
+  for (const item of inspection.preserved) output.write(`  preserve (user): ${item}\n`);
 }
 
 async function confirm(message) {
@@ -106,6 +118,64 @@ async function runInit(options) {
     }
   }
   if (!options.json) output.write(`Initialization complete. Created ${result.created.length} file(s).\n`);
+  return 0;
+}
+
+async function readExistingRuntimes(cwd) {
+  try {
+    const lock = JSON.parse(await readFile(path.join(cwd, "scaffold.lock"), "utf8"));
+    if (Array.isArray(lock.runtimes)) return lock.runtimes;
+  } catch {}
+  return null;
+}
+
+async function runUpdate(options) {
+  const cwd = path.resolve(options.cwd);
+  let runtimes;
+  if (options.runtime !== "auto") {
+    const selection = parseRuntimeSelection(options.runtime);
+    runtimes = selection.runtimes;
+  } else {
+    const existing = await readExistingRuntimes(cwd);
+    if (existing !== null) {
+      runtimes = existing;
+    } else {
+      const detected = await detectRuntimes(cwd);
+      runtimes = detected.map((item) => item.id);
+    }
+  }
+
+  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes });
+  const inspection = await inspectUpdate(cwd, plan);
+  const excludeState = await inspectGitExclude(cwd);
+  const shouldGitExclude = options.gitExclude || excludeState.active;
+
+  if (options.json) {
+    output.write(`${JSON.stringify({ cwd, runtimes, gitExclude: shouldGitExclude, ...inspection }, null, 2)}\n`);
+  } else {
+    printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude });
+  }
+
+  if (options.dryRun) return 0;
+
+  let approved = options.yes;
+  if (!approved && input.isTTY && output.isTTY) approved = await confirm("Apply this kernel update?");
+  if (!approved) {
+    if (!options.json) output.write("No files written. Re-run with --yes for non-interactive update.\n");
+    return input.isTTY ? 0 : 2;
+  }
+
+  const result = await applyUpdate(cwd, plan);
+  if (shouldGitExclude) {
+    const excludeResult = await applyGitExclude(cwd);
+    if (!options.json) {
+      if (excludeResult.ok) output.write("Refreshed local exclusions in .git/info/exclude.\n");
+      else output.write("Notice: .git directory not found; skipped .git/info/exclude.\n");
+    }
+  }
+  if (!options.json) {
+    output.write(`Kernel update complete. Updated ${result.updated.length}, created ${result.created.length}, preserved ${result.preserved.length} file(s).\n`);
+  }
   return 0;
 }
 
@@ -195,6 +265,7 @@ export async function runCli(argv) {
       return 0;
     }
     if (options.command === "init") return await runInit(options);
+    if (options.command === "update") return await runUpdate(options);
     if (options.command === "exclude") return await excludeCommand(options);
     if (options.command === "doctor") return await doctorCommand(options);
     if (options.command === "knowledge") return await knowledgeCommand(options);
@@ -204,3 +275,4 @@ export async function runCli(argv) {
     return 1;
   }
 }
+

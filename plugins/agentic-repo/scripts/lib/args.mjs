@@ -10,7 +10,8 @@ function takeValue(args, index, option) {
 
 export function parseArgs(argv) {
   const args = [...argv];
-  const command = args[0] && !args[0].startsWith("-") ? args.shift() : "help";
+  let command = args[0] && !args[0].startsWith("-") ? args.shift() : "help";
+  if (command === "upgrade") command = "update";
   const subcommand = ["knowledge", "adr", "prd", "anneal"].includes(command)
     && args[0] && !args[0].startsWith("-") ? args.shift() : null;
   const options = {
@@ -57,7 +58,7 @@ export function parseArgs(argv) {
     else throw new Error(`Unknown option: ${arg}`);
   }
 
-  if (!["init", "doctor", "knowledge", "adr", "prd", "anneal", "exclude", "help"].includes(options.command)) {
+  if (!["init", "update", "doctor", "knowledge", "adr", "prd", "anneal", "exclude", "help"].includes(options.command)) {
     throw new Error(`Unknown command: ${options.command}`);
   }
   const allowedSubcommands = { knowledge: "lint", adr: "new", prd: "new", anneal: "new" };

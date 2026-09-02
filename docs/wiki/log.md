@@ -82,6 +82,12 @@
 - Published `agentic-repo-kit@0.3.1` to npm via GitHub Actions OIDC Trusted Publishing.
 - Fixed ASCII/Unicode box-drawing alignment in README.md architecture diagram across all markdown renderers.
 
+## [2026-09-02] decision | Kernel update command accepted
+
+- Accepted PRD-0005 for `agentic-repo update` upgrading kernel rules and skills while strictly preserving user project documentation.
+- Accepted ADR-0007 for user-owned paths isolation, infrastructure overwrites, and automated lockfile/exclude sync.
+
+
 
 
 
