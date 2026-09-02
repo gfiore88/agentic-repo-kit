@@ -47,9 +47,15 @@ export async function lintKnowledge(cwd) {
       if (!indexContent.includes(relFromIndex)) uncataloguedPages.push(relative(cwd, file));
     }
     const lines = content.split("\n");
+    const headerSlice = lines.slice(0, 20).join("\n");
+    const hasPageProvenance = /(^|\n)\s*(?:\*\*)?source(?:s)?(?:\*\*)?:\s*(?:`[^`]+`|\[[^\]]+\]\([^)]+\)|docs\/raw\/|https?:|\S+)/i.test(headerSlice);
+
     lines.forEach((line, index) => {
-      if (line.includes("[FACT]") && !/(source|sources|provenance|https?:|docs\/raw\/)/i.test(line)) {
-        uncitedFacts.push({ file: relative(cwd, file), line: index + 1 });
+      if (line.includes("[FACT]")) {
+        const hasLineCitation = /(source|sources|provenance|https?:|docs\/raw\/)/i.test(line);
+        if (!hasLineCitation && !hasPageProvenance) {
+          uncitedFacts.push({ file: relative(cwd, file), line: index + 1 });
+        }
       }
     });
   }

@@ -8,4 +8,4 @@
 6. Implement with appropriate lifecycle skills and continuous verification.
 7. Run QA, security, documentation, and knowledge gates.
 8. Validate the complete outcome.
-9. Run the self-annealing diagnosis; route or propose without silent policy mutation.
+9. Conclude with the mandatory **End-of-Task Annealing Diagnosis** block; route findings or author `PENDING` proposals without silent policy mutation.

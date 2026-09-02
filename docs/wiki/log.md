@@ -67,6 +67,12 @@
 - Published `agentic-repo-kit@0.2.1` to npm via GitHub Actions OIDC Trusted Publishing.
 - Added `THIRD_PARTY_NOTICES.md` to default local Git exclusions so no scaffolding files remain untracked.
 
+## [2026-09-02] decision | Mandatory annealing closure and page provenance accepted
+
+- Accepted PRD-0004 for mandatory end-of-task annealing diagnosis and page-level source provenance inheritance.
+- Accepted ADR-0006 for automatic ADR task closure sections and `knowledge lint` header source parsing.
+
+
 
 
 

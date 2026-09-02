@@ -19,7 +19,7 @@ This repository develops a model-agnostic, multi-runtime operating kernel for AI
 4. Implement the smallest vertical slice that proves the decision.
 5. Run tests and plugin/skill validation.
 6. Update the wiki and chronological log when durable knowledge changes.
-7. Run the separated end-of-task annealing diagnosis and never let an agent approve its own directive change.
+7. Run the separated end-of-task annealing diagnosis (concluding with the mandatory diagnosis block) and never let an agent approve its own directive change.
 
 ## Portability invariants
 

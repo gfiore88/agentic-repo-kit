@@ -35,7 +35,13 @@ Before material implementation:
 4. Define verifiable acceptance criteria and a proportionate test strategy.
 5. Implement incrementally using the relevant skills in `.agents/skills/`.
 
-Completion requires acceptance criteria, tests, static checks, security review proportional to risk, documentation updates, wiki/index/log maintenance, and an end-of-run annealing assessment.
+Completion requires acceptance criteria, tests, static checks, security review proportional to risk, documentation updates, wiki/index/log maintenance, and concluding with a visible annealing assessment block:
+```markdown
+### 🔬 End-of-Task Annealing Diagnosis
+- **Observable Friction / Errors**: Summary of friction/failures, or None.
+- **Classification**: `None` | `Agent Method` | `Product/Domain Scope` | `Tooling Gap`
+- **Action**: No directive changes required (or: `PENDING` proposal created in `.agents/annealing/proposals/`).
+```
 
 ## Governed self-annealing
 

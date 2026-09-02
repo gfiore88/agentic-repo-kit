@@ -54,6 +54,23 @@ test("knowledge lint catches broken links, uncatalogued pages, and uncited facts
   assert.deepEqual(result.uncitedFacts, [{ file: "docs/wiki/orphan.md", line: 3 }]);
 });
 
+test("knowledge lint accepts page-level source provenance header", async () => {
+  const cwd = await initializedRepository();
+  await writeFile(
+    path.join(cwd, "docs/wiki/client-spec.md"),
+    "# Client Specification\n\n**Source**: `docs/raw/client.md`\n\n- `[FACT]` Valid fact inheriting page source.\n- `[FACT]` Another valid fact.\n",
+    "utf8"
+  );
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  const indexContent = await readFile(indexFile, "utf8");
+  await writeFile(indexFile, `${indexContent}\n- [Client Spec](client-spec.md)\n`, "utf8");
+
+  const result = await lintKnowledge(cwd);
+  assert.equal(result.ok, true);
+  assert.equal(result.uncitedFacts.length, 0);
+});
+
+
 test("ADR, PRD, and annealing commands create gated artifacts", async () => {
   const cwd = await initializedRepository();
   const adr = await createGovernedArtifact(cwd, "adr", { title: "Persistence boundary" });

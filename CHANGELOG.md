@@ -4,6 +4,14 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-09-02
+
+### Added
+
+- Mandated visible `### 🔬 End-of-Task Annealing Diagnosis` block on task completion for all tasks originating from an Architectural Decision Record (ADR).
+- Enhanced `agentic-repo knowledge lint` with page-level source provenance inheritance (`**Source**: docs/raw/...` in header).
+- Documented annealing closure and provenance inheritance decisions in `PRD-0004` and `ADR-0006`.
+
 ## [0.2.2] - 2026-08-31
 
 ### Fixed
