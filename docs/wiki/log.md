@@ -87,6 +87,12 @@
 - Accepted PRD-0005 for `agentic-repo update` upgrading kernel rules and skills while strictly preserving user project documentation.
 - Accepted ADR-0007 for user-owned paths isolation, infrastructure overwrites, and automated lockfile/exclude sync.
 
+## [2026-09-02] release | npm package 0.4.0 published
+
+- Published `agentic-repo-kit@0.4.0` to npm via GitHub Actions OIDC Trusted Publishing.
+- Added `agentic-repo update` (and alias `upgrade`) command to safely upgrade kernel rules, skills, and adapters with zero loss to user-owned documentation.
+
+
 
 
 
