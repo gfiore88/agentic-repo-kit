@@ -207,9 +207,15 @@ Do not modify the directive directly.
 
 ## 🛠️ Deterministic CLI Commands
 
-The CLI provides fast, reproducible commands for repository health and artifact creation:
+The CLI provides fast, reproducible commands for repository health, upgrades, and artifact creation:
 
 ```bash
+# Initialize a new repository
+agentic-repo init
+
+# Upgrade kernel skills and rules without touching user documentation
+agentic-repo update
+
 # Verify repository integrity and detect drifted managed files
 agentic-repo doctor
 
