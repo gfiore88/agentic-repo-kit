@@ -4,6 +4,12 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] - 2026-09-02
+
+### Fixed
+
+- Fixed ASCII/Unicode border alignment in README architecture diagram across markdown renderers (GitHub, npm, mobile).
+
 ## [0.3.0] - 2026-09-02
 
 ### Added

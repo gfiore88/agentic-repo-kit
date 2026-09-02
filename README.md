@@ -42,16 +42,16 @@ Starting an AI-native software project usually means repeatedly copy-pasting the
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                               AGENTIC REPOSITORY KERNEL                                  │
+│                                AGENTIC REPOSITORY KERNEL                                │
 │                                                                                         │
-│   📥 docs/raw/           ──►  🧠 Knowledge Curator     ──►  📚 docs/wiki/               │
-│      (immutable sources)         (classify & lint)             (living compiled memory) │
+│   docs/raw/              ──►   Knowledge Curator         ──►   docs/wiki/               │
+│   (immutable sources)          (classify & lint)               (living compiled memory) │
 │                                                                                         │
-│   📋 docs/product/       ──►  🚦 Governance Gates      ──►  🛡️ docs/adr/                │
-│      (product PRDs)              (human-in-the-loop)           (mandatory task ADRs)    │
+│   docs/product/          ──►   Governance Gates          ──►   docs/adr/                │
+│   (product PRDs)               (human-in-the-loop)             (mandatory task ADRs)    │
 │                                                                                         │
-│   🧰 .agents/skills/     ──►  🤖 Specialist Agents     ──►  🔄 Self-Annealing           │
-│      (31+ engineering skills)    (model-agnostic roles)        (evidence diff authoring)│
+│   .agents/skills/        ──►   Specialist Agents         ──►   Self-Annealing           │
+│   (31+ engineering skills)     (model-agnostic roles)          (evidence diff authoring)│
 └────────────────────────────────────────────┬────────────────────────────────────────────┘
                                              │
                                              ▼ Generated Runtime Projections
