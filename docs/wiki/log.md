@@ -72,6 +72,12 @@
 - Accepted PRD-0004 for mandatory end-of-task annealing diagnosis and page-level source provenance inheritance.
 - Accepted ADR-0006 for automatic ADR task closure sections and `knowledge lint` header source parsing.
 
+## [2026-09-02] release | npm package 0.3.0 published
+
+- Published `agentic-repo-kit@0.3.0` to npm via GitHub Actions OIDC Trusted Publishing.
+- Mandated visible `### 🔬 End-of-Task Annealing Diagnosis` block on task completion and enabled page-level provenance inheritance in `knowledge lint`.
+
+
 
 
 
