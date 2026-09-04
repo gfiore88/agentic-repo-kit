@@ -103,6 +103,12 @@
 - Added the `--enforce ci|hooks|none` axis (default `none`), persisting the mode in `scaffold.yaml` and `scaffold.lock` so `update` maintains it.
 - Projected an opt-in `.github/workflows/governance.yml` that computes the diff and delegates the decision to `verify`; `hooks` is rejected honestly until its slice ships.
 
+## [2026-09-04] implementation | Local git-hook enforcement installer
+
+- Completed ADR-0008 with the `--enforce hooks` projection: a policy-free `.agents/hooks/pre-push` hook that delegates to `verify`.
+- Installer sets `core.hooksPath` by editing `.git/config` directly, keeping the kit subprocess-free, and marks the hook executable.
+- Switching enforcement away from `hooks` resets `core.hooksPath` only when it still points at the managed directory; combined with `--git-exclude` the gate stays invisible to a client's tracked repository.
+
 
 
 
