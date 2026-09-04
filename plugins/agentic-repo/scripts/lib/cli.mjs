@@ -9,6 +9,7 @@ import { detectRuntimes } from "./detect.mjs";
 import { buildPlan } from "./plan.mjs";
 import { applyPlan, applyUpdate, inspectPlan, inspectUpdate } from "./writer.mjs";
 import { runDoctor } from "./doctor.mjs";
+import { verifyGovernance } from "./verify.mjs";
 import { createGovernedArtifact } from "./artifacts.mjs";
 import { lintKnowledge } from "./knowledge.mjs";
 import { applyGitExclude, inspectGitExclude, removeGitExclude } from "./exclude.mjs";
@@ -24,6 +25,7 @@ Usage:
   agentic-repo init [options]
   agentic-repo update [options]
   agentic-repo doctor [options]
+  agentic-repo verify [options]
   agentic-repo exclude [options]
   agentic-repo knowledge lint [options]
   agentic-repo adr new --title <title> [options]
@@ -41,6 +43,7 @@ Options:
   --json                     Emit machine-readable output
   --title <text>             Governed artifact title
   --target <path>            Canonical directive targeted by annealing
+  --changed <paths>          Comma-separated changed paths for the ADR gate
   --help, -h                 Show help
 
 Runtime IDs:
@@ -227,6 +230,23 @@ async function doctorCommand(options) {
   return result.ok ? 0 : 1;
 }
 
+async function verifyCommand(options) {
+  const cwd = path.resolve(options.cwd);
+  const changedFiles = options.changed === null
+    ? null
+    : options.changed.split(",").map((entry) => entry.trim()).filter(Boolean);
+  const result = await verifyGovernance(cwd, { changedFiles });
+  if (options.json) output.write(`${JSON.stringify({ cwd, ...result }, null, 2)}\n`);
+  else {
+    output.write(`Target: ${cwd}\n`);
+    output.write(`ADR gate: ${result.adrGateApplied ? "applied" : "skipped (pass --changed to enable)"}\n`);
+    output.write(`Violations: ${result.violations.length}\n`);
+    for (const violation of result.violations) output.write(`  ${violation.kind}: ${violation.detail}\n`);
+    output.write(result.ok ? "Status: compliant\n" : "Status: non-compliant\n");
+  }
+  return result.ok ? 0 : 1;
+}
+
 async function knowledgeCommand(options) {
   const cwd = path.resolve(options.cwd);
   const result = await lintKnowledge(cwd);
@@ -268,6 +288,7 @@ export async function runCli(argv) {
     if (options.command === "update") return await runUpdate(options);
     if (options.command === "exclude") return await excludeCommand(options);
     if (options.command === "doctor") return await doctorCommand(options);
+    if (options.command === "verify") return await verifyCommand(options);
     if (options.command === "knowledge") return await knowledgeCommand(options);
     return await artifactCommand(options);
   } catch (error) {

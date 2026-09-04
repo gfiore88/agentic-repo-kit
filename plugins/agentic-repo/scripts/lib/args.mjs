@@ -21,6 +21,7 @@ export function parseArgs(argv) {
     runtime: "auto",
     title: null,
     target: null,
+    changed: null,
     gitExclude: false,
     remove: false,
     list: false,
@@ -55,10 +56,14 @@ export function parseArgs(argv) {
       options.target = takeValue(args, index, arg);
       index += 1;
     } else if (arg.startsWith("--target=")) options.target = arg.slice(9);
+    else if (arg === "--changed") {
+      options.changed = takeValue(args, index, arg);
+      index += 1;
+    } else if (arg.startsWith("--changed=")) options.changed = arg.slice(10);
     else throw new Error(`Unknown option: ${arg}`);
   }
 
-  if (!["init", "update", "doctor", "knowledge", "adr", "prd", "anneal", "exclude", "help"].includes(options.command)) {
+  if (!["init", "update", "doctor", "knowledge", "verify", "adr", "prd", "anneal", "exclude", "help"].includes(options.command)) {
     throw new Error(`Unknown command: ${options.command}`);
   }
   const allowedSubcommands = { knowledge: "lint", adr: "new", prd: "new", anneal: "new" };
