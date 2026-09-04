@@ -4,6 +4,16 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.5.2] - 2026-09-04
+
+### Changed
+
+- Bumped `actions/upload-artifact` from `@v4` to `@v5` in the `ci-cd-and-automation` skill example, completing the Node 24 GitHub Actions currency pass. Decision recorded in `ADR-0010`.
+
+### Documentation
+
+- Documented in `docs/releasing.md` that releases modifying files under `.github/workflows/**` require a token with the `workflow` scope (`gh` as git credential helper satisfies this).
+
 ## [0.5.1] - 2026-09-04
 
 ### Changed
