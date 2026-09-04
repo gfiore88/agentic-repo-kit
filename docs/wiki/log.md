@@ -1,5 +1,10 @@
 # Knowledge Log
 
+## [2026-09-04] implementation | Release scope note and Actions currency follow-up
+
+- Accepted ADR-0010: documented in `docs/releasing.md` that releases touching `.github/workflows/**` need a `workflow`-scoped token (or `gh` as credential helper), and bumped `actions/upload-artifact@v4 → @v5` in the `ci-cd-and-automation` skill example.
+- Completes the Node 24 Actions currency pass started in ADR-0009; docs/skill-only, `npm run validate` stays green.
+
 ## [2026-09-04] implementation | GitHub Actions Node 24 runtime currency
 
 - Accepted ADR-0009 and bumped `actions/checkout` and `actions/setup-node` from `@v4` to `@v5` (first major on Node 24) in the repository workflows, the canonical governance generator (`plan.mjs`), and the `ci-cd-and-automation` skill examples.

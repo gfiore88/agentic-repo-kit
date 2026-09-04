@@ -154,7 +154,7 @@ jobs:
         run: npm run build
       - name: Run E2E tests
         run: npx playwright test
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: playwright-report

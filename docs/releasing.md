@@ -36,4 +36,10 @@ The workflow uses GitHub OIDC through `id-token: write`; do not add a long-lived
 6. Publish the matching GitHub release.
 7. Confirm the Trusted Publishing workflow and npm package provenance.
 
+> **Token scope:** If the release changes any file under `.github/workflows/**`,
+> the push in step 5 requires a token with the `workflow` OAuth scope. Using `gh`
+> as the git credential helper (after `gh auth refresh --hostname github.com
+> --scopes workflow`) satisfies this; a plain PAT without the `workflow` scope is
+> rejected by GitHub.
+
 Never reuse or overwrite an npm version.
