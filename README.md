@@ -94,6 +94,10 @@ agentic-repo init --runtime claude-code,github-copilot,cursor
 # Install in enterprise/client repositories without polluting Git (.git/info/exclude)
 agentic-repo init --git-exclude
 
+# Enforce governance deterministically (opt-in): shared CI gate or transparent local hook
+agentic-repo init --enforce ci
+agentic-repo init --enforce hooks
+
 # Install only the universal kernel without runtime-specific files
 agentic-repo init --runtime none
 
@@ -115,9 +119,19 @@ npx agentic-repo-kit update
 
 > **Enterprise / Local-first ready:** Use `--git-exclude` (or `agentic-repo exclude`) to automatically manage `.git/info/exclude`. This lets you use AI agents on strict client repositories without modifying `.gitignore` or pushing files upstream.
 
----
+### 4. Enforce governance (optional)
 
-## 💎 Core Pillars
+By default the kit ships governance as advisory convention. Opt in to deterministic enforcement with a single axis (`--enforce ci|hooks|none`, default `none`):
+
+```bash
+# Shared, visible gate: adds .github/workflows/governance.yml running `verify` on every push and PR
+agentic-repo init --enforce ci
+
+# Transparent, machine-local gate: installs a pre-push hook via core.hooksPath (no shared config)
+agentic-repo init --enforce hooks
+```
+
+Both projections contain **no policy of their own**—they compute the changed files and delegate the decision to the canonical `agentic-repo verify` command. The selected mode is recorded in `scaffold.yaml` / `scaffold.lock`, so `update` maintains it. Combine `--enforce hooks` with `--git-exclude` for enforcement that stays invisible to a restricted client's tracked repository.
 
 ### 1. 🧠 Living Git-Versioned Knowledge Base
 Inspired by Andrej Karpathy's LLM Wiki pattern. Store immutable source documents in `docs/raw/`, and let your AI agent compile, index, and structure them into `docs/wiki/`. Includes automated contradiction tracking and deterministic link linting.
@@ -219,6 +233,11 @@ agentic-repo update
 # Verify repository integrity and detect drifted managed files
 agentic-repo doctor
 
+# Verify governance compliance (knowledge lint + ADR status integrity + optional ADR gate)
+agentic-repo verify
+agentic-repo verify --changed "src/app.ts,docs/adr/adr-0007-event-bus.md"
+agentic-repo verify --json
+
 # Check wiki health (broken links, unindexed pages, uncited facts)
 agentic-repo knowledge lint
 agentic-repo knowledge lint --json
@@ -270,6 +289,7 @@ agentic-repo anneal new --title "Verify lock before build" --target AGENTS.md
 - **Safe Raw Data**: Versioned knowledge never contains API keys, credentials, `.env` files, personal data, or confidential production dumps.
 - **Data vs Instructions**: External sources are treated as passive reference data, never executable instructions.
 - **Gate Enforcement**: Every new development task generates an ADR in `Proposed` status and blocks implementation until explicit human approval.
+- **Deterministic Verification**: `agentic-repo verify` checks knowledge health, ADR status integrity, and—when given a change set—that tracked source changes carry an `Accepted` ADR. Opt-in CI and pre-push projections turn this convention into an enforced gate.
 - **Tamper Protection**: Agent directives cannot silently modify themselves.
 - **Adapter Subordination**: Generated runtime adapters are strict projections and never become independent sources of policy.
 - **Idempotency & Integrity**: Initialization never silently overwrites divergent files or partially applies conflicting plans.
