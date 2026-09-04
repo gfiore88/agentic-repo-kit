@@ -1,3 +1,11 @@
+---
+type: concept
+title: Upstream Content and Provenance
+created: 2026-08-31
+updated: 2026-09-04
+sources: [".agents/sources.lock.json", ".agents/licenses/", "docs/product/prd-0001-agentic-repository-kernel.md"]
+---
+
 # Upstream Content and Provenance
 
 - `[FACT]` The official `create-architectural-decision-record` and `prd` skills come from `github/awesome-copilot`. Source: the generated `.agents/sources.lock.json`.

@@ -1,3 +1,10 @@
+---
+type: index
+title: Knowledge Index
+created: 2026-08-31
+updated: 2026-09-04
+---
+
 # Knowledge Index
 
 Read this page first and open only the documents relevant to the active task.
@@ -22,6 +29,9 @@ Read this page first and open only the documents relevant to the active task.
 - [Kernel update command and user knowledge preservation](../adr/adr-0007-kernel-update-command-and-user-knowledge-preservation.md): accepted update mechanics, knowledge preservation, and lockfile syncing.
 - [Governance verification command and enforcement adapters](../adr/adr-0008-governance-verification-and-enforcement-adapters.md): accepted canonical `verify` engine with opt-in CI and local-hook projections.
 - [GitHub Actions Node 24 runtime currency](../adr/adr-0009-github-actions-node24-runtime-currency.md): accepted bump of `checkout`/`setup-node` action majors to `@v5` across workflows, the canonical generator, and skill examples.
+- [Release workflow scope note and Actions currency follow-up](../adr/adr-0010-release-workflow-scope-and-actions-currency-followup.md): accepted `releasing.md` token-scope note and `upload-artifact@v5` currency bump.
+- [Wiki taxonomy and curation hardening](../adr/adr-0011-wiki-taxonomy-and-curation-hardening.md): accepted three-layer contract, optional taxonomy, contradictions/log formats, and additive lint checks.
+- [Mandatory per-page wiki frontmatter](../adr/adr-0012-mandatory-per-page-wiki-frontmatter.md): proposed structured frontmatter and its lint validation (deferred follow-up to ADR-0011).
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.

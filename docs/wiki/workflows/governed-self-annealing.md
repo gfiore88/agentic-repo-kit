@@ -1,3 +1,10 @@
+---
+type: concept
+title: Governed Self-Annealing
+created: 2026-08-31
+updated: 2026-09-04
+---
+
 # Governed Self-Annealing
 
 The workflow separates authority across stages:

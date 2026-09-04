@@ -1,3 +1,10 @@
+---
+type: questions
+title: Open Questions
+created: 2026-08-31
+updated: 2026-09-04
+---
+
 # Open Questions
 
 - `[OPEN QUESTION]` Which package scope and public product name should be used before npm publication?

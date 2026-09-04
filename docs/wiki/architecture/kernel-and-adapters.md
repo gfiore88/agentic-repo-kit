@@ -1,3 +1,11 @@
+---
+type: concept
+title: Kernel and Runtime Adapters
+created: 2026-08-31
+updated: 2026-09-04
+sources: ["plugins/agentic-repo/scripts/lib/detect.mjs", "plugins/agentic-repo/scripts/lib/plan.mjs", "plugins/agentic-repo/scripts/lib/doctor.mjs", "docs/adr/adr-0001-hybrid-distribution-and-runtime-adapters.md"]
+---
+
 # Kernel and Runtime Adapters
 
 - `[DECISION]` The product uses a canonical repository, Codex plugin, and dependency-free Node.js CLI. Source: [ADR-0001](../../adr/adr-0001-hybrid-distribution-and-runtime-adapters.md).

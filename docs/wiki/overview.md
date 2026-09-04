@@ -1,3 +1,11 @@
+---
+type: overview
+title: System Overview
+created: 2026-08-31
+updated: 2026-09-04
+sources: ["plugins/agentic-repo/assets/adapters/", "plugins/agentic-repo/scripts/lib/plan.mjs", "docs/adr/adr-0001-hybrid-distribution-and-runtime-adapters.md"]
+---
+
 # System Overview
 
 - `[DECISION]` The product is a repository kernel, plugin, and CLI rather than a single package format.

@@ -1,4 +1,22 @@
+---
+type: log
+title: Knowledge Log
+created: 2026-08-31
+updated: 2026-09-04
+---
+
 # Knowledge Log
+
+## [2026-09-04] implementation | Mandatory per-page wiki frontmatter
+
+- Accepted ADR-0012 and made YAML frontmatter mandatory on every `docs/wiki/` page: required `type`/`title`/`created`/`updated` keys, a non-empty `sources:` list on fact-bearing pages, and optional `tags`/`aliases`. Broadened the `type` enum during acceptance to add `log` and `questions` so the four foundation pages are covered.
+- Extended `knowledge lint` with a dependency-free frontmatter validator (`frontmatterIssues`), added frontmatter to the blueprint templates and the kit's eight wiki pages, and updated the `curate-project-knowledge` skill. `npm run validate` is green (59 tests), skills (31) and plugin validation pass, and clean multi-adapter init reports healthy `doctor` and `knowledge lint`.
+
+## [2026-09-04] implementation | Wiki taxonomy and curation hardening
+
+- Accepted ADR-0011 and hardened the canonical LLM Wiki pattern: three-layer contract with immutable `docs/raw/`, optional `sources/`/`entities/`/`concepts/` taxonomy (relative links only), contradictions and log-entry formats, query-to-concept promotion, and house-style guardrails in the `curate-project-knowledge` skill.
+- Extended `knowledge lint` additively with orphan-page, uncovered-raw-source, and malformed-log-entry checks; `npm run validate` stays green (57 tests), skills (31) and plugin validation pass, and a clean multi-adapter init reports healthy `doctor` and `knowledge lint`.
+- Proposed ADR-0012 (mandatory per-page YAML frontmatter) as the deferred follow-up; implementation blocked until human acceptance.
 
 ## [2026-09-04] implementation | Release scope note and Actions currency follow-up
 

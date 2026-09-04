@@ -1,3 +1,10 @@
+---
+type: concept
+title: Knowledge and Decision Lifecycle
+created: 2026-08-31
+updated: 2026-09-04
+---
+
 # Knowledge and Decision Lifecycle
 
 ## Knowledge
