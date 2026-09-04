@@ -22,6 +22,7 @@ export function parseArgs(argv) {
     title: null,
     target: null,
     changed: null,
+    enforce: null,
     gitExclude: false,
     remove: false,
     list: false,
@@ -60,6 +61,10 @@ export function parseArgs(argv) {
       options.changed = takeValue(args, index, arg);
       index += 1;
     } else if (arg.startsWith("--changed=")) options.changed = arg.slice(10);
+    else if (arg === "--enforce") {
+      options.enforce = takeValue(args, index, arg);
+      index += 1;
+    } else if (arg.startsWith("--enforce=")) options.enforce = arg.slice(10);
     else throw new Error(`Unknown option: ${arg}`);
   }
 
@@ -69,6 +74,10 @@ export function parseArgs(argv) {
   const allowedSubcommands = { knowledge: "lint", adr: "new", prd: "new", anneal: "new" };
   if (allowedSubcommands[command] && subcommand !== allowedSubcommands[command]) {
     throw new Error(`${command} requires subcommand: ${allowedSubcommands[command]}`);
+  }
+
+  if (options.enforce !== null && !["ci", "hooks", "none"].includes(options.enforce)) {
+    throw new Error(`Unknown enforcement mode: ${options.enforce} (use ci, hooks, or none)`);
   }
 
   return options;

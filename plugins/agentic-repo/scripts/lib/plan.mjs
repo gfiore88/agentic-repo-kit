@@ -86,15 +86,55 @@ function runtimeAgentFile(runtime, agent) {
   return null;
 }
 
-function scaffoldYaml(runtimes) {
+function scaffoldYaml(runtimes, enforce) {
+  const enforcementLine = `enforcement: ${enforce}\n`;
   if (runtimes.length === 0) {
-    return "version: 1\ncompatibility:\n  detection: assisted\n  runtimes: []\n";
+    return `version: 1\n${enforcementLine}compatibility:\n  detection: assisted\n  runtimes: []\n`;
   }
   const runtimeLines = runtimes.map((runtime) => `    - ${runtime}`).join("\n");
-  return `version: 1\ncompatibility:\n  detection: assisted\n  runtimes:\n${runtimeLines}\n`;
+  return `version: 1\n${enforcementLine}compatibility:\n  detection: assisted\n  runtimes:\n${runtimeLines}\n`;
 }
 
-export async function buildPlan({ assetsRoot, skillsRoot, runtimes }) {
+// Opt-in CI projection. Contains no policy: it computes the changed files and
+// delegates the decision to the canonical `agentic-repo verify` engine.
+function ciEnforcementWorkflow() {
+  return `name: Governance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify governance
+        run: |
+          if [ "\${{ github.event_name }}" = "pull_request" ]; then
+            BASE="\${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="\${{ github.event.before }}"
+          fi
+          if git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null && [ -n "$(git diff --name-only "$BASE" HEAD)" ]; then
+            CHANGED="$(git diff --name-only "$BASE" HEAD | paste -sd, -)"
+            npx --yes agentic-repo-kit verify --changed "$CHANGED"
+          else
+            npx --yes agentic-repo-kit verify
+          fi
+`;
+}
+
+export async function buildPlan({ assetsRoot, skillsRoot, runtimes, enforce = "none" }) {
   const files = new Map();
   const baseRoot = path.join(assetsRoot, "blueprints", "base");
   const baseFiles = await collectFiles(baseRoot);
@@ -116,12 +156,16 @@ export async function buildPlan({ assetsRoot, skillsRoot, runtimes }) {
     }
   }
 
-  mergeFile(files, { path: "scaffold.yaml", content: scaffoldYaml(runtimes) }, "generated");
+  mergeFile(files, { path: "scaffold.yaml", content: scaffoldYaml(runtimes, enforce) }, "generated");
+
+  if (enforce === "ci") {
+    mergeFile(files, { path: ".github/workflows/governance.yml", content: ciEnforcementWorkflow() }, "ci-enforcement");
+  }
 
   const managed = [...files.values()]
     .sort((left, right) => left.path.localeCompare(right.path))
     .map((file) => ({ path: file.path, sha256: sha256(file.content), source: file.source }));
-  const lockContent = `${JSON.stringify({ schemaVersion: 1, runtimes, managedFiles: managed }, null, 2)}\n`;
+  const lockContent = `${JSON.stringify({ schemaVersion: 1, runtimes, enforcement: enforce, managedFiles: managed }, null, 2)}\n`;
   mergeFile(files, { path: "scaffold.lock", content: lockContent }, "generated");
 
   return {

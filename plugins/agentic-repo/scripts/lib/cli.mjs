@@ -44,6 +44,7 @@ Options:
   --title <text>             Governed artifact title
   --target <path>            Canonical directive targeted by annealing
   --changed <paths>          Comma-separated changed paths for the ADR gate
+  --enforce <mode>           Enforcement projection: ci, hooks, or none (default none)
   --help, -h                 Show help
 
 Runtime IDs:
@@ -51,7 +52,7 @@ Runtime IDs:
 `;
 }
 
-function printPlan({ cwd, runtimes, detected, inspection, detectionMode, gitExclude }) {
+function printPlan({ cwd, runtimes, detected, inspection, detectionMode, gitExclude, enforce }) {
   output.write(`Target: ${cwd}\n`);
   if (detected.length > 0) {
     output.write("Detected runtimes:\n");
@@ -63,14 +64,16 @@ function printPlan({ cwd, runtimes, detected, inspection, detectionMode, gitExcl
   else output.write("Runtime detection: skipped because selection is explicit.\n");
   output.write(`Selected adapters: ${runtimes.length > 0 ? runtimes.join(", ") : "none"}\n`);
   if (gitExclude) output.write("Local git exclude: enabled (.git/info/exclude)\n");
+  output.write(`Enforcement: ${enforce}\n`);
   output.write(`Create: ${inspection.created.length}, unchanged: ${inspection.skipped.length}, conflicts: ${inspection.conflicts.length}\n`);
   for (const conflict of inspection.conflicts) output.write(`  conflict: ${conflict}\n`);
 }
 
-function printUpdatePlan({ cwd, runtimes, inspection, gitExclude }) {
+function printUpdatePlan({ cwd, runtimes, inspection, gitExclude, enforce }) {
   output.write(`Target: ${cwd}\n`);
   output.write(`Selected adapters: ${runtimes.length > 0 ? runtimes.join(", ") : "none"}\n`);
   if (gitExclude) output.write("Local git exclude: enabled (.git/info/exclude)\n");
+  output.write(`Enforcement: ${enforce}\n`);
   output.write(`Update: ${inspection.updated.length}, create: ${inspection.created.length}, unchanged: ${inspection.unchanged.length}, preserved: ${inspection.preserved.length}\n`);
   for (const item of inspection.updated) output.write(`  update: ${item}\n`);
   for (const item of inspection.created) output.write(`  create: ${item}\n`);
@@ -89,15 +92,16 @@ async function confirm(message) {
 
 async function runInit(options) {
   const cwd = path.resolve(options.cwd);
+  const enforce = requireSupportedEnforcement(options.enforce ?? "none");
   const selection = parseRuntimeSelection(options.runtime);
   const detected = selection.mode === "auto" ? await detectRuntimes(cwd) : [];
   const runtimes = selection.mode === "auto" ? detected.map((item) => item.id) : selection.runtimes;
-  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes });
+  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes, enforce });
   const inspection = await inspectPlan(cwd, plan);
 
   if (options.json) {
-    output.write(`${JSON.stringify({ cwd, detected, runtimes, gitExclude: options.gitExclude, ...inspection }, null, 2)}\n`);
-  } else printPlan({ cwd, runtimes, detected, inspection, detectionMode: selection.mode, gitExclude: options.gitExclude });
+    output.write(`${JSON.stringify({ cwd, detected, runtimes, enforcement: enforce, gitExclude: options.gitExclude, ...inspection }, null, 2)}\n`);
+  } else printPlan({ cwd, runtimes, detected, inspection, detectionMode: selection.mode, gitExclude: options.gitExclude, enforce });
 
   if (inspection.conflicts.length > 0) {
     if (!options.json) output.write("No files written because preflight found conflicts.\n");
@@ -132,8 +136,24 @@ async function readExistingRuntimes(cwd) {
   return null;
 }
 
+async function readExistingEnforcement(cwd) {
+  try {
+    const lock = JSON.parse(await readFile(path.join(cwd, "scaffold.lock"), "utf8"));
+    if (typeof lock.enforcement === "string") return lock.enforcement;
+  } catch {}
+  return null;
+}
+
+function requireSupportedEnforcement(enforce) {
+  if (enforce === "hooks") {
+    throw new Error("enforce=hooks is not available yet; it ships as a later slice. Use ci or none.");
+  }
+  return enforce;
+}
+
 async function runUpdate(options) {
   const cwd = path.resolve(options.cwd);
+  const enforce = requireSupportedEnforcement(options.enforce ?? await readExistingEnforcement(cwd) ?? "none");
   let runtimes;
   if (options.runtime !== "auto") {
     const selection = parseRuntimeSelection(options.runtime);
@@ -148,15 +168,15 @@ async function runUpdate(options) {
     }
   }
 
-  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes });
+  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes, enforce });
   const inspection = await inspectUpdate(cwd, plan);
   const excludeState = await inspectGitExclude(cwd);
   const shouldGitExclude = options.gitExclude || excludeState.active;
 
   if (options.json) {
-    output.write(`${JSON.stringify({ cwd, runtimes, gitExclude: shouldGitExclude, ...inspection }, null, 2)}\n`);
+    output.write(`${JSON.stringify({ cwd, runtimes, enforcement: enforce, gitExclude: shouldGitExclude, ...inspection }, null, 2)}\n`);
   } else {
-    printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude });
+    printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude, enforce });
   }
 
   if (options.dryRun) return 0;
