@@ -4,6 +4,22 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-09-04
+
+### Added
+
+- Mandatory per-page YAML frontmatter (`type`, `title`, `created`, `updated`, and a non-empty `sources` list on fact-bearing pages) across the wiki knowledge base, validated by `knowledge lint` with a dependency-free parser. Decision recorded in `ADR-0012`.
+- Extended `knowledge lint` with orphan-page, uncovered-raw-source, and malformed-log-entry checks, plus the optional `sources/`, `entities/`, and `concepts/` wiki taxonomy. Decision recorded in `ADR-0011`.
+
+### Changed
+
+- Hardened the `curate-project-knowledge` skill with the three-layer contract (immutable `docs/raw/`), fixed contradictions and log-entry formats, query-to-concept promotion, and house-style guardrails.
+- Blueprint `docs/wiki/` templates now ship conformant frontmatter so freshly initialized repositories pass `knowledge lint` out of the box.
+
+### Documentation
+
+- Aligned `README.md` to describe typed wiki frontmatter and the full set of `knowledge lint` checks.
+
 ## [0.5.2] - 2026-09-04
 
 ### Changed
