@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { access, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,6 +41,10 @@ test("fresh knowledge base passes deterministic lint", async () => {
     brokenLinks: [],
     uncataloguedPages: [],
     uncitedFacts: [],
+    orphanPages: [],
+    uncoveredSources: [],
+    malformedLogEntries: [],
+    frontmatterIssues: [],
   });
 });
 
@@ -58,7 +62,7 @@ test("knowledge lint accepts page-level source provenance header", async () => {
   const cwd = await initializedRepository();
   await writeFile(
     path.join(cwd, "docs/wiki/client-spec.md"),
-    "# Client Specification\n\n**Source**: `docs/raw/client.md`\n\n- `[FACT]` Valid fact inheriting page source.\n- `[FACT]` Another valid fact.\n",
+    "---\ntype: source\ntitle: Client Specification\ncreated: 2026-09-04\nupdated: 2026-09-04\nsources: [\"docs/raw/client.md\"]\n---\n\n# Client Specification\n\n**Source**: `docs/raw/client.md`\n\n- `[FACT]` Valid fact inheriting page source.\n- `[FACT]` Another valid fact.\n",
     "utf8"
   );
   const indexFile = path.join(cwd, "docs/wiki/index.md");
@@ -70,6 +74,88 @@ test("knowledge lint accepts page-level source provenance header", async () => {
   assert.equal(result.uncitedFacts.length, 0);
 });
 
+test("knowledge lint flags orphan pages, uncovered raw sources, and malformed log entries", async () => {
+  const cwd = await initializedRepository();
+  // Orphan: catalogued by path text in index but linked from nowhere.
+  await writeFile(path.join(cwd, "docs/wiki/loner.md"), "# Loner\n\nNo inbound links.\n", "utf8");
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  const indexContent = await readFile(indexFile, "utf8");
+  await writeFile(indexFile, `${indexContent}\n<!-- loner.md -->\n`, "utf8");
+  // Uncovered raw source: no sources/ summary page.
+  await mkdir(path.join(cwd, "docs/raw"), { recursive: true });
+  await writeFile(path.join(cwd, "docs/raw/2026-09-04-note.md"), "raw note\n", "utf8");
+  // Malformed log entry.
+  const logFile = path.join(cwd, "docs/wiki/log.md");
+  const logContent = await readFile(logFile, "utf8");
+  await writeFile(logFile, `${logContent}\n## Not a valid entry\n`, "utf8");
+
+  const result = await lintKnowledge(cwd);
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.uncataloguedPages, []);
+  assert.deepEqual(result.orphanPages, ["docs/wiki/loner.md"]);
+  assert.deepEqual(result.uncoveredSources, ["docs/raw/2026-09-04-note.md"]);
+  assert.equal(result.malformedLogEntries.length, 1);
+  assert.equal(result.malformedLogEntries[0].file, "docs/wiki/log.md");
+});
+
+test("knowledge lint accepts a covered raw source with a sources/ summary", async () => {
+  const cwd = await initializedRepository();
+  await mkdir(path.join(cwd, "docs/raw"), { recursive: true });
+  await writeFile(path.join(cwd, "docs/raw/2026-09-04-note.md"), "raw note\n", "utf8");
+  await mkdir(path.join(cwd, "docs/wiki/sources"), { recursive: true });
+  await writeFile(
+    path.join(cwd, "docs/wiki/sources/2026-09-04-note.md"),
+    "---\ntype: source\ntitle: Note summary\ncreated: 2026-09-04\nupdated: 2026-09-04\nsources: [\"docs/raw/2026-09-04-note.md\"]\n---\n\n# Note summary\n\n**Source**: `docs/raw/2026-09-04-note.md`\n\n- `[FACT]` Summary point.\n",
+    "utf8"
+  );
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  const indexContent = await readFile(indexFile, "utf8");
+  await writeFile(indexFile, `${indexContent}\n- [Note summary](sources/2026-09-04-note.md)\n`, "utf8");
+
+  const result = await lintKnowledge(cwd);
+  assert.deepEqual(result.uncoveredSources, []);
+  assert.deepEqual(result.orphanPages, []);
+  assert.equal(result.ok, true);
+});
+
+test("knowledge lint validates page frontmatter", async () => {
+  const cwd = await initializedRepository();
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  await writeFile(path.join(cwd, "docs/wiki/no-front.md"), "# No Front\n\nBody only.\n", "utf8");
+  await writeFile(
+    path.join(cwd, "docs/wiki/bad-front.md"),
+    "---\ntype: bogus\ntitle: Bad\ncreated: 2026-09-04\nupdated: yesterday\n---\n\n# Bad\n\n- `[FACT]` Unsourced claim.\n",
+    "utf8"
+  );
+  const indexContent = await readFile(indexFile, "utf8");
+  await writeFile(indexFile, `${indexContent}\n- [No Front](no-front.md)\n- [Bad Front](bad-front.md)\n`, "utf8");
+
+  const result = await lintKnowledge(cwd);
+  assert.equal(result.ok, false);
+  const issuesFor = (file) => result.frontmatterIssues.filter((item) => item.file === file).map((item) => item.issue);
+  assert.deepEqual(issuesFor("docs/wiki/no-front.md"), ["missing frontmatter"]);
+  const bad = issuesFor("docs/wiki/bad-front.md");
+  assert.ok(bad.includes("invalid frontmatter type: bogus"));
+  assert.ok(bad.includes("invalid updated date: yesterday"));
+  assert.ok(bad.includes("fact-bearing page missing non-empty sources"));
+});
+
+test("knowledge lint accepts conformant frontmatter with sources provenance", async () => {
+  const cwd = await initializedRepository();
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  await writeFile(
+    path.join(cwd, "docs/wiki/typed.md"),
+    "---\ntype: concept\ntitle: Typed\ncreated: 2026-09-04\nupdated: 2026-09-04\nsources: [\"docs/raw/typed.md\"]\n---\n\n# Typed\n\n- `[FACT]` Sourced via frontmatter.\n",
+    "utf8"
+  );
+  const indexContent = await readFile(indexFile, "utf8");
+  await writeFile(indexFile, `${indexContent}\n- [Typed](typed.md)\n`, "utf8");
+
+  const result = await lintKnowledge(cwd);
+  assert.deepEqual(result.frontmatterIssues, []);
+  assert.equal(result.uncitedFacts.length, 0);
+  assert.equal(result.ok, true);
+});
 
 test("ADR, PRD, and annealing commands create gated artifacts", async () => {
   const cwd = await initializedRepository();

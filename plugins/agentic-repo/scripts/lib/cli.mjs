@@ -285,9 +285,15 @@ async function knowledgeCommand(options) {
   else {
     output.write(`Knowledge pages checked: ${result.checkedPages}\n`);
     output.write(`Broken links: ${result.brokenLinks.length}; uncatalogued pages: ${result.uncataloguedPages.length}; uncited facts: ${result.uncitedFacts.length}\n`);
+    output.write(`Orphan pages: ${result.orphanPages.length}; uncovered raw sources: ${result.uncoveredSources.length}; malformed log entries: ${result.malformedLogEntries.length}\n`);
+    output.write(`Frontmatter issues: ${result.frontmatterIssues.length}\n`);
     for (const item of result.brokenLinks) output.write(`  broken: ${item.file} -> ${item.href}\n`);
     for (const item of result.uncataloguedPages) output.write(`  uncatalogued: ${item}\n`);
     for (const item of result.uncitedFacts) output.write(`  uncited fact: ${item.file}:${item.line}\n`);
+    for (const item of result.orphanPages) output.write(`  orphan: ${item}\n`);
+    for (const item of result.uncoveredSources) output.write(`  uncovered source: ${item}\n`);
+    for (const item of result.malformedLogEntries) output.write(`  malformed log: ${item.file}:${item.line}\n`);
+    for (const item of result.frontmatterIssues) output.write(`  frontmatter: ${item.file} -> ${item.issue}\n`);
     output.write(result.ok ? "Status: healthy\n" : "Status: unhealthy\n");
   }
   return result.ok ? 0 : 1;
