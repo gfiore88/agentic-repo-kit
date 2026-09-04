@@ -4,6 +4,12 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.5.1] - 2026-09-04
+
+### Changed
+
+- Bumped `actions/checkout` and `actions/setup-node` from `@v4` to `@v5` (the first major line running on Node 24) across the repository workflows, the canonical generated governance workflow, and the `ci-cd-and-automation` skill examples, clearing the GitHub Actions Node 20 deprecation warning. Decision recorded in `ADR-0009`.
+
 ## [0.5.0] - 2026-09-04
 
 ### Added
