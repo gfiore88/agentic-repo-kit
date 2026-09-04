@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { access, mkdtemp, readFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -75,11 +75,33 @@ test("init --enforce ci writes the workflow and update preserves the mode", asyn
   assert.ok(await fileExists(path.join(dir, ".github/workflows/governance.yml")));
 });
 
-test("hooks enforcement is rejected honestly until its slice ships", async () => {
+test("hooks enforcement projects an executable pre-push hook and sets core.hooksPath", async () => {
+  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes: [], enforce: "hooks" });
+  const hook = plan.files.find((file) => file.path === ".agents/hooks/pre-push");
+  assert.ok(hook, "expected the pre-push hook to be generated");
+  assert.match(hook.content, /agentic-repo-kit verify/);
+
   const dir = await tempDir();
-  const { code, err } = await run(["init", "--runtime", "none", "--enforce", "hooks", "--yes", "--cwd", dir]);
-  assert.equal(code, 1);
-  assert.match(err, /hooks is not available yet/);
+  await mkdir(path.join(dir, ".git"), { recursive: true });
+  await writeFile(path.join(dir, ".git/config"), "[core]\n\tbare = false\n", "utf8");
+  const init = await run(["init", "--runtime", "none", "--enforce", "hooks", "--yes", "--cwd", dir]);
+  assert.equal(init.code, 0);
+
+  const hookStat = await stat(path.join(dir, ".agents/hooks/pre-push"));
+  assert.ok((hookStat.mode & 0o111) !== 0, "hook should be executable");
+  const config = await readFile(path.join(dir, ".git/config"), "utf8");
+  assert.match(config, /hooksPath = \.agents\/hooks/);
+});
+
+test("switching enforcement away from hooks resets core.hooksPath", async () => {
+  const dir = await tempDir();
+  await mkdir(path.join(dir, ".git"), { recursive: true });
+  await writeFile(path.join(dir, ".git/config"), "[core]\n\tbare = false\n", "utf8");
+  await run(["init", "--runtime", "none", "--enforce", "hooks", "--yes", "--cwd", dir]);
+  const update = await run(["update", "--enforce", "none", "--yes", "--cwd", dir]);
+  assert.equal(update.code, 0);
+  const config = await readFile(path.join(dir, ".git/config"), "utf8");
+  assert.ok(!/hooksPath/.test(config), "core.hooksPath should be removed");
 });
 
 test("an unknown enforcement mode is rejected", async () => {

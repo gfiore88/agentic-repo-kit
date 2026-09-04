@@ -95,6 +95,30 @@ function scaffoldYaml(runtimes, enforce) {
   return `version: 1\n${enforcementLine}compatibility:\n  detection: assisted\n  runtimes:\n${runtimeLines}\n`;
 }
 
+// Opt-in local pre-push projection. Contains no policy: it computes the changed
+// files and delegates the decision to the canonical `agentic-repo verify` engine.
+function prePushHook() {
+  return `#!/bin/sh
+# Managed by agentic-repo-kit (enforce=hooks): transparent, machine-local gate.
+zero="0000000000000000000000000000000000000000"
+fail=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+  if [ "$remote_sha" = "$zero" ]; then
+    npx --yes agentic-repo-kit verify || fail=1
+  else
+    changed="$(git diff --name-only "$remote_sha" "$local_sha" | paste -sd, -)"
+    if [ -n "$changed" ]; then
+      npx --yes agentic-repo-kit verify --changed "$changed" || fail=1
+    else
+      npx --yes agentic-repo-kit verify || fail=1
+    fi
+  fi
+done
+exit $fail
+`;
+}
+
 // Opt-in CI projection. Contains no policy: it computes the changed files and
 // delegates the decision to the canonical `agentic-repo verify` engine.
 function ciEnforcementWorkflow() {
@@ -160,6 +184,9 @@ export async function buildPlan({ assetsRoot, skillsRoot, runtimes, enforce = "n
 
   if (enforce === "ci") {
     mergeFile(files, { path: ".github/workflows/governance.yml", content: ciEnforcementWorkflow() }, "ci-enforcement");
+  }
+  if (enforce === "hooks") {
+    mergeFile(files, { path: ".agents/hooks/pre-push", content: prePushHook() }, "hooks-enforcement");
   }
 
   const managed = [...files.values()]

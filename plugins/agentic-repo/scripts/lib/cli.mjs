@@ -13,6 +13,7 @@ import { verifyGovernance } from "./verify.mjs";
 import { createGovernedArtifact } from "./artifacts.mjs";
 import { lintKnowledge } from "./knowledge.mjs";
 import { applyGitExclude, inspectGitExclude, removeGitExclude } from "./exclude.mjs";
+import { installGitHooks, uninstallGitHooks } from "./hooks.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const assetsRoot = path.resolve(moduleDir, "../../assets");
@@ -92,7 +93,7 @@ async function confirm(message) {
 
 async function runInit(options) {
   const cwd = path.resolve(options.cwd);
-  const enforce = requireSupportedEnforcement(options.enforce ?? "none");
+  const enforce = options.enforce ?? "none";
   const selection = parseRuntimeSelection(options.runtime);
   const detected = selection.mode === "auto" ? await detectRuntimes(cwd) : [];
   const runtimes = selection.mode === "auto" ? detected.map((item) => item.id) : selection.runtimes;
@@ -124,6 +125,7 @@ async function runInit(options) {
       else output.write("Notice: .git directory not found; skipped .git/info/exclude.\n");
     }
   }
+  await applyHookEnforcement(cwd, enforce, options);
   if (!options.json) output.write(`Initialization complete. Created ${result.created.length} file(s).\n`);
   return 0;
 }
@@ -144,16 +146,24 @@ async function readExistingEnforcement(cwd) {
   return null;
 }
 
-function requireSupportedEnforcement(enforce) {
+async function applyHookEnforcement(cwd, enforce, options) {
   if (enforce === "hooks") {
-    throw new Error("enforce=hooks is not available yet; it ships as a later slice. Use ci or none.");
+    const result = await installGitHooks(cwd);
+    if (!options.json) {
+      if (result.ok) output.write(`Installed local governance hooks via core.hooksPath (${result.hooksPath}).\n`);
+      else output.write("Notice: .git directory not found; skipped hook installation.\n");
+    }
+    return;
   }
-  return enforce;
+  const result = await uninstallGitHooks(cwd);
+  if (result.ok && result.removed && !options.json) {
+    output.write("Reset core.hooksPath: local governance hooks disabled.\n");
+  }
 }
 
 async function runUpdate(options) {
   const cwd = path.resolve(options.cwd);
-  const enforce = requireSupportedEnforcement(options.enforce ?? await readExistingEnforcement(cwd) ?? "none");
+  const enforce = options.enforce ?? await readExistingEnforcement(cwd) ?? "none";
   let runtimes;
   if (options.runtime !== "auto") {
     const selection = parseRuntimeSelection(options.runtime);
@@ -196,6 +206,7 @@ async function runUpdate(options) {
       else output.write("Notice: .git directory not found; skipped .git/info/exclude.\n");
     }
   }
+  await applyHookEnforcement(cwd, enforce, options);
   if (!options.json) {
     output.write(`Kernel update complete. Updated ${result.updated.length}, created ${result.created.length}, preserved ${result.preserved.length} file(s).\n`);
   }
