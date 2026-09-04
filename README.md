@@ -134,7 +134,7 @@ agentic-repo init --enforce hooks
 Both projections contain **no policy of their own**—they compute the changed files and delegate the decision to the canonical `agentic-repo verify` command. The selected mode is recorded in `scaffold.yaml` / `scaffold.lock`, so `update` maintains it. Combine `--enforce hooks` with `--git-exclude` for enforcement that stays invisible to a restricted client's tracked repository.
 
 ### 1. 🧠 Living Git-Versioned Knowledge Base
-Inspired by Andrej Karpathy's LLM Wiki pattern. Store immutable source documents in `docs/raw/`, and let your AI agent compile, index, and structure them into `docs/wiki/`. Includes automated contradiction tracking and deterministic link linting.
+Inspired by Andrej Karpathy's LLM Wiki pattern. Store immutable source documents in `docs/raw/`, and let your AI agent compile, index, and structure them into `docs/wiki/`. Every page carries typed YAML frontmatter (`type`, `title`, `created`, `updated`, and `sources` on fact-bearing pages) for machine-parseable provenance, backed by an optional `sources/`, `entities/`, and `concepts/` taxonomy. Includes automated contradiction tracking and deterministic linting of links, frontmatter, provenance, orphan pages, and log format.
 
 ### 2. 🛡️ Mandatory Human-Gated Decisions
 Every material development task starts with an Architectural Decision Record (`docs/adr/`) generated in `Proposed` status using GitHub's official ADR skill. Implementation stays blocked until a human explicitly approves the architecture. Material product uncertainty triggers PRD discovery (`docs/product/`).
@@ -238,7 +238,8 @@ agentic-repo verify
 agentic-repo verify --changed "src/app.ts,docs/adr/adr-0007-event-bus.md"
 agentic-repo verify --json
 
-# Check wiki health (broken links, unindexed pages, uncited facts)
+# Check wiki health: typed frontmatter, broken links, unindexed pages, uncited
+# facts, orphan pages, uncovered raw sources, and malformed log entries
 agentic-repo knowledge lint
 agentic-repo knowledge lint --json
 
