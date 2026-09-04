@@ -1,5 +1,11 @@
 # Knowledge Log
 
+## [2026-09-04] implementation | GitHub Actions Node 24 runtime currency
+
+- Accepted ADR-0009 and bumped `actions/checkout` and `actions/setup-node` from `@v4` to `@v5` (first major on Node 24) in the repository workflows, the canonical governance generator (`plan.mjs`), and the `ci-cd-and-automation` skill examples.
+- Dogfooded the projection: an `--enforce ci` init renders `governance.yml` with `@v5`; `npm run validate` stays green (55 tests).
+- Scoped to `checkout`/`setup-node`; `upload-artifact@v4` in a skill example left for a future currency pass.
+
 ## [2026-08-31] decision | Initial product and architecture baseline
 
 - Accepted PRD-0001 for a model-agnostic, multi-runtime repository kernel.

@@ -21,6 +21,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Mandatory annealing closure and page provenance](../adr/adr-0006-mandatory-annealing-closure-and-page-provenance.md): accepted mandatory ADR completion diagnosis and page-level provenance.
 - [Kernel update command and user knowledge preservation](../adr/adr-0007-kernel-update-command-and-user-knowledge-preservation.md): accepted update mechanics, knowledge preservation, and lockfile syncing.
 - [Governance verification command and enforcement adapters](../adr/adr-0008-governance-verification-and-enforcement-adapters.md): accepted canonical `verify` engine with opt-in CI and local-hook projections.
+- [GitHub Actions Node 24 runtime currency](../adr/adr-0009-github-actions-node24-runtime-currency.md): accepted bump of `checkout`/`setup-node` action majors to `@v5` across workflows, the canonical generator, and skill examples.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.
