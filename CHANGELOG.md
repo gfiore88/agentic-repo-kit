@@ -4,6 +4,19 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-09-04
+
+### Added
+
+- Added `agentic-repo verify` command for deterministic governance checks: knowledge lint, ADR status integrity, and an optional ADR gate that flags tracked source changes lacking an `Accepted` ADR.
+- Added the `--enforce ci|hooks|none` axis (default `none`) projecting opt-in enforcement: a GitHub Actions governance workflow (`ci`) and a transparent local pre-push hook installed via `core.hooksPath` (`hooks`), both delegating to `verify`.
+- Documented governance enforcement modes in `PRD-0006` and `ADR-0008`.
+- Included a top-level `THIRD_PARTY_NOTICES.md` in the published package.
+
+### Fixed
+
+- `agentic-repo doctor` no longer reports an otherwise-healthy repository as unhealthy after expected drift in preserved user-owned documentation paths (`docs/wiki/`, `docs/adr/`, `docs/product/`, `docs/raw/`, `docs/specs/`, `docs/templates/`).
+
 ## [0.4.0] - 2026-09-02
 
 ### Added
