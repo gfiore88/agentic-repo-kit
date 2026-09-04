@@ -35,7 +35,8 @@
   ],
   "files": [
     "bin/",
-    "plugins/agentic-repo/"
+    "plugins/agentic-repo/",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "description": "Model-agnostic, multi-runtime scaffolding for governed AI-native repositories.",
   "type": "module",
