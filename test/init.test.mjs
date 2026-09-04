@@ -91,6 +91,26 @@ test("initialization is idempotent and doctor detects divergence", async () => {
   assert.deepEqual(unhealthy.divergent, ["AGENTS.md"]);
 });
 
+test("doctor ignores expected drift in preserved user-owned paths", async () => {
+  const cwd = await tempRepository();
+  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes: [] });
+  await applyPlan(cwd, plan);
+  assert.equal((await runDoctor(cwd)).ok, true);
+
+  // Customizing user-owned documentation is the intended workflow and must not
+  // report the kernel as divergent (mirrors `update` preservation semantics).
+  await writeFile(path.join(cwd, "docs/wiki/index.md"), "# My Project Wiki\n", "utf8");
+  const afterCustomization = await runDoctor(cwd);
+  assert.equal(afterCustomization.ok, true);
+  assert.deepEqual(afterCustomization.divergent, []);
+
+  // Kernel infrastructure divergence is still detected.
+  await writeFile(path.join(cwd, "AGENTS.md"), "tampered kernel contract\n", "utf8");
+  const tampered = await runDoctor(cwd);
+  assert.equal(tampered.ok, false);
+  assert.deepEqual(tampered.divergent, ["AGENTS.md"]);
+});
+
 test("preflight conflicts prevent partial writes", async () => {
   const cwd = await tempRepository();
   await writeFile(path.join(cwd, "AGENTS.md"), "existing contract\n", "utf8");
