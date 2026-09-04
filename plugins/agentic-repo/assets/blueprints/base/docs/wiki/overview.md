@@ -1,3 +1,10 @@
+---
+type: overview
+title: Project Overview
+created: 2025-01-01
+updated: 2025-01-01
+---
+
 # Project Overview
 
 - `[OPEN QUESTION]` Describe the problem this project solves.
