@@ -92,6 +92,17 @@
 - Published `agentic-repo-kit@0.4.0` to npm via GitHub Actions OIDC Trusted Publishing.
 - Added `agentic-repo update` (and alias `upgrade`) command to safely upgrade kernel rules, skills, and adapters with zero loss to user-owned documentation.
 
+## [2026-09-04] decision | Governance verification and enforcement adapters accepted
+
+- Accepted PRD-0006 and ADR-0008 for a canonical deterministic `agentic-repo verify` command with opt-in enforcement projections.
+- Confirmed the first slice order: the pure `verify` engine plus the CI-gate adapter, with the local hook installer deferred to a later slice.
+
+## [2026-09-04] implementation | Governance verification command and CI-gate adapter
+
+- Added the subprocess-free `verify` engine running knowledge lint, ADR frontmatter integrity, and an ADR gate that requires an `Accepted` ADR in supplied source changes.
+- Added the `--enforce ci|hooks|none` axis (default `none`), persisting the mode in `scaffold.yaml` and `scaffold.lock` so `update` maintains it.
+- Projected an opt-in `.github/workflows/governance.yml` that computes the diff and delegates the decision to `verify`; `hooks` is rejected honestly until its slice ships.
+
 
 
 
