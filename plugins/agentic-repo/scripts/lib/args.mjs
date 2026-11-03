@@ -1,4 +1,4 @@
-import { normalizeRuntimeId, RUNTIME_CATALOG } from "./catalog.mjs";
+import { normalizeRuntimeId, PROFILES, RUNTIME_CATALOG } from "./catalog.mjs";
 
 function takeValue(args, index, option) {
   const value = args[index + 1];
@@ -23,6 +23,10 @@ export function parseArgs(argv) {
     target: null,
     changed: null,
     enforce: null,
+    profile: null,
+    adr: null,
+    force: false,
+    routine: false,
     gitExclude: false,
     remove: false,
     list: false,
@@ -41,6 +45,8 @@ export function parseArgs(argv) {
     else if (arg === "--git-exclude" || arg === "--exclude" || arg === "-e") options.gitExclude = true;
     else if (arg === "--remove") options.remove = true;
     else if (arg === "--list") options.list = true;
+    else if (arg === "--force") options.force = true;
+    else if (arg === "--routine") options.routine = true;
     else if (arg === "--cwd") {
       options.cwd = takeValue(args, index, arg);
       index += 1;
@@ -65,6 +71,14 @@ export function parseArgs(argv) {
       options.enforce = takeValue(args, index, arg);
       index += 1;
     } else if (arg.startsWith("--enforce=")) options.enforce = arg.slice(10);
+    else if (arg === "--profile") {
+      options.profile = takeValue(args, index, arg);
+      index += 1;
+    } else if (arg.startsWith("--profile=")) options.profile = arg.slice(10);
+    else if (arg === "--adr") {
+      options.adr = takeValue(args, index, arg);
+      index += 1;
+    } else if (arg.startsWith("--adr=")) options.adr = arg.slice(6);
     else throw new Error(`Unknown option: ${arg}`);
   }
 
@@ -78,6 +92,10 @@ export function parseArgs(argv) {
 
   if (options.enforce !== null && !["ci", "hooks", "none"].includes(options.enforce)) {
     throw new Error(`Unknown enforcement mode: ${options.enforce} (use ci, hooks, or none)`);
+  }
+
+  if (options.profile !== null && !PROFILES.includes(options.profile)) {
+    throw new Error(`Unknown profile: ${options.profile} (use ${PROFILES.join(" or ")})`);
   }
 
   return options;

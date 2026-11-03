@@ -55,9 +55,10 @@ test("inspectGitExclude reports active status and patterns", async () => {
   await applyGitExclude(dir);
   const after = await inspectGitExclude(dir);
   assert.equal(after.active, true);
-  assert.ok(after.patterns.includes(".agents/"));
-  assert.ok(after.patterns.includes("AGENTS.md"));
-  assert.ok(after.patterns.includes("THIRD_PARTY_NOTICES.md"));
+  assert.ok(after.patterns.includes("/.agents/"));
+  assert.ok(after.patterns.includes("/AGENTS.md"));
+  assert.ok(after.patterns.includes("/THIRD_PARTY_NOTICES.md"));
+  assert.ok(after.patterns.every((pattern) => pattern.startsWith("/")), "patterns are root-anchored");
 });
 
 test("removeGitExclude removes managed block and preserves other rules", async () => {
@@ -95,5 +96,22 @@ test("init with --git-exclude configures .git/info/exclude end-to-end", async ()
 
   const status = await inspectGitExclude(dir);
   assert.equal(status.active, true);
-  assert.ok(status.patterns.includes(".agents/"));
+  assert.ok(status.patterns.includes("/.agents/"));
+});
+
+test("git exclude derived from the lock hides every generated adapter file", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "agentic-repo-e2e-"));
+  await mkdir(path.join(dir, ".git"), { recursive: true });
+  const runtimes = "codex,claude-code,github-copilot,antigravity,gemini-cli,cursor,opencode,kiro";
+  assert.equal(await runCli(["init", "--cwd", dir, "--yes", "--runtime", runtimes, "--git-exclude"]), 0);
+
+  const { patterns } = await inspectGitExclude(dir);
+  const lock = JSON.parse(await readFile(path.join(dir, "scaffold.lock"), "utf8"));
+  const covered = (file) => patterns.some((pattern) => pattern.endsWith("/")
+    ? `/${file}`.startsWith(pattern)
+    : pattern === `/${file}`);
+  const uncovered = [...lock.managedFiles.map((entry) => entry.path), "scaffold.lock"].filter((file) => !covered(file));
+  assert.deepEqual(uncovered, []);
+  assert.ok(patterns.includes("/.cursor/rules/agentic-kernel.mdc"));
+  assert.ok(patterns.includes("/opencode.json"));
 });

@@ -1,29 +1,60 @@
-import { access, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const MARKER_START = "# --- BEGIN AGENTIC REPO EXCLUDES ---";
 export const MARKER_END = "# --- END AGENTIC REPO EXCLUDES ---";
 
-export const DEFAULT_EXCLUDE_PATTERNS = [
-  ".agents/",
-  "scaffold.yaml",
-  "scaffold.lock",
-  "AGENTS.md",
-  "THIRD_PARTY_NOTICES.md",
-  "docs/raw/",
-  "docs/wiki/",
-  "docs/adr/",
-  "docs/product/",
-  "docs/specs/",
-  "docs/templates/",
-  "CLAUDE.md",
-  "GEMINI.md",
-  ".github/copilot-instructions.md",
-  ".github/agents/",
-  ".cursorrules",
-  ".opencode/",
-  ".kiro/",
+// Kit-owned directories that keep growing after initialization (new wiki pages,
+// ADRs, annealing proposals), so they are excluded as whole directories.
+export const GROWTH_DIRECTORIES = [
+  "/.agents/",
+  "/docs/raw/",
+  "/docs/wiki/",
+  "/docs/adr/",
+  "/docs/product/",
+  "/docs/specs/",
+  "/docs/templates/",
 ];
+
+// Fallback only, for repositories without a scaffold.lock. Patterns are anchored to
+// the repository root so nested files with the same name are never hidden.
+export const DEFAULT_EXCLUDE_PATTERNS = [
+  ...GROWTH_DIRECTORIES,
+  "/AGENTS.md",
+  "/THIRD_PARTY_NOTICES.md",
+  "/scaffold.yaml",
+  "/scaffold.lock",
+  "/CLAUDE.md",
+  "/.claude/agents/",
+  "/.codex/agents/",
+  "/GEMINI.md",
+  "/.gemini/agents/",
+  "/.github/copilot-instructions.md",
+  "/.github/agents/",
+  "/.cursor/rules/agentic-kernel.mdc",
+  "/opencode.json",
+  "/.opencode/agents/",
+  "/.kiro/steering/agentic-kernel.md",
+];
+
+// Derives the exclusion patterns from the files the kit actually manages, so the
+// list can never drift from the generated adapters.
+export async function managedExcludePatterns(cwd) {
+  let lock;
+  try {
+    lock = JSON.parse(await readFile(path.join(cwd, "scaffold.lock"), "utf8"));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(lock?.managedFiles)) return null;
+  const patterns = new Set([...GROWTH_DIRECTORIES, "/scaffold.lock"]);
+  for (const entry of lock.managedFiles) {
+    if (typeof entry?.path !== "string") continue;
+    const anchored = `/${entry.path}`;
+    if (!GROWTH_DIRECTORIES.some((directory) => anchored.startsWith(directory))) patterns.add(anchored);
+  }
+  return [...GROWTH_DIRECTORIES, ...[...patterns].filter((pattern) => !GROWTH_DIRECTORIES.includes(pattern)).sort()];
+}
 
 export async function resolveGitExcludePath(cwd) {
   const gitPath = path.join(cwd, ".git");
@@ -72,7 +103,9 @@ export async function applyGitExclude(cwd, customPatterns = null) {
   }
 
   const cleaned = stripManagedBlock(existing);
-  const patterns = customPatterns && customPatterns.length > 0 ? customPatterns : DEFAULT_EXCLUDE_PATTERNS;
+  const patterns = customPatterns && customPatterns.length > 0
+    ? customPatterns
+    : (await managedExcludePatterns(cwd)) ?? DEFAULT_EXCLUDE_PATTERNS;
 
   const blockLines = [
     MARKER_START,
