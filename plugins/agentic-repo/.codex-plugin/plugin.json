@@ -1,6 +1,6 @@
 {
   "name": "agentic-repo",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Bootstrap and govern model-agnostic, knowledge-first software repositories.",
   "author": {
     "name": "Giovanni Fiore",
@@ -15,7 +15,10 @@
     "longDescription": "Create and maintain model-agnostic repositories with selective coding-agent adapters, a compounding wiki, decision gates, and human-governed self-annealing.",
     "developerName": "Giovanni Fiore",
     "category": "Developer Tools",
-    "capabilities": ["Interactive", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
     "defaultPrompt": [
       "Initialize this repository with the agentic kernel.",
       "Run the governance gates for this development task.",
