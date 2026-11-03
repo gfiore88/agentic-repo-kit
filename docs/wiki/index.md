@@ -33,7 +33,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Wiki taxonomy and curation hardening](../adr/adr-0011-wiki-taxonomy-and-curation-hardening.md): accepted three-layer contract, optional taxonomy, contradictions/log formats, and additive lint checks.
 - [Mandatory per-page wiki frontmatter](../adr/adr-0012-mandatory-per-page-wiki-frontmatter.md): accepted structured frontmatter and its lint validation (deferred follow-up to ADR-0011).
 - [Lock-aware update and governance gate hardening](../adr/adr-0013-lock-aware-update-and-governance-gate-hardening.md): accepted conflict-safe `update`, orphan cleanup, lock-derived git excludes, ADR references and pinned enforcement, registry consolidation, and skill profiles.
-- [Minor release 0.7.0](../adr/adr-0014-minor-release-0-7-0.md): proposed SemVer minor release of the ADR-0013 work.
+- [Minor release 0.7.0](../adr/adr-0014-minor-release-0-7-0.md): accepted SemVer minor release of the ADR-0013 work.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.
