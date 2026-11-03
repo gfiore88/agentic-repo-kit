@@ -4,6 +4,32 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] - 2026-11-03
+
+Generated hook and CI projections now pin the generating kit version and pass the new `verify --adr` and `--routine` options. Decisions recorded in `ADR-0013`; release recorded in `ADR-0014`.
+
+### Fixed
+
+- `update` no longer silently overwrites kernel files you modified (for example `AGENTS.md`, `CLAUDE.md`): files are compared with their `scaffold.lock` hash, conflicts abort the update, and `--force` overrides.
+- `update` refuses to run without `scaffold.lock` instead of overwriting files in a never-initialized repository.
+- `--git-exclude` now derives root-anchored patterns from `scaffold.lock`, covering `.claude/agents/`, `.codex/agents/`, `.gemini/agents/`, `.cursor/rules/`, and `opencode.json`, which previously leaked into tracked changes.
+- `verify` treats kit-managed files as non-source, so kernel upgrades no longer trip the ADR gate.
+- Pre-push hooks and CI check new branches against their merge-base instead of skipping the ADR gate.
+- `plugin.json` version aligned with `package.json` (was `0.4.0`); README navigation anchors and the Cursor adapter path corrected.
+
+### Added
+
+- `verify --adr <ids>`: follow-up work can cite the `Accepted` ADR that governs it; hooks and CI extract `ADR-NNNN` from commit messages and the PR title/body.
+- Routine tier and exempt paths for the ADR gate: a human-owned `docs/adr/gate.json` lists `exempt` globs and `routine` globs; `verify --routine` (or an `ADR: routine` commit line, detected by hooks and CI) accepts in-scope changes that are recorded in `docs/wiki/log.md`.
+- `init --profile core|full` (default `full`): install only the governance kernel skills; `update` keeps the recorded profile.
+- `update` removes unmodified files the kit no longer generates (dropped runtimes, enforcement changes, retired agents) and reports modified ones.
+- `validate:plugin` fails on plugin/blueprint asset drift and plugin/package version skew; the npm `version` script keeps `plugin.json` in sync.
+
+### Changed
+
+- Hook and CI projections run `npx agentic-repo-kit@<generating version>` instead of the unpinned latest release, with `npx` detached from the hook's stdin.
+- Retired the overlapping `security-reviewer` and `qa-test-engineer` roles; the registry routes to `security-auditor` and `test-engineer` with the kernel's handoff obligations; `code-reviewer` and `software-architect` now have an explicit before/after-implementation boundary.
+
 ## [0.6.0] - 2026-09-04
 
 ### Added
