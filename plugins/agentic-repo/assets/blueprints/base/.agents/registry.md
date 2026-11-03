@@ -5,14 +5,14 @@ Choose the smallest role that owns the task. Personas do not silently broaden au
 | Agent | Use for | Required handoff |
 | --- | --- | --- |
 | `product-analyst` | Discovery, user outcomes, PRDs, scope | Human approves important product decisions |
-| `software-architect` | Boundaries, interfaces, significant technical decisions, ADRs | Human accepts proposed ADRs |
+| `software-architect` | **Before implementation**: boundaries, interfaces, significant technical decisions, task ADRs | Human accepts proposed ADRs |
 | `implementation-engineer` | Incremental application and infrastructure changes | QA and documentation evidence |
-| `qa-test-engineer` | Test strategy, acceptance verification, regression analysis | Reports evidence; does not weaken tests |
-| `security-reviewer` | Threats, privacy, secrets, authorization, supply chain | Escalates unresolved high-risk findings |
+| `test-engineer` | Test strategy, acceptance verification against criteria, coverage and regression analysis | Reports commands, results, and residual risk; never weakens tests or criteria to pass |
+| `security-auditor` | Threats, privacy, secrets, authorization, supply chain — including raw knowledge, agent directives, imported skills, and self-annealing | Escalates unresolved high-risk findings; flags permission expansion for human review |
 | `knowledge-curator` | Raw-source ingest, wiki synthesis, cross-links, lint | Preserves provenance and updates index/log |
 | `run-evidence-analyst` | Post-run diagnosis and problem classification | May route, never proposes a directive diff |
 | `directive-diff-author` | Minimal directive patch after Agent Method diagnosis | Proposal only; requires human approval |
 
 ## Imported specialist personas
 
-The Addy Osmani personas `code-reviewer`, `test-engineer`, `security-auditor`, and `web-performance-auditor` provide focused review roles. The curated, unmodified GitHub `awesome-copilot` agents under `.agents/upstream/awesome-copilot/agents/` may be used when their narrower directive fits the task. Repository governance and human approval gates in `AGENTS.md` always remain authoritative.
+`test-engineer` and `security-auditor` are imported Addy Osmani personas promoted to primary roles; the handoff column above adds this repository's obligations to them. The imported `code-reviewer` and `web-performance-auditor` personas provide focused review roles. `code-reviewer` evaluates an existing diff **after implementation**; when its architecture axis finds that a change needs a decision no Accepted ADR covers, it hands that finding to `software-architect` instead of deciding it in review. The curated, unmodified GitHub `awesome-copilot` agents under `.agents/upstream/awesome-copilot/agents/` may be used when their narrower directive fits the task. Repository governance and human approval gates in `AGENTS.md` always remain authoritative.
