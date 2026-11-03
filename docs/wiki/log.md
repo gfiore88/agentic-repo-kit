@@ -7,6 +7,10 @@ updated: 2026-11-03
 
 # Knowledge Log
 
+## [2026-11-03] release | 0.7.0
+
+- Accepted ADR-0014 and released the ADR-0013 work as 0.7.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and Trusted Publishing workflow.
+
 ## [2026-11-03] implementation | Lock-aware update and governance gate hardening
 
 - A repository review reproduced silent overwrites by `update` (user-edited `AGENTS.md`/`CLAUDE.md`, and pre-existing files in never-initialized repositories), `--git-exclude` leaking `.claude/`, `.codex/`, `.gemini/`, `.cursor/`, and `opencode.json`, and the ADR gate firing on kit-managed adapter files. The owner instructed fixing every finding; recorded as Accepted ADR-0013.

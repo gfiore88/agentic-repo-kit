@@ -1,6 +1,6 @@
 ---
 title: "ADR-0014: Minor Release 0.7.0"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-03"
 authors: "Giovanni Fiore and implementation agent"
 tags: ["release", "npm", "semver"]
@@ -12,7 +12,7 @@ superseded_by: ""
 
 ## Status
 
-**Proposed**. Publishing waits for explicit human acceptance.
+**Accepted** by Giovanni Fiore on 2026-11-03.
 
 ## Context
 
