@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { CORE_SKILLS } from "./catalog.mjs";
 
 export function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
@@ -86,42 +87,58 @@ function runtimeAgentFile(runtime, agent) {
   return null;
 }
 
-function scaffoldYaml(runtimes, enforce) {
-  const enforcementLine = `enforcement: ${enforce}\n`;
+function scaffoldYaml(runtimes, enforce, profile) {
+  const header = `version: 1\nenforcement: ${enforce}\nprofile: ${profile}\n`;
   if (runtimes.length === 0) {
-    return `version: 1\n${enforcementLine}compatibility:\n  detection: assisted\n  runtimes: []\n`;
+    return `${header}compatibility:\n  detection: assisted\n  runtimes: []\n`;
   }
   const runtimeLines = runtimes.map((runtime) => `    - ${runtime}`).join("\n");
-  return `version: 1\n${enforcementLine}compatibility:\n  detection: assisted\n  runtimes:\n${runtimeLines}\n`;
+  return `${header}compatibility:\n  detection: assisted\n  runtimes:\n${runtimeLines}\n`;
+}
+
+// The verifier is pinned to the kit version that generated the projection, so a
+// push never executes an unreviewed latest release. `update` refreshes the pin.
+function verifierSpec(kitVersion) {
+  return kitVersion ? `agentic-repo-kit@${kitVersion}` : "agentic-repo-kit";
 }
 
 // Opt-in local pre-push projection. Contains no policy: it computes the changed
-// files and delegates the decision to the canonical `agentic-repo verify` engine.
-function prePushHook() {
+// files and referenced ADRs and delegates the decision to `agentic-repo verify`.
+function prePushHook(kitVersion) {
   return `#!/bin/sh
 # Managed by agentic-repo-kit (enforce=hooks): transparent, machine-local gate.
+remote="\${1:-origin}"
+verifier="${verifierSpec(kitVersion)}"
 zero="0000000000000000000000000000000000000000"
 fail=0
 while read -r local_ref local_sha remote_ref remote_sha; do
   [ "$local_sha" = "$zero" ] && continue
-  if [ "$remote_sha" = "$zero" ]; then
-    npx --yes agentic-repo-kit verify || fail=1
+  base=""
+  if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
+    base="$remote_sha"
   else
-    changed="$(git diff --name-only "$remote_sha" "$local_sha" | paste -sd, -)"
-    if [ -n "$changed" ]; then
-      npx --yes agentic-repo-kit verify --changed "$changed" || fail=1
-    else
-      npx --yes agentic-repo-kit verify || fail=1
-    fi
+    base="$(git merge-base "$local_sha" "refs/remotes/$remote/HEAD" 2>/dev/null || true)"
   fi
+  if [ -z "$base" ]; then
+    echo "agentic-repo: cannot determine a base for $local_ref; ADR gate skipped (knowledge and ADR status checks still run)." >&2
+    npx --yes "$verifier" verify < /dev/null || fail=1
+    continue
+  fi
+  changed="$(git diff --name-only "$base" "$local_sha" | paste -sd, -)"
+  [ -z "$changed" ] && continue
+  messages="$(git log --format=%B "$base..$local_sha")"
+  adrs="$(printf '%s\\n' "$messages" | grep -oE 'ADR-[0-9]{4}' | sort -u | paste -sd, -)"
+  routine=""
+  printf '%s\\n' "$messages" | grep -qiE '^ADR:[[:space:]]*routine[[:space:]]*$' && routine="--routine"
+  npx --yes "$verifier" verify --changed "$changed" \${adrs:+--adr "$adrs"} $routine < /dev/null || fail=1
 done
 exit $fail
 `;
 }
 
 // Opt-in CI projection. Contains no policy: it computes the changed files and
-// delegates the decision to the canonical `agentic-repo verify` engine.
-function ciEnforcementWorkflow() {
+// referenced ADRs and delegates the decision to `agentic-repo verify`.
+function ciEnforcementWorkflow(kitVersion) {
   return `name: Governance
 
 on:
@@ -143,31 +160,60 @@ jobs:
         with:
           node-version: 24
       - name: Verify governance
+        env:
+          VERIFIER: ${verifierSpec(kitVersion)}
+          EVENT_NAME: \${{ github.event_name }}
+          PR_BASE: \${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: \${{ github.event.before }}
+          DEFAULT_BRANCH: \${{ github.event.repository.default_branch }}
+          PR_TITLE: \${{ github.event.pull_request.title }}
+          PR_BODY: \${{ github.event.pull_request.body }}
         run: |
-          if [ "\${{ github.event_name }}" = "pull_request" ]; then
-            BASE="\${{ github.event.pull_request.base.sha }}"
-          else
-            BASE="\${{ github.event.before }}"
+          if [ "$EVENT_NAME" = "pull_request" ]; then BASE="$PR_BASE"; else BASE="$PUSH_BEFORE"; fi
+          if ! git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null; then
+            BASE="$(git merge-base HEAD "origin/$DEFAULT_BRANCH" 2>/dev/null || true)"
           fi
-          if git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null && [ -n "$(git diff --name-only "$BASE" HEAD)" ]; then
-            CHANGED="$(git diff --name-only "$BASE" HEAD | paste -sd, -)"
-            npx --yes agentic-repo-kit verify --changed "$CHANGED"
-          else
-            npx --yes agentic-repo-kit verify
+          if [ -z "$BASE" ]; then
+            echo "::warning::Cannot determine a base commit; ADR gate skipped."
+            npx --yes "$VERIFIER" verify
+            exit $?
           fi
+          CHANGED="$(git diff --name-only "$BASE" HEAD | paste -sd, -)"
+          if [ -z "$CHANGED" ]; then
+            npx --yes "$VERIFIER" verify
+            exit $?
+          fi
+          TEXT="$(git log --format=%B "$BASE..HEAD"; printf '%s\\n%s\\n' "$PR_TITLE" "$PR_BODY")"
+          ADRS="$(printf '%s\\n' "$TEXT" | grep -oE 'ADR-[0-9]{4}' | sort -u | paste -sd, - || true)"
+          set -- verify --changed "$CHANGED"
+          if [ -n "$ADRS" ]; then set -- "$@" --adr "$ADRS"; fi
+          if printf '%s\\n' "$TEXT" | grep -qiE '^ADR:[[:space:]]*routine[[:space:]]*$'; then set -- "$@" --routine; fi
+          npx --yes "$VERIFIER" "$@"
 `;
 }
 
-export async function buildPlan({ assetsRoot, skillsRoot, runtimes, enforce = "none" }) {
+async function readKitVersion(assetsRoot) {
+  try {
+    const manifest = JSON.parse(await readFile(path.resolve(assetsRoot, "../../../package.json"), "utf8"));
+    return manifest.name === "agentic-repo-kit" && typeof manifest.version === "string" ? manifest.version : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function buildPlan({ assetsRoot, skillsRoot, runtimes, enforce = "none", profile = "full", kitVersion }) {
+  const version = kitVersion === undefined ? await readKitVersion(assetsRoot) : kitVersion;
   const files = new Map();
   const baseRoot = path.join(assetsRoot, "blueprints", "base");
-  const baseFiles = await collectFiles(baseRoot);
+  const baseFiles = (await collectFiles(baseRoot))
+    .filter((file) => profile !== "core" || !file.path.startsWith(".agents/commands/addys/"));
   for (const file of baseFiles) mergeFile(files, file, "base");
   const agents = baseFiles
     .filter((file) => file.path.startsWith(".agents/agents/") && file.path.endsWith(".md"))
     .map((file) => agentMetadata({ ...file, path: file.path.slice(".agents/agents/".length) }));
 
   for (const file of await collectFiles(skillsRoot)) {
+    if (profile === "core" && !CORE_SKILLS.includes(file.path.split("/")[0])) continue;
     mergeFile(files, { ...file, path: `.agents/skills/${file.path}` }, "kernel-skill");
   }
 
@@ -180,23 +226,25 @@ export async function buildPlan({ assetsRoot, skillsRoot, runtimes, enforce = "n
     }
   }
 
-  mergeFile(files, { path: "scaffold.yaml", content: scaffoldYaml(runtimes, enforce) }, "generated");
+  mergeFile(files, { path: "scaffold.yaml", content: scaffoldYaml(runtimes, enforce, profile) }, "generated");
 
   if (enforce === "ci") {
-    mergeFile(files, { path: ".github/workflows/governance.yml", content: ciEnforcementWorkflow() }, "ci-enforcement");
+    mergeFile(files, { path: ".github/workflows/governance.yml", content: ciEnforcementWorkflow(version) }, "ci-enforcement");
   }
   if (enforce === "hooks") {
-    mergeFile(files, { path: ".agents/hooks/pre-push", content: prePushHook() }, "hooks-enforcement");
+    mergeFile(files, { path: ".agents/hooks/pre-push", content: prePushHook(version) }, "hooks-enforcement");
   }
 
   const managed = [...files.values()]
     .sort((left, right) => left.path.localeCompare(right.path))
     .map((file) => ({ path: file.path, sha256: sha256(file.content), source: file.source }));
-  const lockContent = `${JSON.stringify({ schemaVersion: 1, runtimes, enforcement: enforce, managedFiles: managed }, null, 2)}\n`;
+  const lockContent = `${JSON.stringify({ schemaVersion: 1, kitVersion: version, runtimes, enforcement: enforce, profile, managedFiles: managed }, null, 2)}\n`;
   mergeFile(files, { path: "scaffold.lock", content: lockContent }, "generated");
 
   return {
     runtimes: [...runtimes],
+    profile,
+    enforce,
     files: [...files.values()].sort((left, right) => left.path.localeCompare(right.path)),
   };
 }

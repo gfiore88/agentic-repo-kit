@@ -173,12 +173,13 @@ test("ADR, PRD, and annealing commands create gated artifacts", async () => {
   assert.equal(await readFile(target, "utf8"), before);
 });
 
-test("full generated repository has no broken relative Markdown links", async () => {
+for (const profile of ["full", "core"]) test(`${profile} generated repository has no broken relative Markdown links`, async () => {
   const cwd = await mkdtemp(path.join(os.tmpdir(), "agentic-repo-links-"));
   const plan = await buildPlan({
     assetsRoot: path.join(pluginRoot, "assets"),
     skillsRoot: path.join(pluginRoot, "skills"),
     runtimes: ["codex", "claude-code", "github-copilot", "antigravity", "gemini-cli", "cursor", "opencode", "kiro"],
+    profile,
   });
   await applyPlan(cwd, plan);
   const broken = [];
@@ -192,4 +193,13 @@ test("full generated repository has no broken relative Markdown links", async ()
     }
   }
   assert.deepEqual(broken, []);
+  if (profile === "core") {
+    // Canonical kernel files must not point at skills the core profile omits.
+    const installed = new Set(plan.files.filter((file) => file.path.startsWith(".agents/skills/")).map((file) => file.path.split("/")[2]));
+    const dangling = plan.files
+      .filter((file) => !file.path.startsWith(".agents/skills/") && !file.path.startsWith(".agents/upstream/"))
+      .flatMap((file) => [...file.content.matchAll(/\.agents\/skills\/([a-z0-9-]+)/g)].map((match) => [file.path, match[1]]))
+      .filter(([, skill]) => !installed.has(skill));
+    assert.deepEqual(dangling, []);
+  }
 });

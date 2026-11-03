@@ -1,0 +1,11 @@
+{
+  "exempt": [],
+  "routine": [
+    "package-lock.json",
+    "npm-shrinkwrap.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "*.lock",
+    ".github/dependabot.yml"
+  ]
+}

@@ -45,7 +45,11 @@ test("ci enforcement projects the governance workflow and records the mode", asy
   const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes: [], enforce: "ci" });
   const workflow = plan.files.find((file) => file.path === ".github/workflows/governance.yml");
   assert.ok(workflow, "expected the governance workflow to be generated");
-  assert.match(workflow.content, /agentic-repo-kit verify/);
+  assert.match(workflow.content, /VERIFIER: agentic-repo-kit@\d+\.\d+\.\d+/);
+  assert.match(workflow.content, /--adr "\$ADRS"/);
+  assert.match(workflow.content, /merge-base HEAD/);
+  assert.match(workflow.content, /set -- "\$@" --routine/);
+  assert.doesNotMatch(workflow.content, /\$\{\{ github\.event\.pull_request\.body \}\}"/, "PR text must reach the script through env, not inline");
 
   const scaffold = plan.files.find((file) => file.path === "scaffold.yaml");
   assert.match(scaffold.content, /^enforcement: ci$/m);
@@ -79,7 +83,11 @@ test("hooks enforcement projects an executable pre-push hook and sets core.hooks
   const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes: [], enforce: "hooks" });
   const hook = plan.files.find((file) => file.path === ".agents/hooks/pre-push");
   assert.ok(hook, "expected the pre-push hook to be generated");
-  assert.match(hook.content, /agentic-repo-kit verify/);
+  assert.match(hook.content, /verifier="agentic-repo-kit@\d+\.\d+\.\d+"/);
+  assert.match(hook.content, /verify --changed "\$changed"/);
+  assert.match(hook.content, /< \/dev\/null/);
+  assert.match(hook.content, /merge-base/);
+  assert.match(hook.content, /\^ADR:\[\[:space:\]\]\*routine/);
 
   const dir = await tempDir();
   await mkdir(path.join(dir, ".git"), { recursive: true });
@@ -108,4 +116,13 @@ test("an unknown enforcement mode is rejected", async () => {
   const { code, err } = await run(["init", "--enforce", "bogus", "--cwd", "."]);
   assert.equal(code, 1);
   assert.match(err, /Unknown enforcement mode/);
+});
+
+test("switching enforcement from ci to none removes the unmodified workflow", async () => {
+  const dir = await tempDir();
+  await run(["init", "--runtime", "none", "--enforce", "ci", "--yes", "--cwd", dir]);
+  const update = await run(["update", "--enforce", "none", "--yes", "--cwd", dir]);
+  assert.equal(update.code, 0);
+  assert.ok(!await fileExists(path.join(dir, ".github/workflows/governance.yml")));
+  assert.ok(!await fileExists(path.join(dir, ".github")), "empty parent directories are pruned");
 });

@@ -60,3 +60,15 @@ export function runtimeIds() {
   return Object.keys(RUNTIME_CATALOG);
 }
 
+
+// Skill profiles. `full` installs every bundled skill and the imported command pack;
+// `core` installs only the governance kernel skills.
+export const PROFILES = Object.freeze(["full", "core"]);
+export const CORE_SKILLS = Object.freeze([
+  "anneal-agent-directives",
+  "bootstrap-agentic-repository",
+  "create-architectural-decision-record",
+  "curate-project-knowledge",
+  "govern-development-task",
+  "prd",
+]);
