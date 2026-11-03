@@ -1,4 +1,4 @@
-import { access, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 const pluginRoot = path.resolve("plugins/agentic-repo");
@@ -74,6 +74,34 @@ else {
   for (const field of ["websiteURL", "privacyPolicyURL", "termsOfServiceURL"]) httpsUrl(ui[field], `interface.${field}`);
   for (const field of ["composerIcon", "logo", "logoDark"]) if (ui[field] !== undefined) await pathExists(ui[field], `interface.${field}`);
 }
+
+// Plugin-level copies must stay byte-identical to their canonical blueprint source.
+const blueprintAgents = path.join(pluginRoot, "assets/blueprints/base/.agents");
+const mirrors = [
+  ["agents", "agents"],
+  ["references", "references"],
+  ["commands", "commands/addys"],
+  ["docs", "docs"],
+];
+for (const [pluginDir, blueprintDir] of mirrors) {
+  let names = [];
+  try { names = await readdir(path.join(pluginRoot, pluginDir)); } catch { continue; }
+  for (const name of names) {
+    const copy = path.join(pluginDir, name);
+    const canonical = path.join(blueprintAgents, blueprintDir, name);
+    let canonicalContent;
+    try { canonicalContent = await readFile(canonical, "utf8"); } catch {
+      failures.push(`${copy} has no canonical counterpart at ${path.relative(pluginRoot, canonical)}`);
+      continue;
+    }
+    if (await readFile(path.join(pluginRoot, copy), "utf8") !== canonicalContent) {
+      failures.push(`${copy} drifted from ${path.relative(pluginRoot, canonical)}`);
+    }
+  }
+}
+
+const packageVersion = JSON.parse(await readFile(path.resolve("package.json"), "utf8")).version;
+if (manifest.version !== packageVersion) failures.push(`plugin.json version ${manifest.version} differs from package.json version ${packageVersion}`);
 
 if (failures.length) {
   console.error("Plugin validation failed:");
