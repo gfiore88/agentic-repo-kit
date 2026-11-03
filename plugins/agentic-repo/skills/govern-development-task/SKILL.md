@@ -10,7 +10,7 @@ Before implementation:
 1. Read `AGENTS.md`, `docs/wiki/index.md`, and only the relevant linked knowledge.
 2. Classify the request using [references/decision-gates.md](references/decision-gates.md).
 3. Draft a PRD when material product scope, user outcomes, or success measures remain undecided.
-4. For every new development task, execute the official `create-architectural-decision-record` skill and create a dedicated task ADR. Existing ADRs may govern or constrain it but do not replace it.
+4. For every new development task, execute the official `create-architectural-decision-record` skill and create a dedicated task ADR. Existing ADRs may govern or constrain it but do not replace it. Follow-up work inside the scope of an already `Accepted` ADR cites it as `ADR-NNNN` instead of creating a duplicate (see `references/decision-gates.md`).
 5. Keep the task ADR `Proposed` and stop before implementation until the human explicitly approves it. Cite approval from the current conversation only when it unambiguously names or covers that exact task ADR.
 
 After implementation:
