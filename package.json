@@ -49,7 +49,8 @@
     "validate:plugin": "node ./scripts/validate-plugin.mjs",
     "validate:skills": "node ./scripts/validate-skills.mjs",
     "validate": "npm test && npm run validate:skills && npm run validate:plugin",
-    "prepublishOnly": "npm run validate"
+    "prepublishOnly": "npm run validate",
+    "version": "node ./scripts/sync-plugin-version.mjs && git add plugins/agentic-repo/.codex-plugin/plugin.json"
   },
   "publishConfig": {
     "access": "public"

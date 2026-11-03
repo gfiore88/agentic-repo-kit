@@ -32,6 +32,7 @@ The workflow uses GitHub OIDC through `id-token: write`; do not add a long-lived
 2. Update `CHANGELOG.md` and choose the SemVer increment.
 3. Run the full validation suite.
 4. Run `npm version patch`, `minor`, or `major`.
+   The `version` lifecycle script copies the new version into `plugins/agentic-repo/.codex-plugin/plugin.json` inside the same commit and tag; `npm run validate:plugin` fails while the two versions differ. Generated hook and CI projections pin `agentic-repo-kit@<version>`, so a release that changes `verify` options must ship before repositories adopt them.
 5. Push the commit and tag.
 6. Publish the matching GitHub release.
 7. Confirm the Trusted Publishing workflow and npm package provenance.
