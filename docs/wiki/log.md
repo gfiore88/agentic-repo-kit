@@ -2,10 +2,18 @@
 type: log
 title: Knowledge Log
 created: 2026-08-31
-updated: 2026-09-04
+updated: 2026-11-03
 ---
 
 # Knowledge Log
+
+## [2026-11-03] implementation | Lock-aware update and governance gate hardening
+
+- A repository review reproduced silent overwrites by `update` (user-edited `AGENTS.md`/`CLAUDE.md`, and pre-existing files in never-initialized repositories), `--git-exclude` leaking `.claude/`, `.codex/`, `.gemini/`, `.cursor/`, and `opencode.json`, and the ADR gate firing on kit-managed adapter files. The owner instructed fixing every finding; recorded as Accepted ADR-0013.
+- `update` now classifies files against `scaffold.lock` (conflicts abort unless `--force`), requires a lock, and removes unmodified orphans; git excludes derive from the lock; `verify` exempts managed files and accepts `--adr` references; hook/CI projections pin `agentic-repo-kit@<version>`, extract `ADR-NNNN` from commits, and diff new branches against the merge-base.
+- Added a human-owned `docs/adr/gate.json` with `exempt` globs and a lightweight routine tier (`ADR: routine` commit line, in-scope paths only, log entry required) so trivial work no longer needs an ADR.
+- Retired the overlapping `security-reviewer` and `qa-test-engineer` roles in favour of `security-auditor`/`test-engineer` with kernel handoffs, and drew an explicit before/after-implementation boundary between `software-architect` and `code-reviewer`; added `--profile core|full`; `validate:plugin` now catches plugin/blueprint drift and plugin/package version skew (fixed `plugin.json` 0.4.0 → 0.6.0, synced by the npm `version` script); fixed README anchors and the Cursor adapter path.
+- `npm run validate` is green (75 tests), skills (31) and plugin validation pass; a clean eight-adapter init reports healthy `doctor` and `knowledge lint`.
 
 ## [2026-09-04] implementation | Mandatory per-page wiki frontmatter
 

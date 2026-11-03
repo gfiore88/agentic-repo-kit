@@ -2,8 +2,8 @@
 type: concept
 title: Kernel and Runtime Adapters
 created: 2026-08-31
-updated: 2026-09-04
-sources: ["plugins/agentic-repo/scripts/lib/detect.mjs", "plugins/agentic-repo/scripts/lib/plan.mjs", "plugins/agentic-repo/scripts/lib/doctor.mjs", "docs/adr/adr-0001-hybrid-distribution-and-runtime-adapters.md"]
+updated: 2026-11-03
+sources: ["plugins/agentic-repo/scripts/lib/detect.mjs", "plugins/agentic-repo/scripts/lib/plan.mjs", "plugins/agentic-repo/scripts/lib/doctor.mjs", "plugins/agentic-repo/scripts/lib/writer.mjs", "plugins/agentic-repo/scripts/lib/exclude.mjs", "docs/adr/adr-0013-lock-aware-update-and-governance-gate-hardening.md", "docs/adr/adr-0001-hybrid-distribution-and-runtime-adapters.md"]
 ---
 
 # Kernel and Runtime Adapters
@@ -12,7 +12,10 @@ sources: ["plugins/agentic-repo/scripts/lib/detect.mjs", "plugins/agentic-repo/s
 - `[DECISION]` Every generated project receives the universal kernel; only selected or detected runtime adapters are added. Source: ADR-0001.
 - `[FACT]` `agentic-repo init` defaults to assisted automatic detection and never executes detected coding-agent binaries. Source: `plugins/agentic-repo/scripts/lib/detect.mjs`.
 - `[FACT]` Canonical agent definitions live under `.agents/agents`; `plan.mjs` generates native wrappers for Codex, Claude Code, GitHub Copilot, Gemini CLI, and OpenCode. Source: `plugins/agentic-repo/scripts/lib/plan.mjs`.
-- `[FACT]` `scaffold.lock` records managed paths and SHA-256 digests; `doctor` reports missing or divergent files. Source: `plugins/agentic-repo/scripts/lib/doctor.mjs`.
+- `[FACT]` `scaffold.lock` records managed paths and SHA-256 digests, the kit version, runtimes, enforcement mode, and skill profile; `doctor` reports missing or divergent files. Source: `plugins/agentic-repo/scripts/lib/doctor.mjs`.
+- `[DECISION]` `update` only replaces a kernel file whose content still matches its locked hash; user-modified files are conflicts that abort the update unless `--force` is given, and unmodified files the plan no longer generates are removed. `update` refuses to run without `scaffold.lock`. Source: [ADR-0013](../../adr/adr-0013-lock-aware-update-and-governance-gate-hardening.md).
+- `[FACT]` `.git/info/exclude` patterns are root-anchored and derived from `scaffold.lock` plus kit-owned growth directories, so new adapters cannot drift out of the exclusion list. Source: `plugins/agentic-repo/scripts/lib/exclude.mjs`.
+- `[DECISION]` `--profile core` installs only the six governance kernel skills and omits the imported command pack; `full` (default) installs all 31 skills. Source: ADR-0013.
 
 Adapters remain deliberately thin. Governance, knowledge rules, and human gates belong to canonical files so cross-runtime behavior cannot drift independently.
 
