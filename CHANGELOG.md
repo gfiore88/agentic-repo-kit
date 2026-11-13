@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.8.0] - 2026-11-13
 
-Faster, more reliable agent runs: fewer lint repair loops, session context from a single command, and consistent directives. Decisions recorded in `ADR-0015`.
+Faster, more reliable agent runs: fewer lint repair loops, session context from a single command, and consistent directives. Decisions recorded in `ADR-0015`; release recorded in `ADR-0016`.
 
 ### Added
 
