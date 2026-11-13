@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.9.0 publication check
+
+- npm reports `latest` 0.9.0 with an SLSA v1 provenance attestation. A repository initialized with `npx agentic-repo-kit@0.9.0` pins 0.9.0 in its pre-push hook and in `AGENTS.md`, and ships the `lowRisk` policy (5 files, 200 lines, five excluded categories).
+- The generated pre-push hook ran the pinned verifier with per-path `--lines` on a low-risk tier task and reported it compliant. With `--require-reviews` the task was blocked as waiting for human review until `adr review` recorded the approval, after which it passed.
+
 ## [2026-11-13] release | 0.9.0
 
 - Accepted ADR-0020 and released the ADR-0019 low-risk tier as 0.9.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
