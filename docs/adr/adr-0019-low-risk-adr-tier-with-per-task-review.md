@@ -1,6 +1,6 @@
 ---
 title: "ADR-0019: Low-Risk ADR Tier with Per-Task Review"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["governance", "adr-gate", "verify", "fast-lane", "review"]
@@ -12,11 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed** | Accepted | Rejected | Superseded | Deprecated
-
-Implementation waits for the approval of
-[PRD-0007](../product/prd-0007-fast-lane-task-approval.md) and the acceptance of
-this ADR.
+**Accepted** by Giovanni Fiore on 2026-11-13. He replied "approvo entrambi" ("I
+approve both") to the request to approve
+[PRD-0007](../product/prd-0007-fast-lane-task-approval.md) and accept this ADR.
 
 ## Context
 

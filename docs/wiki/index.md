@@ -17,7 +17,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Mandatory Annealing Closure and Provenance Inheritance PRD](../product/prd-0004-mandatory-annealing-closure-and-provenance-inheritance.md): closing annealing blocks and page-level source inheritance.
 - [Kernel Update and Upgrade Command PRD](../product/prd-0005-kernel-update-and-upgrade-command.md): non-destructive upgrades preserving project documentation.
 - [Governance Enforcement Modes PRD](../product/prd-0006-governance-enforcement-modes.md): turning advisory PRD/ADR discipline into an opt-in deterministic guarantee.
-- [Fast-Lane Task Approval PRD](../product/prd-0007-fast-lane-task-approval.md): draft, with discovery complete, for a low-risk tier that accepts small task ADRs without stopping (at most 5 files and 200 lines, with tests); each ADR is reviewed afterwards, and CI blocks merges until the review.
+- [Fast-Lane Task Approval PRD](../product/prd-0007-fast-lane-task-approval.md): accepted low-risk tier that accepts small task ADRs without stopping (at most 5 files and 200 lines, with tests); each ADR is reviewed afterwards, and CI blocks merges until the review.
 
 ## Architecture
 
@@ -39,7 +39,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Minor release 0.8.0](../adr/adr-0016-minor-release-0-8-0.md): accepted SemVer minor release of the ADR-0015 work.
 - [Version-pinned projected invocation and tolerant frontmatter parsing](../adr/adr-0017-version-pinned-projected-invocation-and-tolerant-frontmatter-parsing.md): accepted pinning of generated CLI instructions to the generating version, plus CRLF- and comment-tolerant frontmatter parsing.
 - [Patch release 0.8.1](../adr/adr-0018-patch-release-0-8-1.md): accepted SemVer patch release of the ADR-0017 work.
-- [Low-risk ADR tier with per-task review](../adr/adr-0019-low-risk-adr-tier-with-per-task-review.md): proposed implementation of PRD-0007: `gate.json` policy, `verify` eligibility and review checks, tier ADRs, and the CI merge gate.
+- [Low-risk ADR tier with per-task review](../adr/adr-0019-low-risk-adr-tier-with-per-task-review.md): accepted implementation of PRD-0007: `gate.json` policy, `verify` eligibility and review checks, tier ADRs, and the CI merge gate.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.

@@ -1,6 +1,6 @@
 ---
 title: "PRD-0007: Fast-Lane Task Approval"
-status: "Draft"
+status: "Accepted"
 date: "2026-11-13"
 owners: ["Giovanni Fiore"]
 ---
@@ -26,7 +26,7 @@ owners: ["Giovanni Fiore"]
 > - CI blocks merges to the default branch while a review is pending;
 > - a rejected review reverts the change by default.
 >
-> This PRD stays `Draft` and authorizes nothing until he approves it.
+> He approved this PRD on 2026-11-13.
 
 ## 1. Executive Summary
 
@@ -156,9 +156,10 @@ owners: ["Giovanni Fiore"]
 
 ## Open Questions
 
-None. Discovery is complete; the draft awaits approval.
+None.
 
 ## Human Approval
 
-- **Decision**: PENDING
-- **Reviewer and notes**:
+- **Decision**: APPROVED
+- **Reviewer and notes**: Giovanni Fiore on 2026-11-13, who replied "approvo entrambi"
+  ("I approve both") to the request to approve PRD-0007 and accept ADR-0019.
