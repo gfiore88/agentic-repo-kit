@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | Recovery for repositories without scaffold.lock proposed
+
+- `update` with 0.10.0 failed in a repository initialized with 0.6.0 whose `scaffold.lock` and `scaffold.yaml` were never committed. The error claimed that the repository was never initialized and pointed to `init`, which aborts on the first divergent file, so the kit offered no recovery path.
+- Reproductions found that `update` reports a missing, unreadable, or invalid lock with the same message, and that detection in an initialized repository always selects Antigravity, because the kernel creates its markers (`.agents/agents/`, `.agents/rules/`).
+- Rebuilding the generating version's lock in a temporary directory recovered the repository with one conflict, the customized `AGENTS.md`. Proposed ADR-0024: distinct lock diagnostics, an explicit `update --adopt`, and a documented recovery order.
+
 ## [2026-11-13] release | 0.10.1 publication check
 
 - npm reports `latest` 0.10.1 with an SLSA v1 provenance attestation. The README in the published tarball and in the registry has no stray quote, states the conditional merge gate, and includes the run-efficiency pillar.
