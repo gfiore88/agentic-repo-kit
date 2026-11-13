@@ -1,6 +1,6 @@
 ---
 title: "ADR-0028: Automatic Three-Way Merge of Customized Kernel Files on Update"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["update", "merge", "scaffold-lock", "npm", "supply-chain"]
@@ -12,9 +12,10 @@ superseded_by: ""
 
 ## Status
 
-**Proposed**. Giovanni Fiore chose the design (base rebuilt from the version in the
-lock; conflict markers while the update continues). Implementation waits for his
-explicit acceptance of this ADR.
+**Accepted** by Giovanni Fiore on 2026-11-13. He chose the design (base rebuilt from
+the version in the lock; conflict markers while the update continues), then, asked
+how to proceed, chose "Accetto l'ADR-0028 insieme al rilascio 0.13.0" ("I accept
+ADR-0028 together with the 0.13.0 release").
 
 ## Context
 
