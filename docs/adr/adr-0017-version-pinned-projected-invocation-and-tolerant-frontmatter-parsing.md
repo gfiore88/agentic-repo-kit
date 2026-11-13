@@ -1,6 +1,6 @@
 ---
 title: "ADR-0017: Version-Pinned Projected Invocation and Tolerant Frontmatter Parsing"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["cli", "invocation", "generated-repositories", "verify", "knowledge-lint", "parsing"]
@@ -12,7 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed** | Accepted | Rejected | Superseded | Deprecated
+**Accepted** by Giovanni Fiore on 2026-11-13. He replied "si procedi" ("yes, proceed")
+to the 0.8.0 summary, which asked whether generated instructions should pin the
+version as hooks and CI do, and listed the CRLF and YAML-comment defects as open.
 
 ## Context
 
