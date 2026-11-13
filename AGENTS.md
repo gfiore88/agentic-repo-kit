@@ -20,6 +20,7 @@ This repository develops a model-agnostic, multi-runtime operating kernel for AI
 5. Run tests and plugin/skill validation.
 6. Update the wiki and chronological log when durable knowledge changes.
 7. Run the separated end-of-task annealing diagnosis (concluding with the mandatory diagnosis block) and never let an agent approve its own directive change.
+8. When resolving an issue needs a manual workaround that every user of the published package would repeat, report it to the owner as a product gap in the same task and propose an ADR.
 
 ## Portability invariants
 

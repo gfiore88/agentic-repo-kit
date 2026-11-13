@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] annealing | Product-gap escalation added to the development contract
+
+- Diagnosis (`Agent Method`): while recovering a client repository, the agent treated a long manual three-way merge as an acceptable fix. It did not report that every user of the published package would repeat that workaround after each update; the owner had to raise it, which led to ADR-0028.
+- The agent proposed a minimal `PENDING` diff and Giovanni Fiore approved it ("ok procedi"). The exact diff was applied to `AGENTS.md` as development lifecycle step 8: a manual workaround that every user of the published package would repeat is reported to the owner as a product gap in the same task, with a proposed ADR. Its effect is to be checked on a comparable future task.
+
 ## [2026-11-13] release | 0.13.0 publication check
 
 - The npm registry lists `latest` 0.13.0 with an SLSA v1 provenance attestation.
