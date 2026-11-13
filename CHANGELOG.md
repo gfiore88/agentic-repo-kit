@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.12.0] - 2026-11-13
 
-Kit files can no longer sit unnoticed outside Git, and local exclusions and the hook gate work in linked worktrees. Decisions recorded in `ADR-0026`.
+Kit files can no longer sit unnoticed outside Git, and local exclusions and the hook gate work in linked worktrees. Decisions recorded in `ADR-0026`; release recorded in `ADR-0027`.
 
 ### Added
 

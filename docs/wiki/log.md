@@ -7,6 +7,13 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.12.0
+
+- Accepted ADR-0027 and released the ADR-0026 untracked kernel warning and the worktree-aware Git metadata as 0.12.0 (SemVer minor), through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+- Before publishing, the kit on `main` ran on a linked worktree that the published 0.11.0 had initialized with `--git-exclude` and `--enforce hooks`: `git status` listed 7 kit entries and Git saw no hooks path. One `update` emptied `git status`, set the hooks path that Git reads, and left `doctor` healthy.
+- A new repository with all 8 adapters and `--enforce ci` passes `doctor` and `knowledge lint`. Its generated links resolve. Before the first commit, `doctor` warns about every kit file; after `exclude`, the warning clears and `git status` is empty.
+- A Finder `.DS_Store` in a local checkout's `plugins/agentic-repo/skills/` is copied into repositories initialized from that checkout. It is ignored by Git and absent from the npm package, so published versions are unaffected.
+
 ## [2026-11-13] implementation | Untracked kernel warning and worktree-aware Git metadata
 
 - Accepted and implemented ADR-0026. `doctor` warns, without failing, about kit files that are on disk, absent from the Git index, and outside the managed exclude block, and `status` shows the count. A new reader parses the index without running Git (versions 2 to 4, SHA-1 and SHA-256); a split or sparse index skips the check.
