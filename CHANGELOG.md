@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.10.0] - 2026-11-13
 
-Existing repositories can opt in to the low-risk tier with one command, and `update` never enables the tier on its own. Decisions recorded in `ADR-0021`.
+Existing repositories can opt in to the low-risk tier with one command, and `update` never enables the tier on its own. Decisions recorded in `ADR-0021`; release recorded in `ADR-0022`.
 
 ### Added
 

@@ -7,6 +7,10 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.10.0
+
+- Accepted ADR-0022 and released the ADR-0021 opt-in, together with the fix for the 0.9.0 gap, as 0.10.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+
 ## [2026-11-13] implementation | Explicit low-risk tier opt-in for existing repositories
 
 - Implemented ADR-0021. `update --enable-low-risk` adds the default policy to `gate.json`: it keeps the other keys, never overwrites an existing `lowRisk` section, refuses invalid JSON, and honors `--dry-run`. The update plan reports the tier state.

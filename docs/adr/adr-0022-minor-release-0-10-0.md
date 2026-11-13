@@ -1,6 +1,6 @@
 ---
 title: "ADR-0022: Minor Release 0.10.0"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore and implementation agent"
 tags: ["release", "npm", "semver"]
@@ -12,7 +12,8 @@ superseded_by: ""
 
 ## Status
 
-**Proposed** | Accepted | Rejected | Superseded | Deprecated
+**Accepted** by Giovanni Fiore on 2026-11-13. He replied "ook" to the request to
+accept ADR-0021 together with the 0.10.0 release.
 
 ## Context
 
