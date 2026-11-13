@@ -4,6 +4,23 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Customized kernel files no longer make the repository look broken. Decisions recorded in `ADR-0030`.
+
+### Changed
+
+- `doctor` no longer reports a repository as unhealthy because you customized kernel files, now that `update` merges them (ADR-0028). It still lists them, labeled `customized`. `divergent` keeps its name in `--json`, and the summary line is unchanged. `ok` fails only for missing kernel files, unresolved conflict markers, and an unusable lock. `status` reports `Integrity: healthy (N customized)`.
+
+### Added
+
+- `doctor --strict` keeps the previous rule for teams that forbid customizing the kernel: any customized kernel file is unhealthy.
+- `doctor` and `status` report pending kit changes: files that `update` kept unchanged because it could not rebuild their base, for example offline. The next step is to run `update` when the npm registry is reachable. `doctor --json` gains `pending`.
+
+### Upgrade notes
+
+- Scripts that relied on `doctor` failing on customized kernel files must add `--strict`.
+
 ## [0.13.0] - 2026-11-13
 
 Customized kernel files no longer block updates: `update` merges your changes with the kit's. Decisions recorded in `ADR-0028`; release recorded in `ADR-0029`.

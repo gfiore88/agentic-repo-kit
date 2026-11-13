@@ -342,9 +342,11 @@ agentic-repo update --force          # take the kit's version of kernel files yo
 agentic-repo update --enable-low-risk # opt in: add the default low-risk tier policy to docs/adr/gate.json
 agentic-repo update --adopt --runtime <ids|none> # recover a kernel whose scaffold.lock was lost
 
-# Verify repository integrity and detect drifted managed files; also warns about
-# kit files that are neither committed nor excluded (read from the Git index)
+# Verify repository integrity: missing kernel files, unresolved conflict markers, and
+# the lock make it unhealthy; customized kernel files are listed but supported, and
+# pending kit changes and kit files neither committed nor excluded are reported
 agentic-repo doctor
+agentic-repo doctor --strict          # also count customized kernel files as unhealthy
 
 # Read-only session digest for agents: kernel and knowledge health, every ADR and
 # PRD with its status (open first), pending annealing proposals, ADR number

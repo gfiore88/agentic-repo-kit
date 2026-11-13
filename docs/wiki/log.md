@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] implementation | Customized kernel files reported, not unhealthy
+
+- Accepted and implemented ADR-0030. `doctor` lists customized kernel files but no longer counts them against `ok`, which now fails only for missing kernel files, unresolved conflict markers, and an unusable lock. Lock entries carrying an older kit version are reported as pending kit changes, and `doctor --strict` keeps the previous rule.
+- A repository initialized with 0.10.1 and customized like the client repository reported `Status: healthy` after `update`, with two files labeled customized; `status` showed `Integrity: healthy (2 customized)`.
+
 ## [2026-11-13] decision | Customized kernel files reported, not unhealthy, proposed
 
 - Since ADR-0028, customizing kernel files is supported, but `doctor` still reports every customized repository as unhealthy. The client repository showed `divergent: 10` after a successful update. Proposed ADR-0030: customized files stay listed but no longer fail `doctor`, pending kit changes are reported, and `doctor --strict` keeps the old rule.
