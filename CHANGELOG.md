@@ -4,6 +4,20 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Generated instructions now run the kit version that produced them, and frontmatter parsing tolerates CRLF line endings and YAML comments. Decisions recorded in `ADR-0017`.
+
+### Fixed
+
+- Generated instructions no longer run a stale global install. Every CLI invocation in kernel-owned generated files is pinned to the generating kit version (`npx --yes agentic-repo-kit@<version> <command>`), like the hooks and CI, and `update` refreshes the pin. Before, the unpinned `npx` could run an old global copy without the `status` command.
+- `verify` reads ADR status in CRLF checkouts, where it used to report every ADR as having a missing or invalid status.
+- `knowledge lint`, `verify`, and `status` read frontmatter values that carry a trailing YAML comment, such as `type: concept  # note` or `status: "Accepted"  # note`. `sources: # none` no longer counts as a source.
+
+### Changed
+
+- Generated content no longer suggests the bare `agentic-repo` alias, and `docs/adr/README.md` names commands instead of invoking them. Existing copies of that README are user-owned and keep their text.
+
 ## [0.8.0] - 2026-11-13
 
 Faster, more reliable agent runs: fewer lint repair loops, session context from a single command, and consistent directives. Decisions recorded in `ADR-0015`; release recorded in `ADR-0016`.

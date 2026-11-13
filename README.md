@@ -248,7 +248,7 @@ Do not modify the directive directly.
 
 ## 🛠️ Deterministic CLI Commands
 
-The CLI provides fast, reproducible commands for repository health, upgrades, and artifact creation. Without a global install, run each command as `npx agentic-repo-kit <command>`; generated repositories always use that form, so agents never hit "command not found":
+The CLI provides fast, reproducible commands for repository health, upgrades, and artifact creation. Without a global install, run each command as `npx agentic-repo-kit <command>`. Generated repositories pin the kit version that produced them (`npx --yes agentic-repo-kit@<version> <command>`), the same pin as the hooks and CI, so agents never hit "command not found" or run a stale global install; `update` refreshes the pin:
 
 ```bash
 # Initialize a new repository
