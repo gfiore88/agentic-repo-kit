@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.8.1 publication check
+
+- npm reports `latest` 0.8.1 with an SLSA v1 provenance attestation. A repository initialized with `npx agentic-repo-kit@0.8.1` pins `npx --yes agentic-repo-kit@0.8.1` in `AGENTS.md` and in its pre-push hook.
+- With a simulated stale global 0.6.0, the pinned `status` instruction runs 0.8.1 while the old unpinned form still fails. `verify` accepts a CRLF ADR whose status carries a trailing YAML comment.
+
 ## [2026-11-13] release | 0.8.1
 
 - Accepted ADR-0018 and released the ADR-0017 work as 0.8.1 (SemVer patch) through `npm version patch`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
