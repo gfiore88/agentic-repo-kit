@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.14.0 publication check
+
+- The npm registry lists `latest` 0.14.0 with an SLSA v1 provenance attestation.
+- On a repository initialized with 0.10.1 and customized like the client repository, `npx agentic-repo-kit@0.14.0 update --yes` merged `AGENTS.md` and exited 0. `doctor` then reported `Status: healthy` with the two customized files listed, `doctor --strict` reported them as unhealthy, and `status` showed `Integrity: healthy (2 customized)`.
+
 ## [2026-11-13] release | 0.14.0
 
 - Accepted ADR-0031 and released the ADR-0030 `doctor` health change as 0.14.0 (SemVer minor), through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
