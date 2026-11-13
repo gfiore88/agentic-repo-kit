@@ -6,8 +6,8 @@ import { stdin as input, stdout as output } from "node:process";
 import { parseArgs, parseRuntimeSelection } from "./args.mjs";
 import { RUNTIME_CATALOG, runtimeIds } from "./catalog.mjs";
 import { detectRuntimes } from "./detect.mjs";
-import { buildPlan } from "./plan.mjs";
-import { applyPlan, applyUpdate, inspectPlan, inspectUpdate, readScaffoldLock } from "./writer.mjs";
+import { blueprintLowRiskPolicy, buildPlan } from "./plan.mjs";
+import { applyPlan, applyUpdate, enableLowRiskTier, inspectLowRiskOptIn, inspectPlan, inspectUpdate, readScaffoldLock } from "./writer.mjs";
 import { runDoctor } from "./doctor.mjs";
 import { verifyGovernance } from "./verify.mjs";
 import { createGovernedArtifact, recordAdrReview } from "./artifacts.mjs";
@@ -59,6 +59,7 @@ Options:
   --limit <n>                status: number of latest log entries to show (default 5)
   --lines <n|count:path,...> verify: changed line counts for the low-risk tier (a total, or numstat-derived counts per path)
   --require-reviews          verify: low-risk tier ADRs in the change set must have an approved human review
+  --enable-low-risk          update: add the default low-risk tier policy to docs/adr/gate.json (explicit opt-in)
   --tier low-risk            adr new: accept the ADR through the low-risk tier in docs/adr/gate.json (review pending)
   --decision <decision>      adr review: approved or rejected (rejected also rejects the ADR)
   --by <name>                adr review: the human reviewer
@@ -89,12 +90,20 @@ function printPlan({ cwd, runtimes, detected, inspection, detectionMode, gitExcl
   for (const conflict of inspection.conflicts) output.write(`  conflict: ${conflict}\n`);
 }
 
-function printUpdatePlan({ cwd, runtimes, inspection, gitExclude, enforce, profile }) {
+const LOW_RISK_PLAN = {
+  enabled: "enabled (docs/adr/gate.json)",
+  disabled: "disabled; add the default policy with --enable-low-risk",
+  "will-enable": "will be enabled with the default policy (docs/adr/gate.json)",
+  invalid: "unknown; docs/adr/gate.json is not valid JSON",
+};
+
+function printUpdatePlan({ cwd, runtimes, inspection, gitExclude, enforce, profile, lowRiskTier }) {
   output.write(`Target: ${cwd}\n`);
   output.write(`Selected adapters: ${runtimes.length > 0 ? runtimes.join(", ") : "none"}\n`);
   output.write(`Skill profile: ${profile}\n`);
   if (gitExclude) output.write("Local git exclude: enabled (.git/info/exclude)\n");
   output.write(`Enforcement: ${enforce}\n`);
+  output.write(`Low-risk tier: ${LOW_RISK_PLAN[lowRiskTier]}\n`);
   output.write(`Update: ${inspection.updated.length}, create: ${inspection.created.length}, remove: ${inspection.removed.length}, unchanged: ${inspection.unchanged.length}, preserved: ${inspection.preserved.length}, conflicts: ${inspection.conflicts.length}\n`);
   for (const item of inspection.updated) output.write(`  update: ${item}\n`);
   for (const item of inspection.created) output.write(`  create: ${item}\n`);
@@ -173,7 +182,7 @@ async function runUpdate(options) {
   const cwd = path.resolve(options.cwd);
   const previousLock = await readScaffoldLock(cwd);
   if (!previousLock) {
-    process.stderr.write("Error: scaffold.lock not found; this repository was not initialized by agentic-repo-kit. Run `agentic-repo init` first (it stops on conflicting files instead of overwriting them).\n");
+    process.stderr.write("Error: scaffold.lock not found; this repository was not initialized by agentic-repo-kit. Run `npx agentic-repo-kit init` first (it stops on conflicting files instead of overwriting them).\n");
     return 1;
   }
   const enforce = options.enforce ?? (typeof previousLock.enforcement === "string" ? previousLock.enforcement : "none");
@@ -182,15 +191,21 @@ async function runUpdate(options) {
     ? parseRuntimeSelection(options.runtime).runtimes
     : Array.isArray(previousLock.runtimes) ? previousLock.runtimes : (await detectRuntimes(cwd)).map((item) => item.id);
 
-  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes, enforce, profile });
+  const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes, enforce, profile, lowRisk: options.enableLowRisk });
   const inspection = await inspectUpdate(cwd, plan, { previousLock, force: options.force });
+  const lowRiskTier = await inspectLowRiskOptIn(cwd, options.enableLowRisk);
   const excludeState = await inspectGitExclude(cwd);
   const shouldGitExclude = options.gitExclude || excludeState.active;
 
   if (options.json) {
-    output.write(`${JSON.stringify({ cwd, runtimes, profile, enforcement: enforce, gitExclude: shouldGitExclude, ...inspection }, null, 2)}\n`);
+    output.write(`${JSON.stringify({ cwd, runtimes, profile, enforcement: enforce, gitExclude: shouldGitExclude, lowRiskTier, ...inspection }, null, 2)}\n`);
   } else {
-    printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude, enforce, profile });
+    printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude, enforce, profile, lowRiskTier });
+  }
+
+  if (options.enableLowRisk && lowRiskTier === "invalid") {
+    process.stderr.write("Error: docs/adr/gate.json is not valid JSON; fix it before running update --enable-low-risk. No files written.\n");
+    return 1;
   }
 
   if (inspection.conflicts.length > 0) {
@@ -207,6 +222,10 @@ async function runUpdate(options) {
   }
 
   const result = await applyUpdate(cwd, plan, { previousLock, force: options.force });
+  if (lowRiskTier === "will-enable") {
+    await enableLowRiskTier(cwd, await blueprintLowRiskPolicy(assetsRoot));
+    if (!options.json) output.write("Enabled the low-risk tier in docs/adr/gate.json.\n");
+  }
   if (shouldGitExclude) {
     const excludeResult = await applyGitExclude(cwd);
     if (!options.json) {
