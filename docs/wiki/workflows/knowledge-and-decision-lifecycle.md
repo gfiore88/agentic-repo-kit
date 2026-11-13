@@ -22,6 +22,7 @@ Important product uncertainty triggers the official PRD discovery workflow. Ever
 - **Eligibility:** a `lowRisk` policy in `gate.json` sets thresholds (5 source files and 200 lines by default, documentation excluded, with tests whenever code changes) and excluded categories (security, dependencies, public APIs, migrations, governance).
 - **Acceptance:** a qualifying task's ADR is accepted by the tier with a pending review.
 - **Review:** a human reviews each one afterwards, and only an explicit approval that names the task counts. `verify --require-reviews` in CI blocks merges to the default branch until the review is recorded, and a rejection reverts the change.
+- **Adoption:** new repositories get the policy from `init`. Existing repositories opt in explicitly with `update --enable-low-risk`, and `update` never enables the tier on its own ([ADR-0021](../../adr/adr-0021-explicit-low-risk-tier-opt-in-for-existing-repositories.md)).
 
 A human-owned `docs/adr/gate.json` lists `exempt` globs that never need an ADR and `routine` globs for the lightweight routine tier (`ADR: routine` in the commit message plus a `routine` entry in `docs/wiki/log.md`, no ADR). PRDs begin as `Draft` and important product choices remain human-governed.
 

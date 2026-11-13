@@ -153,6 +153,8 @@ Small, low-risk tasks need no approval stop. In the same human-owned `docs/adr/g
 
 A task inside the tier gets an ADR that the tier accepts (`adr new --tier low-risk`) with a pending review, and the agent implements it without stopping. A human reviews each one afterwards (`adr review`), and the CI projection runs `verify --require-reviews` for the default branch, so nothing merges unreviewed. Make the governance check required in branch protection so that merges wait for it. A rejected review reverts the change.
 
+New repositories get the default policy. Existing repositories keep their `gate.json` untouched, and `update` reports the tier as disabled until you opt in explicitly. Preview the change with `--dry-run`, then run `npx agentic-repo-kit update --enable-low-risk`. The command adds the default `lowRisk` section, keeps your other keys, and never overwrites an existing section, so you can script it across many repositories.
+
 Trivial work does not need an ADR either. The human-owned `docs/adr/gate.json` lists `exempt` globs that never need one and `routine` globs (lockfiles by default) eligible for the **routine tier**: add an `ADR: routine` line to the commit message and record the change in `docs/wiki/log.md`. The selected mode is recorded in `scaffold.yaml` / `scaffold.lock`, so `update` maintains it. Combine `--enforce hooks` with `--git-exclude` for enforcement that stays invisible to a restricted client's tracked repository.
 
 ---
@@ -264,6 +266,7 @@ agentic-repo init
 # Upgrade kernel skills and rules without touching user documentation
 agentic-repo update
 agentic-repo update --force          # also overwrite kernel files you modified
+agentic-repo update --enable-low-risk # opt in: add the default low-risk tier policy to docs/adr/gate.json
 
 # Verify repository integrity and detect drifted managed files
 agentic-repo doctor

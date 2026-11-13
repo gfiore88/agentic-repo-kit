@@ -4,6 +4,23 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Existing repositories can opt in to the low-risk tier with one command, and `update` never enables the tier on its own. Decisions recorded in `ADR-0021`.
+
+### Added
+
+- `update --enable-low-risk` adds the default `lowRisk` policy to `docs/adr/gate.json` as part of the confirmed update plan, and honors `--dry-run`. It keeps your other keys, never overwrites an existing `lowRisk` section, and refuses to write anything when the file is not valid JSON. The update plan always reports whether the tier is enabled.
+
+### Fixed
+
+- In 0.9.0, `update` enabled the low-risk tier without opt-in when it created a missing `gate.json` in repositories initialized before 0.7.0. The file is now created without `lowRisk` unless `--enable-low-risk` is given.
+- The `update` error for repositories without `scaffold.lock` now points to `npx agentic-repo-kit init`.
+
+### Upgrade notes
+
+- If you updated a repository initialized before 0.7.0 with 0.9.0, check `docs/adr/gate.json`. Remove the `lowRisk` section unless you want the tier enabled.
+
 ## [0.9.0] - 2026-11-13
 
 Small, low-risk tasks no longer stop for ADR approval: a human-owned policy accepts them, and every one gets a human review before it merges. Decisions recorded in `PRD-0007` and `ADR-0019`; release recorded in `ADR-0020`.

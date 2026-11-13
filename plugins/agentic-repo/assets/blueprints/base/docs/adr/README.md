@@ -12,7 +12,7 @@ Every new development task requires its own ADR created with the official ADR sk
   - A qualifying task's ADR is accepted by the tier (`adr new --tier low-risk`) with its review pending, and the work proceeds.
   - The human reviews it afterwards (`adr review`), and CI blocks merges to the default branch until the review is approved. Make the governance check required in branch protection so that merges actually wait for it.
   - A rejected review reverts the change.
-  - Remove the section to disable the tier.
+  - Remove the section to disable the tier. Repositories initialized before the tier existed enable it explicitly with `update --enable-low-risk`, which adds the default section.
 
 Globs use `**` across directories and `*`/`?` within one segment; a pattern without `/` matches the file name at any depth. Widening either list is a governance decision: change it only with explicit human approval.
 
