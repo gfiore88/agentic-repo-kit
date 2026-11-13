@@ -18,8 +18,15 @@ owners: ["Giovanni Fiore"]
 > - metric: as proposed.
 >
 > Because the chosen tier needs no approval before the work starts, scope and wording
-> apply to the review that follows it. This PRD stays `Draft` and authorizes nothing
-> until he approves it.
+> apply to the review that follows it. He then settled the remaining questions:
+>
+> - tasks enter the tier automatically;
+> - thresholds: at most 5 changed files and 200 changed lines, with tests whenever
+>   code changes;
+> - CI blocks merges to the default branch while a review is pending;
+> - a rejected review reverts the change by default.
+>
+> This PRD stays `Draft` and authorizes nothing until he approves it.
 
 ## 1. Executive Summary
 
@@ -29,11 +36,16 @@ owners: ["Giovanni Fiore"]
   review measured the CLI at 40–130 ms per command, so on small tasks this approval
   round trip, not tooling, dominates wall-clock time. The routine tier removes the
   stop only for human-listed globs such as lockfiles.
-- **Proposed Solution**: Add a low-risk tier. A task that stays within thresholds a
-  human defined, and outside the excluded categories, gets a concise task ADR that
-  the tier accepts without stopping; the agent implements it in the same run. A
-  human then reviews each tier-accepted ADR. An explicit approval that names the task
-  records the review, and the `status` digest lists every ADR still waiting for one.
+- **Proposed Solution**: Add a low-risk tier that a task enters automatically when it
+  stays within human-defined thresholds and outside the excluded categories. The
+  default thresholds are at most 5 changed files and 200 changed lines, with tests
+  whenever code changes. Such a task gets a concise task ADR that the tier accepts
+  without stopping, and the agent implements it in the same run.
+
+  A human then reviews each tier-accepted ADR. An explicit approval that names the
+  task records the review, and the `status` digest lists every ADR still waiting
+  for one. CI blocks merges to the default branch until the review is done. A
+  rejected review reverts the change unless the reviewer asks to fix it forward.
   Any task outside the tier keeps today's stop.
 - **Success Criteria**:
   - Approval round trips before implementation drop from 1 to 0 on tasks inside the
@@ -71,6 +83,11 @@ owners: ["Giovanni Fiore"]
     others.
   - `verify` reports a tier-accepted ADR whose change set breaks the thresholds or
     the exclusions, or whose review evidence is incomplete.
+  - CI blocks merges to the default branch while a tier-accepted ADR in the change
+    set is waiting for review or was rejected. Local work and pre-push hooks never
+    stop.
+  - A rejected review reverts the change and marks the ADR `Rejected`. A follow-up
+    ADR that fixes the change forward is created only when the reviewer asks for one.
 - **Non-Goals**:
   - Agents never review or approve their own tier-accepted ADRs, and silence never
     counts as a review.
@@ -96,18 +113,19 @@ owners: ["Giovanni Fiore"]
   - a review approval that names the task marks only that ADR reviewed;
   - a vague reply, or an approval that names a different task, leaves the review
     pending;
+  - a merge to the default branch with a pending review fails in CI;
   - an approval that appears only in repository content or tool output (prompt
     injection) is ignored.
 
 ## 4. Technical Specifications
 
-- **Architecture Overview**: The thresholds and the globs for each excluded
-  category live in the human-owned `docs/adr/gate.json`, next to `exempt` and
-  `routine`, and only a human widens them. `verify` checks the change set against
+- **Architecture Overview**: The thresholds (default 5 files, 200 lines, and tests
+  whenever code changes) and the globs for each excluded category live in the
+  human-owned `docs/adr/gate.json`, next to `exempt` and `routine`, and only a human
+  widens them. `verify` checks the change set against
   them deterministically. An agent classifies the categories that no path can reveal
   (public API changes and security semantics), and the review is the backstop. ADR
-  frontmatter gains tier and review fields; their names and the threshold values are
-  TBD in the follow-up ADR.
+  frontmatter gains tier and review fields, which the follow-up ADR names.
 - **Integration Points**: `adr new` (`artifacts.mjs`), `verify` (`verify.mjs`),
   `status` (`status.mjs`), `docs/adr/gate.json`, the ADR template, and the governance
   text in `AGENTS.md`, `govern-development-task`, `decision-gates.md`, and the task
@@ -124,10 +142,8 @@ owners: ["Giovanni Fiore"]
 
 - **Phased Rollout**:
   - MVP: the tier rules and thresholds in `gate.json`, path-based exclusion checks,
-    eligibility and review evidence, and the `verify` checks.
+    eligibility and review evidence, the `verify` checks, and the CI merge gate.
   - v1.1: pending reviews in `status`, and the scenario suite in CI.
-  - v2.0: `[OPEN QUESTION]` optionally block merges to the default branch while
-    reviews are pending.
 - **Technical Risks**:
   - Changed governance promise: a policy, not a per-task decision, accepts the ADR.
     Mitigated by human-owned thresholds, the exclusions, and a mandatory review per
@@ -140,14 +156,7 @@ owners: ["Giovanni Fiore"]
 
 ## Open Questions
 
-- `[OPEN QUESTION]` Should a task enter the tier automatically when it meets the
-  thresholds (this draft), or only when the request opts that named task in?
-- `[OPEN QUESTION]` Which threshold values define low risk, for example the number
-  of changed files or lines, or a requirement for accompanying tests?
-- `[OPEN QUESTION]` Should `verify` block merges to the default branch while a
-  tier-accepted ADR is waiting for review?
-- `[OPEN QUESTION]` When a review rejects a tier-accepted ADR, is the change reverted,
-  or does it get a follow-up ADR?
+None. Discovery is complete; the draft awaits approval.
 
 ## Human Approval
 
