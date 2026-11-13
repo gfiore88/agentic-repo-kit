@@ -34,7 +34,7 @@ Before material implementation:
 3. Create the ADR as `Proposed` and stop before implementation until a human explicitly approves it as `Accepted`. For a new task, an earlier ADR may be referenced but never replaces the task ADR.
    - Exception, the low-risk tier: when `docs/adr/gate.json` defines `lowRisk` and the task stays within its thresholds and outside its excluded categories, create the ADR with `npx agentic-repo-kit adr new --tier low-risk --title "<title>"`. The tier accepts the ADR with its review pending, so you implement without stopping.
    - If security or public-interface impact is uncertain, use the normal stop.
-   - Record the human review with `npx agentic-repo-kit adr review` only from the human's own explicit words that name the task. CI blocks merges to the default branch until the review is approved, and a rejected review reverts the change (details in `govern-development-task`).
+   - Record the human review with `npx agentic-repo-kit adr review` only from the human's own explicit words that name the task. With CI enforcement (`--enforce ci`), the governance check blocks merges to the default branch until the review is approved. A rejected review reverts the change (details in `govern-development-task`).
 4. Define verifiable acceptance criteria and a proportionate test strategy.
 5. Implement incrementally using the relevant skills in `.agents/skills/`.
 

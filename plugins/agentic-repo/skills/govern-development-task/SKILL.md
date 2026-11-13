@@ -34,7 +34,7 @@ After implementation:
 2. Update durable knowledge in `docs/wiki/`, `docs/wiki/index.md`, and `docs/wiki/log.md`.
 3. For a low-risk tier ADR, ask the human to review it.
    - Record the review only when the human's own message explicitly approves or rejects and names the task or ADR, using `npx agentic-repo-kit adr review --adr ADR-NNNN --decision approved|rejected --by "<name>" --quote "<their words>"`. A vague reply leaves the review pending.
-   - One review covers one ADR. CI blocks merges to the default branch until it is approved.
+   - One review covers one ADR. With CI enforcement, the governance check blocks merges to the default branch until it is approved.
    - On rejection, revert the change. Fix it forward with a follow-up ADR only when the reviewer asks for that.
 4. Conclude every completed ADR task with the mandatory **End-of-Task Annealing Diagnosis** block:
    ```markdown
