@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | Fast-lane PRD discovery answered
+
+- Giovanni Fiore answered the PRD-0007 discovery questions. The main problem is the per-task ADR stop, and the chosen mechanism is a low-risk tier that accepts the ADR within human-defined thresholds, followed by a review. Each review covers only the task it names, any explicit approval naming the task counts, and every proposed exclusion and metric was kept.
+- The draft now replaces its assumptions with these answers and keeps four open questions: automatic entry or opt-in, threshold values, blocking merges while a review is pending, and how a rejected review is handled. PRD-0007 stays `Draft` until approved.
+
 ## [2026-11-13] release | 0.8.1 publication check
 
 - npm reports `latest` 0.8.1 with an SLSA v1 provenance attestation. A repository initialized with `npx agentic-repo-kit@0.8.1` pins `npx --yes agentic-repo-kit@0.8.1` in `AGENTS.md` and in its pre-push hook.
