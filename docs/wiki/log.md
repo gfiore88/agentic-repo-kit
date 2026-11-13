@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | Fast-lane PRD completed and ADR-0019 proposed
+
+- Giovanni Fiore settled the remaining PRD-0007 questions: tasks enter the tier automatically, the thresholds are at most 5 changed files and 200 changed lines with tests whenever code changes, CI blocks merges to the default branch while a review is pending, and a rejected review reverts the change by default. The PRD has no open questions left and stays `Draft` until approved.
+- Proposed ADR-0019 for the implementation: a `lowRisk` policy in `gate.json`, `adr new --tier low-risk`, `verify` eligibility and review checks (`--lines`, `--require-reviews`), a pending-review section in `status`, and line counts in the projections. Nothing is implemented until the PRD is approved and the ADR accepted.
+
 ## [2026-11-13] decision | Fast-lane PRD discovery answered
 
 - Giovanni Fiore answered the PRD-0007 discovery questions. The main problem is the per-task ADR stop, and the chosen mechanism is a low-risk tier that accepts the ADR within human-defined thresholds, followed by a review. Each review covers only the task it names, any explicit approval naming the task counts, and every proposed exclusion and metric was kept.
