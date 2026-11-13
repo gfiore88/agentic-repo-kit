@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.9.0] - 2026-11-13
 
-Small, low-risk tasks no longer stop for ADR approval: a human-owned policy accepts them, and every one gets a human review before it merges. Decisions recorded in `PRD-0007` and `ADR-0019`.
+Small, low-risk tasks no longer stop for ADR approval: a human-owned policy accepts them, and every one gets a human review before it merges. Decisions recorded in `PRD-0007` and `ADR-0019`; release recorded in `ADR-0020`.
 
 ### Added
 

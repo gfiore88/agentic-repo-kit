@@ -7,6 +7,10 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.9.0
+
+- Accepted ADR-0020 and released the ADR-0019 low-risk tier as 0.9.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+
 ## [2026-11-13] implementation | Low-risk ADR tier with per-task review
 
 - Implemented ADR-0019 (from PRD-0007):
