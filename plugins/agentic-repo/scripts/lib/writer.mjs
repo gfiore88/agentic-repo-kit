@@ -46,6 +46,31 @@ export async function applyPlan(cwd, plan, { dryRun = false } = {}) {
   return result;
 }
 
+const GATE_FILE = "docs/adr/gate.json";
+
+// State of the low-risk tier for `update` (ADR-0021): "enabled", "disabled",
+// "will-enable" (the opt-in flag adds it), or "invalid" (gate.json is not JSON).
+export async function inspectLowRiskOptIn(cwd, enable) {
+  const target = path.join(cwd, GATE_FILE);
+  if (!await exists(target)) return enable ? "will-enable" : "disabled";
+  let parsed;
+  try { parsed = JSON.parse(await readFile(target, "utf8")); } catch { return "invalid"; }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return "invalid";
+  if (parsed.lowRisk !== undefined) return "enabled";
+  return enable ? "will-enable" : "disabled";
+}
+
+// Adds the default policy to a user-owned gate.json only on explicit opt-in. Other
+// keys are kept, and an existing lowRisk section is never overwritten.
+export async function enableLowRiskTier(cwd, policy) {
+  const target = path.join(cwd, GATE_FILE);
+  const parsed = JSON.parse(await readFile(target, "utf8"));
+  if (parsed.lowRisk !== undefined) return false;
+  parsed.lowRisk = policy;
+  await writeFile(target, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
+  return true;
+}
+
 export async function readScaffoldLock(cwd) {
   try {
     const lock = JSON.parse(await readFile(path.join(cwd, "scaffold.lock"), "utf8"));

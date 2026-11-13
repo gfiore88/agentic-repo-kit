@@ -216,13 +216,27 @@ async function readKitVersion(assetsRoot) {
   }
 }
 
-export async function buildPlan({ assetsRoot, skillsRoot, runtimes, enforce = "none", profile = "full", kitVersion }) {
+const GATE_FILE = "docs/adr/gate.json";
+
+export async function blueprintLowRiskPolicy(assetsRoot) {
+  const gate = JSON.parse(await readFile(path.join(assetsRoot, "blueprints", "base", GATE_FILE), "utf8"));
+  return gate.lowRisk;
+}
+
+// `lowRisk: false` leaves the low-risk tier out of a gate.json the plan creates, so
+// `update` never enables the tier without an explicit opt-in (ADR-0021).
+export async function buildPlan({ assetsRoot, skillsRoot, runtimes, enforce = "none", profile = "full", kitVersion, lowRisk = true }) {
   const version = kitVersion === undefined ? await readKitVersion(assetsRoot) : kitVersion;
   const files = new Map();
   const baseRoot = path.join(assetsRoot, "blueprints", "base");
   const baseFiles = (await collectFiles(baseRoot))
     .filter((file) => profile !== "core" || !file.path.startsWith(".agents/commands/addys/"));
   for (const file of baseFiles) mergeFile(files, file, "base");
+  if (!lowRisk && files.has(GATE_FILE)) {
+    const gate = JSON.parse(files.get(GATE_FILE).content);
+    delete gate.lowRisk;
+    files.set(GATE_FILE, { ...files.get(GATE_FILE), content: `${JSON.stringify(gate, null, 2)}\n` });
+  }
   const agents = baseFiles
     .filter((file) => file.path.startsWith(".agents/agents/") && file.path.endsWith(".md"))
     .map((file) => agentMetadata({ ...file, path: file.path.slice(".agents/agents/".length) }));

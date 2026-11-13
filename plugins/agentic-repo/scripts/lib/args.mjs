@@ -34,6 +34,7 @@ export function parseArgs(argv) {
     force: false,
     routine: false,
     requireReviews: false,
+    enableLowRisk: false,
     gitExclude: false,
     remove: false,
     list: false,
@@ -55,6 +56,7 @@ export function parseArgs(argv) {
     else if (arg === "--force") options.force = true;
     else if (arg === "--routine") options.routine = true;
     else if (arg === "--require-reviews") options.requireReviews = true;
+    else if (arg === "--enable-low-risk") options.enableLowRisk = true;
     else if (arg === "--cwd") {
       options.cwd = takeValue(args, index, arg);
       index += 1;
@@ -117,6 +119,9 @@ export function parseArgs(argv) {
     throw new Error(`Unknown profile: ${options.profile} (use ${PROFILES.join(" or ")})`);
   }
 
+  if (options.enableLowRisk && options.command !== "update") {
+    throw new Error("--enable-low-risk applies only to update");
+  }
   if (options.tier !== null && options.tier !== "low-risk") {
     throw new Error(`Unknown tier: ${options.tier} (use low-risk)`);
   }
