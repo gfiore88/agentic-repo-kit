@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] operations | History rewritten without co-author trailers
+
+- At the owner's request, `main` and the release tags were rewritten with `git filter-repo` to remove the `Co-authored-by` trailers from 93 commit messages and 9 tag messages. File contents and authors are unchanged. Commits from the first such trailer onward have new hashes, and 10 of the 22 tags moved; the GitHub releases follow their tags. Clones made before the rewrite must be reset to the new `origin/main` and tags.
+- The merged pull requests #1–#5 still reference the previous commits, which GitHub keeps read-only. npm provenance for versions published before the rewrite points to those previous hashes.
+- `AGENTS.md` now states that commit and tag messages carry no co-author trailers for AI assistants.
+
 ## [2026-11-13] release | 0.14.0 publication check
 
 - The npm registry lists `latest` 0.14.0 with an SLSA v1 provenance attestation.

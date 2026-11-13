@@ -22,6 +22,10 @@ This repository develops a model-agnostic, multi-runtime operating kernel for AI
 7. Run the separated end-of-task annealing diagnosis (concluding with the mandatory diagnosis block) and never let an agent approve its own directive change.
 8. When resolving an issue needs a manual workaround that every user of the published package would repeat, report it to the owner as a product gap in the same task and propose an ADR.
 
+## Commits
+
+- Commit and tag messages carry no co-author trailers or "Generated with" lines for AI assistants. The repository owner is the sole author.
+
 ## Portability invariants
 
 - Keep the shared skill source compatible with the open `SKILL.md` format.
