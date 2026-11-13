@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | Untracked kernel warning and worktree-aware Git metadata proposed
+
+- In a client repository, the kit's files were neither committed nor excluded and showed as untracked, which most likely led to deleting `scaffold.lock`. The owner approved the idea of a warning. Proposed ADR-0026: `doctor` and `status` report kit files that are neither in the Git index nor in the managed exclude block, through a subprocess-free index reader.
+- Reproductions in a linked worktree found two silent failures. `--git-exclude` writes the block to the per-worktree `info/exclude` and `--enforce hooks` writes `core.hooksPath` to the per-worktree `config`, but Git reads both from the common directory. ADR-0026 writes them there.
+
 ## [2026-11-13] release | 0.11.0 publication check
 
 - The npm registry lists `latest` 0.11.0 with an SLSA v1 provenance attestation. For a few minutes after publication, `npm view` kept answering 0.10.1 from its cache, while the registry document already listed 0.11.0.
