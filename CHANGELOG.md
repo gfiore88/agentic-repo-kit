@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.11.0] - 2026-11-13
 
-A repository that lost its `scaffold.lock` can be updated again, and every lock error names its cause. Decisions recorded in `ADR-0024`.
+A repository that lost its `scaffold.lock` can be updated again, and every lock error names its cause. Decisions recorded in `ADR-0024`; release recorded in `ADR-0025`.
 
 ### Added
 

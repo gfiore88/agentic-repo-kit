@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.11.0
+
+- Accepted ADR-0025 and released the ADR-0024 lock diagnostics and `update --adopt` as 0.11.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+- Before publishing, the kit on `main` ran on a repository initialized with the published 0.6.0 whose `scaffold.lock` and `scaffold.yaml` were removed. `update` pointed to restoring the lock or to `--adopt`, `update --adopt` reported ten conflicts and wrote nothing, and `update --adopt --force` left `doctor` healthy and `verify` compliant.
+- The same day, a client repository recovered without `--adopt`: its kernel came from 0.7.0 and its lock was lost. Rebuilding the 0.7.0 lock left as conflicts only the ten kernel files the owner had customized. A three-way merge (`git merge-file`, base 0.7.0) kept them while applying the kit changes, with one `AGENTS.md` hunk resolved by hand. Its kit files must not be committed, so `exclude` now keeps them out of Git; without that block they showed as untracked, the likely reason the lock was deleted.
+
 ## [2026-11-13] implementation | Lock diagnostics and explicit kernel adoption
 
 - Accepted and implemented ADR-0024. `update` and `doctor` tell a missing, unreadable, or invalid `scaffold.lock` apart and name the next step; a kernel without a lock is pointed to restoring it or to `update --adopt` instead of `init`.

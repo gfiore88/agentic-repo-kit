@@ -45,7 +45,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Minor release 0.10.0](../adr/adr-0022-minor-release-0-10-0.md): accepted SemVer minor release of the ADR-0021 work.
 - [Patch release 0.10.1](../adr/adr-0023-patch-release-0-10-1.md): accepted SemVer patch release of the README and governance wording fixes, so the npm page shows them.
 - [Lock diagnostics and explicit adoption without scaffold.lock](../adr/adr-0024-lock-diagnostics-and-explicit-adoption-without-scaffold-lock.md): accepted distinct `update` and `doctor` messages for a missing, unreadable, or invalid lock, and `update --adopt` for repositories that have the kernel but lost the lock.
-- [Minor release 0.11.0](../adr/adr-0025-minor-release-0-11-0.md): proposed SemVer minor release of the ADR-0024 work.
+- [Minor release 0.11.0](../adr/adr-0025-minor-release-0-11-0.md): accepted SemVer minor release of the ADR-0024 work.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.
