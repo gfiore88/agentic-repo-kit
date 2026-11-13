@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] implementation | Automatic three-way merge on update
+
+- Accepted and implemented ADR-0028. `update` merges customized kernel files against the content the kit wrote, rebuilt from the version in the lock: the package is downloaded from the configured registry, verified against its sha512 integrity, cached, and used only for files that match the lock hashes. Overlapping edits get conflict markers while the rest updates; `doctor`, `verify`, and `status` report unresolved markers.
+- The merge orders an insertion next to the other side's change instead of reporting a conflict, so the client repository's `AGENTS.md` case (rules added right after an item the kit rewrote) merges cleanly, where `git merge-file` reports a conflict.
+- With the real npm packages, repositories initialized with 0.10.1 and 0.7.0 and customized like the client repository updated with one `update --yes`: `AGENTS.md` merged, the other customizations kept, exit 0, `verify` compliant. Tests serve a previous version from a local registry, including offline, integrity-mismatch, and cache cases.
+
 ## [2026-11-13] decision | Automatic three-way merge on update proposed
 
 - The owner pointed out that every npm user who customizes a kernel file hits conflicts at every update. Their only options are `--force`, which discards the changes, or a manual merge like the one a client repository needed that day. Proposed ADR-0028: `update` merges customized kernel files itself and no longer aborts on conflicts.

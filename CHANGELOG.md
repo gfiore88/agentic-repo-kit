@@ -4,6 +4,28 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Customized kernel files no longer block updates: `update` merges your changes with the kit's. Decisions recorded in `ADR-0028`.
+
+### Changed
+
+- `update` merges each kernel file you customized (for example project rules in `AGENTS.md`, a tuned agent, or your own lines in `.github/copilot-instructions.md`) with the kit's changes, instead of stopping the whole update.
+  - The merge is a three-way merge against the content the kit originally wrote. `update` rebuilds that content from the version recorded in `scaffold.lock`: it downloads that version from your configured npm registry (`npm_config_registry`), checks it against the registry's integrity hash, caches it, and uses a file only when it matches the hash in the lock. When the lock records the running version, nothing is downloaded.
+  - When your edits and the kit's touch the same lines, the file gets conflict markers (`<<<<<<< yours` … `>>>>>>> agentic-repo-kit <version>`). Every other file is still updated, and `update` lists the file and exits with status 1.
+  - Offline, or when the base cannot be verified, your file is kept unchanged and listed. Its lock entry keeps the earlier version, so a later `update` merges it.
+  - `--force` still takes the kit's version. `--adopt` keeps its behavior, because a repository without a lock records no version to rebuild.
+  - In `--json`, the update plan gains `merged`, `conflicted`, `kept` (with the reason), and `retained` (your changes, nothing to merge).
+
+### Added
+
+- `doctor` reports kernel files that contain unresolved conflict markers from `update` as unhealthy, `verify` fails on them (so hooks and CI stop the commit), and `status` shows the count.
+
+### Upgrade notes
+
+- Repositories initialized with 0.7.0 or later benefit at their next `update`; the first one downloads the version recorded in the lock (a few hundred KB) into the user cache directory (`$XDG_CACHE_HOME`, `~/.cache`, or `%LOCALAPPDATA%`, overridable with `AGENTIC_REPO_KIT_CACHE`).
+- Repositories initialized before 0.7.0 record no version in their lock, so their customized files are kept and listed; rebuild the original lock as the README describes, or use `--force` after backing up your changes.
+
 ## [0.12.0] - 2026-11-13
 
 Kit files can no longer sit unnoticed outside Git, and local exclusions and the hook gate work in linked worktrees. Decisions recorded in `ADR-0026`; release recorded in `ADR-0027`.

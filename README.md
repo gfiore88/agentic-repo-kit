@@ -127,7 +127,15 @@ npx agentic-repo-kit update
 
 > **Zero Knowledge Loss:** `update` exclusively refreshes the operating kernel (`.agents/skills/`, `.agents/workflows/`, `AGENTS.md`, adapters) and preserves all your project wiki pages and decisions. If you use `--git-exclude`, your local Git exclusions are refreshed automatically.
 
-> **Your edits are never overwritten silently:** `update` compares every kernel file with the hash recorded in `scaffold.lock`. Files you modified (for example project rules added to `AGENTS.md`) are reported as conflicts and nothing is written; move your changes into project files or re-run with `--force`. Files the kit no longer generates (a dropped runtime, a changed enforcement mode, a retired agent) are removed when unmodified and kept when you changed them. `update` requires `scaffold.lock`: run `init` on a new repository, and keep the lock committed. If it is lost, see [Recover a repository without `scaffold.lock`](#recover-without-lock).
+> **Your edits survive updates:** you can customize kernel files, for example by adding project rules to `AGENTS.md`, tuning an agent, or extending `.github/copilot-instructions.md`. `update` merges your changes with the kit's in a three-way merge against the content the kit originally wrote:
+>
+> - **The base.** `update` rebuilds that content from the kit version recorded in `scaffold.lock`. It downloads the version from your configured npm registry, checks it against the registry's integrity hash, and caches it. It uses a file only when it matches the hash in the lock.
+> - **Overlapping edits.** When your edits and the kit's touch the same lines, the file gets conflict markers (`<<<<<<< yours` … `>>>>>>> agentic-repo-kit <version>`) and every other file is still updated. `update` lists the file and exits with status 1, and `doctor` and `verify` report the markers until you resolve them.
+> - **No base.** Offline, or when the base cannot be verified, your file is kept unchanged and listed, and a later `update` merges it.
+> - **`--force`** takes the kit's version instead.
+> - **Retired files.** Files the kit no longer generates (a dropped runtime, a changed enforcement mode, a retired agent) are removed when unmodified and kept when you changed them.
+>
+> `update` requires `scaffold.lock`: run `init` on a new repository, and keep the lock with the repository. If it is lost, see [Recover a repository without `scaffold.lock`](#recover-without-lock).
 
 > **Safe by design:** During `init`, existing files with identical content are safely skipped. If any file has divergent content, `init` stops before writing anything and reports the conflicts. Use `update` to upgrade the kernel while preserving user knowledge.
 
@@ -330,7 +338,7 @@ agentic-repo init
 
 # Upgrade kernel skills and rules without touching user documentation
 agentic-repo update
-agentic-repo update --force          # also overwrite kernel files you modified
+agentic-repo update --force          # take the kit's version of kernel files you modified instead of merging
 agentic-repo update --enable-low-risk # opt in: add the default low-risk tier policy to docs/adr/gate.json
 agentic-repo update --adopt --runtime <ids|none> # recover a kernel whose scaffold.lock was lost
 
