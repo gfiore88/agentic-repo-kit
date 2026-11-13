@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.10.0 publication check
+
+- npm reports `latest` 0.10.0 with an SLSA v1 provenance attestation.
+- On a repository initialized with 0.6.0, `npx agentic-repo-kit@0.10.0 update` creates `gate.json` without `lowRisk` and reports the tier as disabled; `update --enable-low-risk` then adds the default policy.
+- A repository initialized with 0.9.0 keeps its tier, which `update` reports as enabled. A new 0.10.0 repository gets the default policy, and `doctor` reports it healthy.
+
 ## [2026-11-13] release | 0.10.0
 
 - Accepted ADR-0022 and released the ADR-0021 opt-in, together with the fix for the 0.9.0 gap, as 0.10.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
