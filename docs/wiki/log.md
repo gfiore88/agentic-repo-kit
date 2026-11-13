@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.11.0 publication check
+
+- The npm registry lists `latest` 0.11.0 with an SLSA v1 provenance attestation. For a few minutes after publication, `npm view` kept answering 0.10.1 from its cache, while the registry document already listed 0.11.0.
+- On a repository initialized with 0.6.0 whose `scaffold.lock` and `scaffold.yaml` were removed, `npx agentic-repo-kit@0.11.0 update` points to restoring the lock or to `--adopt`, and `doctor` reports the lock state. `update --adopt --force` pins `AGENTS.md` to 0.11.0 and leaves `doctor` healthy and `verify` compliant.
+
 ## [2026-11-13] release | 0.11.0
 
 - Accepted ADR-0025 and released the ADR-0024 lock diagnostics and `update --adopt` as 0.11.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
