@@ -2,7 +2,7 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { runDoctor } from "./doctor.mjs";
 import { lintKnowledge, maskFencedCode, scalarValue } from "./knowledge.mjs";
-import { adrNumberCollisions, adrStatus, KNOWLEDGE_FINDINGS } from "./verify.mjs";
+import { adrNumberCollisions, adrStatus, adrTierRecord, KNOWLEDGE_FINDINGS, LOW_RISK_TIER } from "./verify.mjs";
 import { readScaffoldLock } from "./writer.mjs";
 
 // Read-only session digest (ADR-0015): one call replaces opening the log and every
@@ -46,12 +46,16 @@ function recordTitle(content, block, fallback) {
     .replace(/^Annealing Proposal:\s*/i, "");
 }
 
+function awaitsReview(record) {
+  return record.tier === LOW_RISK_TIER && record.status === "Accepted" && record.review !== "approved";
+}
+
 function byAttention(left, right) {
-  const rank = (record) => (!record.status || OPEN_STATUSES.has(record.status) ? 0 : 1);
+  const rank = (record) => (!record.status || OPEN_STATUSES.has(record.status) || awaitsReview(record) ? 0 : 1);
   return rank(left) - rank(right) || right.id.localeCompare(left.id) || left.path.localeCompare(right.path);
 }
 
-async function readRecords(cwd, directory, kind, readStatus) {
+async function readRecords(cwd, directory, kind, readStatus, extra = () => ({})) {
   const pattern = new RegExp(`^${kind.toLowerCase()}-(\\d{4})-(.+)\\.md$`);
   const records = [];
   for (const name of await listDirectory(path.join(cwd, directory))) {
@@ -64,6 +68,7 @@ async function readRecords(cwd, directory, kind, readStatus) {
       status: readStatus(content, block),
       title: recordTitle(content, block, match[2]),
       path: `${directory}/${name}`,
+      ...extra(content),
     });
   }
   return records.sort(byAttention);
@@ -124,10 +129,15 @@ async function knowledgeStatus(cwd) {
 }
 
 export async function collectStatus(cwd, { limit = 5 } = {}) {
+  const adrs = await readRecords(cwd, "docs/adr", "ADR", (content) => adrStatus(content), (content) => {
+    const { tier, review } = adrTierRecord(content);
+    return { tier, review };
+  });
   return {
     kernel: await kernelStatus(cwd),
     knowledge: await knowledgeStatus(cwd),
-    adrs: await readRecords(cwd, "docs/adr", "ADR", (content) => adrStatus(content)),
+    pendingReviews: adrs.filter(awaitsReview).map(({ id, title, review, path: file }) => ({ id, title, review: review ?? "pending", path: file })),
+    adrs,
     prds: await readRecords(cwd, "docs/product", "PRD", (content, block) => frontmatterField(block, "status") ?? bulletStatus(content)),
     pendingProposals: await readPendingProposals(cwd),
     adrCollisions: adrNumberCollisions(await listDirectory(path.join(cwd, "docs", "adr"))),
@@ -154,7 +164,8 @@ export function formatStatus(cwd, status) {
       .map(([category, count]) => `${KNOWLEDGE_LABELS[category] ?? category} ${count}`);
     lines.push(`Knowledge: ${knowledge.ok ? "healthy" : `unhealthy (${failing.join(", ")}; run knowledge lint)`}, ${knowledge.checkedPages} pages`);
   } else lines.push("Knowledge: not initialized (no docs/wiki/index.md)");
-  const record = (item) => `${item.id} ${item.status ?? "(no status)"}  ${item.title}`;
+  const record = (item) => `${item.id} ${item.status ?? "(no status)"}${item.tier ? ` (${item.tier}, review ${item.review ?? "pending"})` : ""}  ${item.title}`;
+  section(lines, "Low-risk ADRs waiting for review", status.pendingReviews, (item) => `${item.id} ${item.review}  ${item.title}`);
   section(lines, "ADRs", status.adrs, record, " (open first)");
   section(lines, "PRDs", status.prds, record, " (open first)");
   section(lines, "Pending annealing proposals", status.pendingProposals, (item) => `${item.path}  ${item.title}`);

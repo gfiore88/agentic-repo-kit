@@ -7,5 +7,26 @@
     "pnpm-lock.yaml",
     "*.lock",
     ".github/dependabot.yml"
-  ]
+  ],
+  "lowRisk": {
+    "maxFiles": 5,
+    "maxLines": 200,
+    "tests": ["**/*.test.*", "**/*.spec.*", "**/test/**", "**/tests/**", "**/__tests__/**", "*_test.*", "test_*.*"],
+    "exclude": {
+      "security": ["*auth*", "**/*auth*/**", "**/security/**", "*secret*", "*crypt*", "*password*", "*permission*", "*token*", ".env*", "*.pem", "*.key"],
+      "dependencies": [
+        "package.json", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml",
+        "requirements*.txt", "pyproject.toml", "poetry.lock", "Pipfile", "Pipfile.lock",
+        "go.mod", "go.sum", "Cargo.toml", "Cargo.lock", "Gemfile", "Gemfile.lock",
+        "pom.xml", "build.gradle", "build.gradle.kts", "*.csproj", "packages.config", "composer.json", "composer.lock"
+      ],
+      "publicApi": ["**/api/**", "openapi*", "swagger*", "*.proto", "*.graphql", "*.d.ts"],
+      "migrations": ["**/migrations/**", "**/migrate/**", "*.sql", "schema.*"],
+      "governance": [
+        "AGENTS.md", ".agents/**", "docs/adr/gate.json", "CLAUDE.md", "GEMINI.md", ".github/**",
+        ".claude/**", ".codex/**", ".gemini/**", ".cursor/**", ".kiro/**", ".opencode/**",
+        "opencode.json", "scaffold.yaml", "scaffold.lock"
+      ]
+    }
+  }
 }

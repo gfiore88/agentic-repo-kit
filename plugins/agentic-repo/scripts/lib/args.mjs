@@ -26,8 +26,14 @@ export function parseArgs(argv) {
     profile: null,
     adr: null,
     limit: null,
+    lines: null,
+    tier: null,
+    decision: null,
+    by: null,
+    quote: null,
     force: false,
     routine: false,
+    requireReviews: false,
     gitExclude: false,
     remove: false,
     list: false,
@@ -48,6 +54,7 @@ export function parseArgs(argv) {
     else if (arg === "--list") options.list = true;
     else if (arg === "--force") options.force = true;
     else if (arg === "--routine") options.routine = true;
+    else if (arg === "--require-reviews") options.requireReviews = true;
     else if (arg === "--cwd") {
       options.cwd = takeValue(args, index, arg);
       index += 1;
@@ -84,15 +91,22 @@ export function parseArgs(argv) {
       options.limit = takeValue(args, index, arg);
       index += 1;
     } else if (arg.startsWith("--limit=")) options.limit = arg.slice(8);
+    else if (["--lines", "--tier", "--decision", "--by", "--quote"].includes(arg)) {
+      options[arg.slice(2)] = takeValue(args, index, arg);
+      index += 1;
+    } else if (/^--(?:lines|tier|decision|by|quote)=/.test(arg)) {
+      const separator = arg.indexOf("=");
+      options[arg.slice(2, separator)] = arg.slice(separator + 1);
+    }
     else throw new Error(`Unknown option: ${arg}`);
   }
 
   if (!["init", "update", "doctor", "status", "knowledge", "verify", "adr", "prd", "anneal", "exclude", "help"].includes(options.command)) {
     throw new Error(`Unknown command: ${options.command}`);
   }
-  const allowedSubcommands = { knowledge: "lint", adr: "new", prd: "new", anneal: "new" };
-  if (allowedSubcommands[command] && subcommand !== allowedSubcommands[command]) {
-    throw new Error(`${command} requires subcommand: ${allowedSubcommands[command]}`);
+  const allowedSubcommands = { knowledge: ["lint"], adr: ["new", "review"], prd: ["new"], anneal: ["new"] };
+  if (allowedSubcommands[command] && !allowedSubcommands[command].includes(subcommand)) {
+    throw new Error(`${command} requires subcommand: ${allowedSubcommands[command].join(" or ")}`);
   }
 
   if (options.enforce !== null && !["ci", "hooks", "none"].includes(options.enforce)) {
@@ -101,6 +115,13 @@ export function parseArgs(argv) {
 
   if (options.profile !== null && !PROFILES.includes(options.profile)) {
     throw new Error(`Unknown profile: ${options.profile} (use ${PROFILES.join(" or ")})`);
+  }
+
+  if (options.tier !== null && options.tier !== "low-risk") {
+    throw new Error(`Unknown tier: ${options.tier} (use low-risk)`);
+  }
+  if (options.decision !== null && !["approved", "rejected"].includes(options.decision)) {
+    throw new Error(`Unknown review decision: ${options.decision} (use approved or rejected)`);
   }
 
   if (options.limit !== null) {
