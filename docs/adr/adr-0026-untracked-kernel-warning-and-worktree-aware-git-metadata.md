@@ -1,6 +1,6 @@
 ---
 title: "ADR-0026: Untracked Kernel Warning and Worktree-Aware Git Metadata"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["doctor", "status", "exclude", "hooks", "git", "client-repositories"]
@@ -12,8 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed**. Giovanni Fiore approved the idea ("ti do l'ok per l'idea futura").
-Implementation waits for his explicit acceptance of this ADR.
+**Accepted** by Giovanni Fiore on 2026-11-13. He approved the idea ("ti do l'ok per
+l'idea futura"), then, asked how to proceed with this ADR, chose "Accetto l'ADR-0026
+insieme al rilascio 0.12.0" ("I accept ADR-0026 together with the 0.12.0 release").
 
 ## Context
 
