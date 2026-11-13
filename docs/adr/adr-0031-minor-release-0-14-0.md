@@ -1,6 +1,6 @@
 ---
 title: "ADR-0031: Minor Release 0.14.0"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore and implementation agent"
 tags: ["release", "npm", "semver"]
@@ -12,7 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed**. The release waits for explicit acceptance by Giovanni Fiore.
+**Accepted** by Giovanni Fiore on 2026-11-13. Asked how to proceed with ADR-0030, he
+chose "Accetto l'ADR-0030 insieme al rilascio 0.14.0" ("I accept ADR-0030 together
+with the 0.14.0 release").
 
 ## Context
 

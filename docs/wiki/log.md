@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.14.0
+
+- Accepted ADR-0031 and released the ADR-0030 `doctor` health change as 0.14.0 (SemVer minor), through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+- Before publishing, the kit on `main` updated a repository initialized with the published 0.10.1 and customized like the client repository. `doctor` then reported `Status: healthy` with two customized files, and `status` reported `Integrity: healthy (2 customized)`.
+- A new repository with all 8 adapters and `--enforce ci` is healthy under `doctor` and `doctor --strict`, passes `knowledge lint` and `verify`, and its generated links resolve.
+
 ## [2026-11-13] implementation | Customized kernel files reported, not unhealthy
 
 - Accepted and implemented ADR-0030. `doctor` lists customized kernel files but no longer counts them against `ok`, which now fails only for missing kernel files, unresolved conflict markers, and an unusable lock. Lock entries carrying an older kit version are reported as pending kit changes, and `doctor --strict` keeps the previous rule.

@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.14.0] - 2026-11-13
 
-Customized kernel files no longer make the repository look broken. Decisions recorded in `ADR-0030`.
+Customized kernel files no longer make the repository look broken. Decisions recorded in `ADR-0030`; release recorded in `ADR-0031`.
 
 ### Changed
 
