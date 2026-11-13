@@ -60,6 +60,21 @@ export function runtimeIds() {
   return Object.keys(RUNTIME_CATALOG);
 }
 
+// Documentation the repository owner authors. `update` preserves these paths and
+// `doctor` ignores their drift.
+const USER_OWNED_PREFIXES = Object.freeze([
+  "docs/wiki/",
+  "docs/adr/",
+  "docs/product/",
+  "docs/raw/",
+  "docs/specs/",
+  "docs/templates/",
+]);
+
+export function isUserOwnedPath(relativePath) {
+  return USER_OWNED_PREFIXES.some((prefix) => relativePath.startsWith(prefix));
+}
+
 
 // Skill profiles. `full` installs every bundled skill and the imported command pack;
 // `core` installs only the governance kernel skills.

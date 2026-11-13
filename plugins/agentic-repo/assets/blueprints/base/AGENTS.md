@@ -4,7 +4,7 @@ This repository is both a software workspace and a persistent, Git-versioned kno
 
 ## Session bootstrap
 
-1. Run `npx agentic-repo-kit status` (or `agentic-repo status` with a global install). This read-only digest reports kernel and knowledge health, every ADR and PRD with its status (open records first), pending annealing proposals, ADR number collisions, and the latest log entries. If the command cannot run, read the latest entries in `docs/wiki/log.md` instead.
+1. Run `npx agentic-repo-kit status`, which is pinned to the kit version that generated this repository (`update` refreshes the pin). This read-only digest reports kernel and knowledge health, every ADR and PRD with its status (open records first), pending annealing proposals, ADR number collisions, and the latest log entries. If the command cannot run, read the latest entries in `docs/wiki/log.md` instead.
 2. Read `docs/wiki/index.md` to locate relevant knowledge.
 3. Open only the PRD/specification, ADRs, and topic pages that the digest and the index show are relevant to the task.
 4. Consult `.agents/registry.md` and select the smallest suitable specialist role.

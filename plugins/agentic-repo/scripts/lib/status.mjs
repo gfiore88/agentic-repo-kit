@@ -1,7 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { runDoctor } from "./doctor.mjs";
-import { lintKnowledge, maskFencedCode } from "./knowledge.mjs";
+import { lintKnowledge, maskFencedCode, scalarValue } from "./knowledge.mjs";
 import { adrNumberCollisions, adrStatus, KNOWLEDGE_FINDINGS } from "./verify.mjs";
 import { readScaffoldLock } from "./writer.mjs";
 
@@ -30,8 +30,8 @@ function frontmatterBlock(content) {
 }
 
 function frontmatterField(block, name) {
-  const value = block?.match(new RegExp(`^${name}:[ \\t]*(.+?)[ \\t]*$`, "m"))?.[1];
-  return value ? value.replace(/^(['"])(.*)\1$/, "$2").trim() || null : null;
+  const value = block?.match(new RegExp(`^${name}:[ \\t]*(.*)$`, "m"))?.[1];
+  return value === undefined ? null : scalarValue(value) || null;
 }
 
 // Templates without frontmatter record status as a `- **Status**: Draft` bullet.

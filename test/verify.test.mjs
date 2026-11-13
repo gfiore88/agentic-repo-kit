@@ -9,6 +9,7 @@ import { runCli } from "../plugins/agentic-repo/scripts/lib/cli.mjs";
 import { buildPlan } from "../plugins/agentic-repo/scripts/lib/plan.mjs";
 import { applyPlan } from "../plugins/agentic-repo/scripts/lib/writer.mjs";
 import { lintKnowledge } from "../plugins/agentic-repo/scripts/lib/knowledge.mjs";
+import { collectStatus } from "../plugins/agentic-repo/scripts/lib/status.mjs";
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../plugins/agentic-repo");
 
@@ -238,4 +239,19 @@ test("duplicate ADR numbers are violations and make references ambiguous", async
   const unique = await verifyGovernance(dir, { changedFiles: ["src/db.js"], adrReferences: ["ADR-0002"] });
   assert.equal(unique.adrReferences[0].status, "Accepted");
   assert.ok(!unique.violations.some((violation) => violation.kind === "adr-gate"));
+});
+
+test("ADR status parsing accepts CRLF line endings and trailing YAML comments", async () => {
+  const dir = await tempDir();
+  await mkdir(path.join(dir, "docs/adr"), { recursive: true });
+  await writeFile(path.join(dir, "docs/adr/adr-0001-crlf.md"), '---\r\ntitle: "ADR-0001: Crlf"\r\nstatus: "Accepted"\r\n---\r\n\r\n# ADR-0001: Crlf\r\n', "utf8");
+  await writeFile(path.join(dir, "docs/adr/adr-0002-comment.md"), '---\ntitle: "ADR-0002: Comment"  # short\nstatus: "Accepted"  # approved in review\n---\n\n# ADR-0002: Comment\n', "utf8");
+  const result = await verifyGovernance(dir, { changedFiles: ["src/app.js"], adrReferences: ["ADR-0001", "ADR-0002"] });
+  assert.deepEqual(result.violations, []);
+  assert.deepEqual(result.adrReferences.map((reference) => reference.status), ["Accepted", "Accepted"]);
+  const digest = await collectStatus(dir);
+  assert.deepEqual(digest.adrs.map((record) => [record.id, record.status, record.title]), [
+    ["ADR-0002", "Accepted", "Comment"],
+    ["ADR-0001", "Accepted", "Crlf"],
+  ]);
 });

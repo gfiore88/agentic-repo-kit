@@ -110,10 +110,10 @@ bullet per file created or updated.
   pages backing each claim. If the answer is a durable synthesis (comparison,
   trade-off, derived decision), offer to promote it to a `concepts/` page — create it
   only after human confirmation, then log it under `query`.
-- **Lint** — run `npx agentic-repo-kit knowledge lint` (or `agentic-repo knowledge lint`
-  with a global install) and resolve what it reports. Never re-implement its checks by
-  hand: if the command cannot run, report the knowledge base as unverified. Do not
-  auto-fix contradictions; surface them for a human decision.
+- **Lint** — run `npx agentic-repo-kit knowledge lint` and resolve what it reports.
+  Never re-implement its checks by hand: if the command cannot run, report the
+  knowledge base as unverified. Do not auto-fix contradictions; surface them for a
+  human decision.
 
 ## House style
 

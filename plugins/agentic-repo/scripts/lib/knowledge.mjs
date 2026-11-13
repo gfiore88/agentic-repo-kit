@@ -42,17 +42,22 @@ export function maskFencedCode(content) {
   }).join("\n");
 }
 
-function unquote(value) {
-  return value.replace(/^['"]|['"]$/g, "").trim();
+// YAML rules for single-line frontmatter scalars (ADR-0017): a quoted value ends at
+// its closing quote, and an unquoted value ends where whitespace starts a comment.
+export function scalarValue(raw) {
+  const value = raw.trim();
+  const quoted = value.match(/^(["'])(.*?)\1(?:\s+#.*)?$/);
+  if (quoted) return quoted[2].trim();
+  return value.replace(/(?:^|\s+)#.*$/, "").trim();
 }
 
 function frontmatterSourcesNonEmpty(body) {
-  const inline = body.match(/^sources:\s*\[([^\]]*)\]/m);
+  const inline = body.match(/^sources:[ \t]*\[([^\]]*)\]/m);
   if (inline) return inline[1].trim().length > 0;
-  const block = body.match(/^sources:\s*\n((?:[ \t]*-[ \t]+.*\n?)+)/m);
-  if (block) return /-[ \t]+\S+/.test(block[1]);
-  const scalar = body.match(/^sources:[ \t]*(\S.*)$/m);
-  return Boolean(scalar);
+  const block = body.match(/^sources:[ \t]*(?:#.*)?\r?\n((?:[ \t]*-[ \t]+.*\n?)+)/m);
+  if (block) return /-[ \t]+[^\s#]/.test(block[1]);
+  const scalar = body.match(/^sources:[ \t]*(.*)$/m)?.[1];
+  return Boolean(scalar && scalarValue(scalar));
 }
 
 // Validates the mandatory per-page YAML frontmatter (ADR-0012) without a YAML dependency.
@@ -61,8 +66,8 @@ function validateFrontmatter(file, content, hasFact) {
   if (!match) return [{ file, issue: "missing frontmatter" }];
   const body = match[1];
   const field = (name) => {
-    const value = body.match(new RegExp(`^${name}:\\s*(.+)$`, "m"))?.[1];
-    return value === undefined ? undefined : unquote(value);
+    const value = body.match(new RegExp(`^${name}:[ \\t]*(.*)$`, "m"))?.[1];
+    return value === undefined ? undefined : scalarValue(value);
   };
   const issues = [];
   const type = field("type");

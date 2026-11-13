@@ -1,6 +1,6 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-import { lintKnowledge } from "./knowledge.mjs";
+import { lintKnowledge, scalarValue } from "./knowledge.mjs";
 
 const ADR_STATUSES = new Set(["Proposed", "Accepted", "Rejected", "Superseded", "Deprecated"]);
 
@@ -27,11 +27,13 @@ function isAdrPath(relativePath) {
   return /^docs\/adr\/adr-\d{4}-.+\.md$/.test(normalize(relativePath));
 }
 
+// Accepts CRLF checkouts and trailing YAML comments (ADR-0017).
 export function adrStatus(content) {
-  const frontMatter = content.match(/^---\n([\s\S]*?)\n---/);
+  const frontMatter = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!frontMatter) return null;
-  const match = frontMatter[1].match(/^status:\s*["']?([A-Za-z]+)["']?\s*$/m);
-  return match ? match[1] : null;
+  const raw = frontMatter[1].match(/^status:[ \t]*(.*)$/m)?.[1];
+  const value = raw === undefined ? "" : scalarValue(raw);
+  return /^[A-Za-z]+$/.test(value) ? value : null;
 }
 
 // Files written by the kit itself (adapters, hooks, generated workflows) are

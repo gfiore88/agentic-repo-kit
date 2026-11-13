@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { CORE_SKILLS } from "./catalog.mjs";
+import { CORE_SKILLS, isUserOwnedPath } from "./catalog.mjs";
 
 export function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
@@ -100,6 +100,13 @@ function scaffoldYaml(runtimes, enforce, profile) {
 // push never executes an unreviewed latest release. `update` refreshes the pin.
 function verifierSpec(kitVersion) {
   return kitVersion ? `agentic-repo-kit@${kitVersion}` : "agentic-repo-kit";
+}
+
+// Projected instructions run the kit version that generated them, like the hooks
+// and CI, so a stale global install or an unreviewed latest release never answers
+// (ADR-0017). `--yes` keeps npx from prompting in a TTY. Sources stay version-free.
+function pinInvocations(content, kitVersion) {
+  return content.replace(/npx (?:--yes )?agentic-repo-kit(?![@\w-])/g, `npx --yes ${verifierSpec(kitVersion)}`);
 }
 
 // Opt-in local pre-push projection. Contains no policy: it computes the changed
@@ -233,6 +240,13 @@ export async function buildPlan({ assetsRoot, skillsRoot, runtimes, enforce = "n
   }
   if (enforce === "hooks") {
     mergeFile(files, { path: ".agents/hooks/pre-push", content: prePushHook(version) }, "hooks-enforcement");
+  }
+
+  // `update` refreshes kernel-owned files, so only they may carry a pinned version.
+  for (const [filePath, file] of files) {
+    if (isUserOwnedPath(filePath) || filePath.startsWith(".agents/upstream/")) continue;
+    const pinned = pinInvocations(file.content, version);
+    if (pinned !== file.content) files.set(filePath, { ...file, content: pinned });
   }
 
   const managed = [...files.values()]
