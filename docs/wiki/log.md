@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | Automatic three-way merge on update proposed
+
+- The owner pointed out that every npm user who customizes a kernel file hits conflicts at every update. Their only options are `--force`, which discards the changes, or a manual merge like the one a client repository needed that day. Proposed ADR-0028: `update` merges customized kernel files itself and no longer aborts on conflicts.
+- A prototype rebuilt the files of 0.10.1 and 0.7.0 from their npm packages and matched the lock hashes for 121 of 121 files, so the base can be rebuilt exactly from the version in the lock. The owner chose that base over a copy stored in the repository, and conflict markers over side files or an aborted update.
+
 ## [2026-11-13] release | 0.12.0 publication check
 
 - The npm registry lists `latest` 0.12.0 with an SLSA v1 provenance attestation. The publish workflow succeeded about seven minutes before the registry served the version; querying the version endpoint showed when it was available.
