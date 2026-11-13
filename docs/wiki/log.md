@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.10.1 publication check
+
+- npm reports `latest` 0.10.1 with an SLSA v1 provenance attestation. The README in the published tarball and in the registry has no stray quote, states the conditional merge gate, and includes the run-efficiency pillar.
+- On a repository initialized with 0.10.0, `npx agentic-repo-kit@0.10.1 update` moves all 8 pinned files to 0.10.1, refreshes the governance wording, and keeps `docs/adr/README.md`; `doctor` reports the repository healthy and `verify` compliant.
+- A new 0.10.1 repository with all 8 adapters and `--enforce ci` passes `doctor` and `knowledge lint`.
+
 ## [2026-11-13] release | 0.10.1
 
 - Accepted ADR-0023 and released the README and governance wording fixes as 0.10.1 (SemVer patch) through `npm version patch`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
