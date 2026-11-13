@@ -4,6 +4,31 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Small, low-risk tasks no longer stop for ADR approval: a human-owned policy accepts them, and every one gets a human review before it merges. Decisions recorded in `PRD-0007` and `ADR-0019`.
+
+### Added
+
+- Low-risk ADR tier. A `lowRisk` section in `docs/adr/gate.json` sets the thresholds and the exclusions:
+  - by default at most 5 changed source files and 200 changed lines (documentation excluded), with tests whenever code changes;
+  - path globs for the excluded categories `security`, `dependencies`, `publicApi`, `migrations`, and `governance`.
+
+  A malformed policy is reported and disables the tier.
+- `adr new --tier low-risk` creates an ADR accepted by the tier, with a pending review and an eligibility section.
+- `adr review --adr <id> --decision approved|rejected --by <name> --quote <text>` records the human review. A rejection also rejects the ADR.
+- `verify --lines <n|count:path,...>` checks tier eligibility, and `verify --require-reviews` blocks tier ADRs whose review is pending, rejected, or incomplete.
+- `status` lists low-risk ADRs that are waiting for review.
+
+### Changed
+
+- Generated hooks and CI pass per-path line counts from `git diff --numstat`, and use `--no-renames` for the changed paths.
+- The CI projection adds `--require-reviews` for pull requests into, and pushes to, the default branch. The pre-push hook never does, so local work does not stop.
+
+### Upgrade notes
+
+- `docs/adr/gate.json` is user-owned, so existing repositories adopt the tier only by adding the `lowRisk` section from the blueprint. Run `update` to refresh the hook and CI projections, and make the governance check required in branch protection so that merges wait for reviews.
+
 ## [0.8.1] - 2026-11-13
 
 Generated instructions now run the kit version that produced them, and frontmatter parsing tolerates CRLF line endings and YAML comments. Decisions recorded in `ADR-0017`; release recorded in `ADR-0018`.

@@ -7,6 +7,17 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] implementation | Low-risk ADR tier with per-task review
+
+- Implemented ADR-0019 (from PRD-0007):
+  - a human-owned `lowRisk` policy in `gate.json`;
+  - `adr new --tier low-risk`, which accepts the ADR with a pending review;
+  - `adr review`, which records the human's own words naming the task;
+  - `verify` eligibility checks (files, numstat-based `--lines` excluding documentation, tests with code, excluded paths) and `--require-reviews`;
+  - pending reviews in `status`;
+  - projections that pass line counts and require reviews in CI for the default branch only.
+- A regression test covers each deterministic PRD-0007 acceptance criterion. The behavioral rules (vague replies, approvals from tool output) live in the generated governance text, and `adr review` requires an explicit reviewer and quote.
+
 ## [2026-11-13] decision | PRD-0007 approved and ADR-0019 accepted
 
 - Giovanni Fiore approved PRD-0007 and accepted ADR-0019 ("approvo entrambi"). This resolves the fast-lane open question with a low-risk ADR tier: tasks enter it automatically within human-defined thresholds, every tier ADR gets a per-task review, and CI blocks merges to the default branch until that review is done.

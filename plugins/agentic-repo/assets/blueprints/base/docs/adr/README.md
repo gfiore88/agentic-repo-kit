@@ -8,6 +8,11 @@ Every new development task requires its own ADR created with the official ADR sk
 
 - `exempt`: path globs that never need an ADR, for example generated assets or editor configuration.
 - `routine`: path globs eligible for the lightweight **routine tier**. Declare it with an `ADR: routine` line in the commit message (or `verify --routine`); the change must stay inside these globs and must add a `routine` entry to `docs/wiki/log.md`. No ADR is created.
+- `lowRisk`: the **low-risk ADR tier**. It sets `maxFiles` and `maxLines` (documentation excluded), `tests` globs, which must match a changed file whenever code changes, and `exclude` globs for the `security`, `dependencies`, `publicApi`, `migrations`, and `governance` categories.
+  - A qualifying task's ADR is accepted by the tier (`adr new --tier low-risk`) with its review pending, and the work proceeds.
+  - The human reviews it afterwards (`adr review`), and CI blocks merges to the default branch until the review is approved. Make the governance check required in branch protection so that merges actually wait for it.
+  - A rejected review reverts the change.
+  - Remove the section to disable the tier.
 
 Globs use `**` across directories and `*`/`?` within one segment; a pattern without `/` matches the file name at any depth. Widening either list is a governance decision: change it only with explicit human approval.
 
