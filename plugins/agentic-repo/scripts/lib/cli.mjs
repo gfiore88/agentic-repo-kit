@@ -6,8 +6,9 @@ import { stdin as input, stdout as output } from "node:process";
 import { parseArgs, parseRuntimeSelection } from "./args.mjs";
 import { RUNTIME_CATALOG, runtimeIds } from "./catalog.mjs";
 import { detectRuntimes } from "./detect.mjs";
-import { blueprintLowRiskPolicy, buildPlan } from "./plan.mjs";
-import { applyPlan, applyUpdate, enableLowRiskTier, inspectLowRiskOptIn, inspectPlan, inspectUpdate, readScaffoldLock } from "./writer.mjs";
+import { blueprintLowRiskPolicy, buildPlan, sha256 } from "./plan.mjs";
+import { applyPlan, applyUpdate, enableLowRiskTier, inspectLowRiskOptIn, inspectPlan, inspectUpdate } from "./writer.mjs";
+import { describeLockProblem, findKernelMarkers, inspectScaffoldLock, readScaffoldYaml } from "./lock.mjs";
 import { runDoctor } from "./doctor.mjs";
 import { verifyGovernance } from "./verify.mjs";
 import { createGovernedArtifact, recordAdrReview } from "./artifacts.mjs";
@@ -44,6 +45,7 @@ Options:
   --runtime <ids|auto|none>  Override runtime selection (default: auto)
   --profile <full|core>      Skill profile: every bundled skill or the governance kernel only (default full)
   --force                    update: overwrite kernel files you modified (default: stop and report)
+  --adopt                    update: adopt a kernel whose scaffold.lock is lost (differing kernel files are conflicts)
   --git-exclude, --exclude   Add generated paths to .git/info/exclude
   --remove                   Remove managed excludes from .git/info/exclude
   --list                     List active local exclusions
@@ -97,8 +99,9 @@ const LOW_RISK_PLAN = {
   invalid: "unknown; docs/adr/gate.json is not valid JSON",
 };
 
-function printUpdatePlan({ cwd, runtimes, inspection, gitExclude, enforce, profile, lowRiskTier }) {
+function printUpdatePlan({ cwd, runtimes, inspection, gitExclude, enforce, profile, lowRiskTier, adopting }) {
   output.write(`Target: ${cwd}\n`);
+  if (adopting) output.write("Adoption: no scaffold.lock, so every existing kernel file that differs from this version is a conflict\n");
   output.write(`Selected adapters: ${runtimes.length > 0 ? runtimes.join(", ") : "none"}\n`);
   output.write(`Skill profile: ${profile}\n`);
   if (gitExclude) output.write("Local git exclude: enabled (.git/info/exclude)\n");
@@ -110,7 +113,7 @@ function printUpdatePlan({ cwd, runtimes, inspection, gitExclude, enforce, profi
   for (const item of inspection.removed) output.write(`  remove (no longer managed): ${item}\n`);
   for (const item of inspection.keptOrphans) output.write(`  keep (no longer managed, modified by you): ${item}\n`);
   for (const item of inspection.preserved) output.write(`  preserve (user): ${item}\n`);
-  for (const item of inspection.conflicts) output.write(`  conflict (modified by you): ${item}\n`);
+  for (const item of inspection.conflicts) output.write(`  conflict (${adopting ? "differs from this version" : "modified by you"}): ${item}\n`);
 }
 
 async function confirm(message) {
@@ -180,27 +183,52 @@ async function applyHookEnforcement(cwd, enforce, options) {
 
 async function runUpdate(options) {
   const cwd = path.resolve(options.cwd);
-  const previousLock = await readScaffoldLock(cwd);
-  if (!previousLock) {
-    process.stderr.write("Error: scaffold.lock not found; this repository was not initialized by agentic-repo-kit. Run `npx agentic-repo-kit init` first (it stops on conflicting files instead of overwriting them).\n");
+  const adopting = options.adopt;
+  const lockInspection = await inspectScaffoldLock(cwd);
+  if (adopting && lockInspection.state === "ok") {
+    process.stderr.write("Error: this repository already has scaffold.lock; run update without --adopt.\n");
     return 1;
   }
-  const enforce = options.enforce ?? (typeof previousLock.enforcement === "string" ? previousLock.enforcement : "none");
-  const profile = options.profile ?? (typeof previousLock.profile === "string" ? previousLock.profile : "full");
-  const runtimes = options.runtime !== "auto"
-    ? parseRuntimeSelection(options.runtime).runtimes
-    : Array.isArray(previousLock.runtimes) ? previousLock.runtimes : (await detectRuntimes(cwd)).map((item) => item.id);
+  const configuration = await readScaffoldYaml(cwd);
+  if (lockInspection.state !== "ok" && !(adopting && lockInspection.state === "missing")) {
+    const markers = lockInspection.state === "missing" ? await findKernelMarkers(cwd) : [];
+    const { problem, hint } = describeLockProblem(lockInspection, markers, { configured: Boolean(configuration) });
+    process.stderr.write(`Error: ${problem}.${adopting ? " --adopt never replaces an existing lock." : ""} ${hint}\n`);
+    return 1;
+  }
+
+  const previousLock = lockInspection.lock;
+  let runtimes;
+  if (options.runtime !== "auto") runtimes = parseRuntimeSelection(options.runtime).runtimes;
+  else if (adopting) {
+    if (!configuration) {
+      process.stderr.write("Error: update --adopt needs the runtimes of this repository, and no scaffold.yaml lists them. Pass --runtime <ids|none>: auto-detection is unreliable here, because the kernel's .agents/agents/ and .agents/rules/ match the Antigravity markers.\n");
+      return 1;
+    }
+    runtimes = configuration.runtimes;
+  } else {
+    runtimes = Array.isArray(previousLock.runtimes) ? previousLock.runtimes : (await detectRuntimes(cwd)).map((item) => item.id);
+  }
+  const recorded = adopting ? configuration ?? {} : previousLock;
+  const enforce = options.enforce ?? (typeof recorded.enforcement === "string" ? recorded.enforcement : "none");
+  const profile = options.profile ?? (typeof recorded.profile === "string" ? recorded.profile : "full");
+  // Without a lock nothing proves that the kit wrote an existing kernel file, so
+  // adoption compares against an empty baseline. scaffold.yaml, read above as the
+  // configuration source, is regenerated instead of reported as a conflict.
+  const baseline = adopting
+    ? { managedFiles: configuration ? [{ path: "scaffold.yaml", sha256: sha256(configuration.content) }] : [] }
+    : previousLock;
 
   const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes, enforce, profile, lowRisk: options.enableLowRisk });
-  const inspection = await inspectUpdate(cwd, plan, { previousLock, force: options.force });
+  const inspection = await inspectUpdate(cwd, plan, { previousLock: baseline, force: options.force });
   const lowRiskTier = await inspectLowRiskOptIn(cwd, options.enableLowRisk);
   const excludeState = await inspectGitExclude(cwd);
   const shouldGitExclude = options.gitExclude || excludeState.active;
 
   if (options.json) {
-    output.write(`${JSON.stringify({ cwd, runtimes, profile, enforcement: enforce, gitExclude: shouldGitExclude, lowRiskTier, ...inspection }, null, 2)}\n`);
+    output.write(`${JSON.stringify({ cwd, adopt: adopting, runtimes, profile, enforcement: enforce, gitExclude: shouldGitExclude, lowRiskTier, ...inspection }, null, 2)}\n`);
   } else {
-    printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude, enforce, profile, lowRiskTier });
+    printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude, enforce, profile, lowRiskTier, adopting });
   }
 
   if (options.enableLowRisk && lowRiskTier === "invalid") {
@@ -209,19 +237,23 @@ async function runUpdate(options) {
   }
 
   if (inspection.conflicts.length > 0) {
-    if (!options.json) output.write("No files written: you modified the kernel files listed as conflicts. Move your changes into project files, or re-run with --force to overwrite them.\n");
+    if (!options.json) {
+      output.write(adopting
+        ? "No files written: without scaffold.lock the kit cannot tell its older files from your edits, so every kernel file that differs from this version is a conflict. Back up the files you customized, then re-run with --force to overwrite them.\n"
+        : "No files written: you modified the kernel files listed as conflicts. Move your changes into project files, or re-run with --force to overwrite them.\n");
+    }
     return 1;
   }
   if (options.dryRun) return 0;
 
   let approved = options.yes;
-  if (!approved && input.isTTY && output.isTTY) approved = await confirm("Apply this kernel update?");
+  if (!approved && input.isTTY && output.isTTY) approved = await confirm(adopting ? "Adopt the kernel and apply this update?" : "Apply this kernel update?");
   if (!approved) {
     if (!options.json) output.write("No files written. Re-run with --yes for non-interactive update.\n");
     return input.isTTY ? 0 : 2;
   }
 
-  const result = await applyUpdate(cwd, plan, { previousLock, force: options.force });
+  const result = await applyUpdate(cwd, plan, { previousLock: baseline, force: options.force });
   if (lowRiskTier === "will-enable") {
     await enableLowRiskTier(cwd, await blueprintLowRiskPolicy(assetsRoot));
     if (!options.json) output.write("Enabled the low-risk tier in docs/adr/gate.json.\n");
@@ -235,7 +267,7 @@ async function runUpdate(options) {
   }
   await applyHookEnforcement(cwd, enforce, options);
   if (!options.json) {
-    output.write(`Kernel update complete. Updated ${result.updated.length}, created ${result.created.length}, removed ${result.removed.length}, preserved ${result.preserved.length} file(s).\n`);
+    output.write(`${adopting ? "Kernel adoption" : "Kernel update"} complete. Updated ${result.updated.length}, created ${result.created.length}, removed ${result.removed.length}, preserved ${result.preserved.length} file(s).\n`);
   }
   return 0;
 }
@@ -283,6 +315,8 @@ async function doctorCommand(options) {
     output.write(`Missing: ${result.missing.length}; divergent: ${result.divergent.length}\n`);
     for (const missing of result.missing) output.write(`  missing: ${missing}\n`);
     for (const divergent of result.divergent) output.write(`  divergent: ${divergent}\n`);
+    if (result.error) output.write(`Lock: ${result.error}\n`);
+    if (result.hint) output.write(`Next step: ${result.hint}\n`);
     output.write(result.ok ? "Status: healthy\n" : "Status: unhealthy\n");
   }
   return result.ok ? 0 : 1;

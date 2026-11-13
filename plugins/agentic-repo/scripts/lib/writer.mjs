@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, readdir, rmdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { isUserOwnedPath } from "./catalog.mjs";
+import { inspectScaffoldLock } from "./lock.mjs";
 import { sha256 } from "./plan.mjs";
 
 export { isUserOwnedPath };
@@ -72,12 +73,7 @@ export async function enableLowRiskTier(cwd, policy) {
 }
 
 export async function readScaffoldLock(cwd) {
-  try {
-    const lock = JSON.parse(await readFile(path.join(cwd, "scaffold.lock"), "utf8"));
-    return lock && typeof lock === "object" && !Array.isArray(lock) ? lock : null;
-  } catch {
-    return null;
-  }
+  return (await inspectScaffoldLock(cwd)).lock;
 }
 
 function lockedHashes(previousLock) {

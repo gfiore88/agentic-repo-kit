@@ -1,22 +1,27 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { describeLockProblem, findKernelMarkers, inspectScaffoldLock, readScaffoldYaml } from "./lock.mjs";
 import { sha256 } from "./plan.mjs";
 import { isUserOwnedPath } from "./writer.mjs";
 
 export async function runDoctor(cwd) {
-  let lock;
-  try {
-    lock = JSON.parse(await readFile(path.join(cwd, "scaffold.lock"), "utf8"));
-  } catch (error) {
+  const inspection = await inspectScaffoldLock(cwd);
+  if (inspection.state !== "ok") {
+    const markers = inspection.state === "missing" ? await findKernelMarkers(cwd) : [];
+    const configured = Boolean(await readScaffoldYaml(cwd));
+    const { problem, hint } = describeLockProblem(inspection, markers, { configured });
     return {
       ok: false,
+      lockState: inspection.state,
       runtimes: [],
-      missing: ["scaffold.lock"],
+      missing: inspection.state === "missing" ? ["scaffold.lock"] : [],
       divergent: [],
-      error: `Cannot read scaffold.lock: ${error.message}`,
+      error: problem,
+      hint,
     };
   }
 
+  const { lock } = inspection;
   const missing = [];
   const divergent = [];
   for (const managed of lock.managedFiles ?? []) {
@@ -33,6 +38,7 @@ export async function runDoctor(cwd) {
 
   return {
     ok: missing.length === 0 && divergent.length === 0,
+    lockState: "ok",
     runtimes: lock.runtimes ?? [],
     missing,
     divergent,
