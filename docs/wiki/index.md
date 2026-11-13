@@ -42,6 +42,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Low-risk ADR tier with per-task review](../adr/adr-0019-low-risk-adr-tier-with-per-task-review.md): accepted implementation of PRD-0007: `gate.json` policy, `verify` eligibility and review checks, tier ADRs, and the CI merge gate.
 - [Minor release 0.9.0](../adr/adr-0020-minor-release-0-9-0.md): accepted SemVer minor release of the ADR-0019 work.
 - [Explicit low-risk tier opt-in for existing repositories](../adr/adr-0021-explicit-low-risk-tier-opt-in-for-existing-repositories.md): accepted `update --enable-low-risk`, plus a fix so that `update` never enables the tier without that flag.
+- [Minor release 0.10.0](../adr/adr-0022-minor-release-0-10-0.md): proposed SemVer minor release of the ADR-0021 work.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.
