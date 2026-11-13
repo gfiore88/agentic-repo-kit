@@ -6,7 +6,8 @@ import { stdin as input, stdout as output } from "node:process";
 import { parseArgs, parseRuntimeSelection } from "./args.mjs";
 import { RUNTIME_CATALOG, runtimeIds } from "./catalog.mjs";
 import { detectRuntimes } from "./detect.mjs";
-import { blueprintLowRiskPolicy, buildPlan, sha256 } from "./plan.mjs";
+import { blueprintLowRiskPolicy, buildPlan, readKitVersion, sha256 } from "./plan.mjs";
+import { rebuildBase } from "./base.mjs";
 import { applyPlan, applyUpdate, enableLowRiskTier, inspectLowRiskOptIn, inspectPlan, inspectUpdate } from "./writer.mjs";
 import { describeLockProblem, findKernelMarkers, inspectScaffoldLock, readScaffoldYaml } from "./lock.mjs";
 import { runDoctor } from "./doctor.mjs";
@@ -107,12 +108,16 @@ function printUpdatePlan({ cwd, runtimes, inspection, gitExclude, enforce, profi
   if (gitExclude) output.write("Local git exclude: enabled (.git/info/exclude)\n");
   output.write(`Enforcement: ${enforce}\n`);
   output.write(`Low-risk tier: ${LOW_RISK_PLAN[lowRiskTier]}\n`);
-  output.write(`Update: ${inspection.updated.length}, create: ${inspection.created.length}, remove: ${inspection.removed.length}, unchanged: ${inspection.unchanged.length}, preserved: ${inspection.preserved.length}, conflicts: ${inspection.conflicts.length}\n`);
+  output.write(`Update: ${inspection.updated.length}, create: ${inspection.created.length}, merge: ${inspection.merged.length}, remove: ${inspection.removed.length}, unchanged: ${inspection.unchanged.length}, preserved: ${inspection.preserved.length}, conflicts: ${inspection.conflicts.length + inspection.conflicted.length + inspection.kept.length}\n`);
   for (const item of inspection.updated) output.write(`  update: ${item}\n`);
   for (const item of inspection.created) output.write(`  create: ${item}\n`);
+  for (const item of inspection.merged) output.write(`  merge (your changes kept, kit changes applied): ${item}\n`);
+  for (const item of inspection.retained) output.write(`  keep (your changes, no kit changes): ${item}\n`);
   for (const item of inspection.removed) output.write(`  remove (no longer managed): ${item}\n`);
   for (const item of inspection.keptOrphans) output.write(`  keep (no longer managed, modified by you): ${item}\n`);
   for (const item of inspection.preserved) output.write(`  preserve (user): ${item}\n`);
+  for (const item of inspection.conflicted) output.write(`  conflict markers (your edits and the kit's overlap): ${item}\n`);
+  for (const item of inspection.kept) output.write(`  keep yours, kit changes not applied (${item.reason}): ${item.path}\n`);
   for (const item of inspection.conflicts) output.write(`  conflict (${adopting ? "differs from this version" : "modified by you"}): ${item}\n`);
 }
 
@@ -220,13 +225,27 @@ async function runUpdate(options) {
     : previousLock;
 
   const plan = await buildPlan({ assetsRoot, skillsRoot, runtimes, enforce, profile, lowRisk: options.enableLowRisk });
-  const inspection = await inspectUpdate(cwd, plan, { previousLock: baseline, force: options.force });
+  let inspection = await inspectUpdate(cwd, plan, { previousLock: baseline, force: options.force });
+  // Customized kernel files are merged against the content the kit wrote, rebuilt
+  // from the version in the lock (ADR-0028). Adoption has no lock to rebuild from.
+  let merge = null;
+  if (!adopting && inspection.conflicts.length > 0) {
+    const currentVersion = await readKitVersion(assetsRoot);
+    const { bases, reasons } = await rebuildBase(previousLock, inspection.conflicts, {
+      currentVersion,
+      currentPlan: (configuration) => buildPlan({ assetsRoot, skillsRoot, ...configuration }),
+    });
+    merge = { bases, reasons, version: currentVersion };
+    inspection = await inspectUpdate(cwd, plan, { previousLock: baseline, force: options.force, merge });
+  }
+  const { contents: _contents, ...report } = inspection;
+  const attention = inspection.conflicted.length + inspection.kept.length;
   const lowRiskTier = await inspectLowRiskOptIn(cwd, options.enableLowRisk);
   const excludeState = await inspectGitExclude(cwd);
   const shouldGitExclude = options.gitExclude || excludeState.active || excludeState.legacy;
 
   if (options.json) {
-    output.write(`${JSON.stringify({ cwd, adopt: adopting, runtimes, profile, enforcement: enforce, gitExclude: shouldGitExclude, lowRiskTier, ...inspection }, null, 2)}\n`);
+    output.write(`${JSON.stringify({ cwd, adopt: adopting, runtimes, profile, enforcement: enforce, gitExclude: shouldGitExclude, lowRiskTier, ...report }, null, 2)}\n`);
   } else {
     printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude, enforce, profile, lowRiskTier, adopting });
   }
@@ -238,13 +257,11 @@ async function runUpdate(options) {
 
   if (inspection.conflicts.length > 0) {
     if (!options.json) {
-      output.write(adopting
-        ? "No files written: without scaffold.lock the kit cannot tell its older files from your edits, so every kernel file that differs from this version is a conflict. Back up the files you customized, then re-run with --force to overwrite them.\n"
-        : "No files written: you modified the kernel files listed as conflicts. Move your changes into project files, or re-run with --force to overwrite them.\n");
+      output.write("No files written: without scaffold.lock the kit cannot tell its older files from your edits, so every kernel file that differs from this version is a conflict. Back up the files you customized, then re-run with --force to overwrite them.\n");
     }
     return 1;
   }
-  if (options.dryRun) return 0;
+  if (options.dryRun) return attention > 0 ? 1 : 0;
 
   let approved = options.yes;
   if (!approved && input.isTTY && output.isTTY) approved = await confirm(adopting ? "Adopt the kernel and apply this update?" : "Apply this kernel update?");
@@ -253,7 +270,7 @@ async function runUpdate(options) {
     return input.isTTY ? 0 : 2;
   }
 
-  const result = await applyUpdate(cwd, plan, { previousLock: baseline, force: options.force });
+  const result = await applyUpdate(cwd, plan, { previousLock: baseline, force: options.force, merge });
   if (lowRiskTier === "will-enable") {
     await enableLowRiskTier(cwd, await blueprintLowRiskPolicy(assetsRoot));
     if (!options.json) output.write("Enabled the low-risk tier in docs/adr/gate.json.\n");
@@ -267,9 +284,13 @@ async function runUpdate(options) {
   }
   await applyHookEnforcement(cwd, enforce, options);
   if (!options.json) {
-    output.write(`${adopting ? "Kernel adoption" : "Kernel update"} complete. Updated ${result.updated.length}, created ${result.created.length}, removed ${result.removed.length}, preserved ${result.preserved.length} file(s).\n`);
+    output.write(`${adopting ? "Kernel adoption" : "Kernel update"} complete. Updated ${result.updated.length}, created ${result.created.length}, merged ${result.merged.length}, removed ${result.removed.length}, preserved ${result.preserved.length} file(s).\n`);
+    if (result.conflicted.length > 0) {
+      output.write(`Resolve the conflict markers (<<<<<<< yours ... >>>>>>> agentic-repo-kit) in: ${result.conflicted.join(", ")}. doctor and verify report them until they are gone.\n`);
+    }
+    for (const item of result.kept) output.write(`Kept your version of ${item.path}; the kit's changes were not applied (${item.reason}). Re-run update when it can be merged, or use --force to take the kit's version.\n`);
   }
-  return 0;
+  return result.conflicted.length + result.kept.length > 0 ? 1 : 0;
 }
 
 async function excludeCommand(options) {
@@ -316,6 +337,8 @@ async function doctorCommand(options) {
     output.write(`Missing: ${result.missing.length}; divergent: ${result.divergent.length}\n`);
     for (const missing of result.missing) output.write(`  missing: ${missing}\n`);
     for (const divergent of result.divergent) output.write(`  divergent: ${divergent}\n`);
+    for (const conflicted of result.conflicted ?? []) output.write(`  conflict markers: ${conflicted}\n`);
+    if (result.conflicted?.length > 0) output.write("Next step: resolve the conflict markers that update left (<<<<<<< yours ... >>>>>>> agentic-repo-kit).\n");
     if (result.untracked.length > 0) {
       const sample = result.untracked.slice(0, 3).join(", ");
       output.write(`Untracked: ${result.untracked.length} kernel file(s) are neither committed nor excluded (${sample}${result.untracked.length > 3 ? ", ..." : ""})\n`);

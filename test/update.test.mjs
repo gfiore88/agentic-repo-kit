@@ -106,7 +106,7 @@ test("update alias 'upgrade' works identically", async (t) => {
   assert.equal(upgradeCode, 0);
 });
 
-test("update stops on user-modified kernel files and --force overwrites them", async (t) => {
+test("update keeps user edits to kernel files, updates the rest, and --force takes the kit's version", async (t) => {
   const dir = await temporaryDir();
   t.after(async () => rm(dir, { recursive: true, force: true }));
   assert.equal(await quiet(["init", "--yes", "--cwd", dir, "--runtime", "claude-code"]), 0);
@@ -116,13 +116,12 @@ test("update stops on user-modified kernel files and --force overwrites them", a
   await writeFile(agentsPath, customized, "utf8");
   await simulateOlderKernelFile(dir, ".agents/registry.md", "# Old registry\n");
 
-  assert.equal(await quiet(["update", "--yes", "--cwd", dir]), 1);
-  assert.equal(await readFile(agentsPath, "utf8"), customized, "user edit survives");
-  assert.equal(await readFile(path.join(dir, ".agents/registry.md"), "utf8"), "# Old registry\n", "conflicts abort the whole update");
+  assert.equal(await quiet(["update", "--yes", "--cwd", dir]), 0);
+  assert.equal(await readFile(agentsPath, "utf8"), customized, "user edit survives; this version has no kit changes to merge");
+  assert.notEqual(await readFile(path.join(dir, ".agents/registry.md"), "utf8"), "# Old registry\n", "the rest of the kernel is updated");
 
   assert.equal(await quiet(["update", "--yes", "--force", "--cwd", dir]), 0);
   assert.notEqual(await readFile(agentsPath, "utf8"), customized);
-  assert.notEqual(await readFile(path.join(dir, ".agents/registry.md"), "utf8"), "# Old registry\n");
 });
 
 test("update refuses to run in a repository without scaffold.lock", async (t) => {

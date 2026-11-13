@@ -1,6 +1,8 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { isUserOwnedPath } from "./catalog.mjs";
 import { lintKnowledge, scalarValue } from "./knowledge.mjs";
+import { hasConflictMarkers } from "./merge.mjs";
 
 const ADR_STATUSES = new Set(["Proposed", "Accepted", "Rejected", "Superseded", "Deprecated"]);
 
@@ -252,6 +254,17 @@ export async function verifyGovernance(cwd, { changedFiles = null, adrReferences
   }
   for (const collision of adrNumberCollisions(adrNames)) {
     violations.push({ kind: "adr", detail: `${collision.id} is used by more than one file (${collision.paths.join(", ")}); renumber the later ADR` });
+  }
+
+  // Conflict markers that `update` left in a kernel file must be resolved before
+  // the file is committed (ADR-0028).
+  for (const managed of await readManagedPaths(cwd)) {
+    if (isUserOwnedPath(managed)) continue;
+    let content;
+    try { content = await readFile(path.join(cwd, managed), "utf8"); } catch { continue; }
+    if (hasConflictMarkers(content)) {
+      violations.push({ kind: "merge-conflict", detail: `${managed} contains unresolved conflict markers from update` });
+    }
   }
 
   // Explicit references (for example `ADR-0013` in commit messages) let follow-up

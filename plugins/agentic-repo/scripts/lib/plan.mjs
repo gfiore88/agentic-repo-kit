@@ -207,7 +207,7 @@ jobs:
 `;
 }
 
-async function readKitVersion(assetsRoot) {
+export async function readKitVersion(assetsRoot) {
   try {
     const manifest = JSON.parse(await readFile(path.resolve(assetsRoot, "../../../package.json"), "utf8"));
     return manifest.name === "agentic-repo-kit" && typeof manifest.version === "string" ? manifest.version : null;

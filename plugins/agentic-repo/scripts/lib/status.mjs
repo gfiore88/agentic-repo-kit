@@ -120,6 +120,7 @@ async function kernelStatus(cwd) {
     integrity: { ok: doctor.ok, missing: doctor.missing.length, divergent: doctor.divergent.length },
     trackingChecked: doctor.trackingChecked,
     untracked: doctor.untracked.length,
+    conflicted: doctor.conflicted?.length ?? 0,
   };
 }
 
@@ -160,6 +161,7 @@ export function formatStatus(cwd, status) {
     lines.push(`Adapters: ${kernel.runtimes.length > 0 ? kernel.runtimes.join(", ") : "none"}`);
     lines.push(`Integrity: ${kernel.integrity.ok ? "healthy" : `unhealthy (missing ${kernel.integrity.missing}, divergent ${kernel.integrity.divergent}; run doctor)`}`);
     if (kernel.untracked > 0) lines.push(`Git: ${kernel.untracked} kernel file(s) neither committed nor excluded; commit them or run exclude (see doctor)`);
+    if (kernel.conflicted > 0) lines.push(`Merge: ${kernel.conflicted} kernel file(s) with unresolved conflict markers from update; resolve them (see doctor)`);
   } else lines.push("Kernel: not initialized (no readable scaffold.lock)");
   if (knowledge.initialized) {
     const failing = Object.entries(knowledge.issues)

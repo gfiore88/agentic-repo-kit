@@ -2,6 +2,7 @@ import { access, mkdir, readFile, readdir, rmdir, unlink, writeFile } from "node
 import path from "node:path";
 import { isUserOwnedPath } from "./catalog.mjs";
 import { inspectScaffoldLock } from "./lock.mjs";
+import { mergeThreeWay } from "./merge.mjs";
 import { sha256 } from "./plan.mjs";
 
 export { isUserOwnedPath };
@@ -84,19 +85,42 @@ function lockedHashes(previousLock) {
   return hashes;
 }
 
+// A file whose kit changes could not be applied keeps its previous lock entry (hash
+// and version), so the next update still merges against the content the kit wrote.
+// A planned file the kit never wrote leaves the lock.
+function carryLockEntries(lockContent, previousLock, keptPaths) {
+  const lock = JSON.parse(lockContent);
+  const previous = new Map((previousLock?.managedFiles ?? []).filter((entry) => typeof entry?.path === "string").map((entry) => [entry.path, entry]));
+  lock.managedFiles = lock.managedFiles.flatMap((entry) => {
+    if (!keptPaths.includes(entry.path)) return [entry];
+    const earlier = previous.get(entry.path);
+    if (!earlier) return [];
+    const kitVersion = earlier.kitVersion ?? previousLock?.kitVersion;
+    return [{ ...entry, sha256: earlier.sha256, ...(typeof kitVersion === "string" ? { kitVersion } : {}) }];
+  });
+  return `${JSON.stringify(lock, null, 2)}\n`;
+}
+
 // Classifies every planned file against the previous scaffold.lock. A kernel-owned
-// file is only replaced when its current content still matches the hash the kit
-// recorded when it last wrote it; otherwise the user changed it and it is a conflict
-// (overridable with `force`). Files the previous lock managed but the new plan no
-// longer contains are removed when unmodified and kept when the user changed them.
-export async function inspectUpdate(cwd, plan, { previousLock = null, force = false } = {}) {
+// file is replaced when its current content still matches the hash the kit recorded
+// when it last wrote it. Otherwise the owner customized it. Without `merge`, that is
+// a conflict (overridable with `force`). With `merge` (ADR-0028), the file is merged
+// against its rebuilt base, or kept with the reason when there is no base. Files the
+// previous lock managed but the new plan no longer contains are removed when
+// unmodified and kept when the owner changed them.
+export async function inspectUpdate(cwd, plan, { previousLock = null, force = false, merge = null } = {}) {
   const created = [];
   const updated = [];
   const preserved = [];
   const unchanged = [];
   const conflicts = [];
+  const merged = [];
+  const conflicted = [];
+  const kept = [];
+  const retained = [];
   const removed = [];
   const keptOrphans = [];
+  const contents = new Map();
   const previous = lockedHashes(previousLock);
   const planned = new Set(plan.files.map((file) => file.path));
 
@@ -113,7 +137,26 @@ export async function inspectUpdate(cwd, plan, { previousLock = null, force = fa
     const current = await readFile(target, "utf8");
     if (current === file.content) unchanged.push(file.path);
     else if (file.path === "scaffold.lock" || previous.get(file.path) === sha256(current) || force) updated.push(file.path);
-    else conflicts.push(file.path);
+    else if (!merge) conflicts.push(file.path);
+    else if (merge.bases.has(file.path)) {
+      const result = mergeThreeWay(merge.bases.get(file.path), current, file.content, { version: merge.version });
+      if (!result) kept.push({ path: file.path, reason: "the file is too large to merge" });
+      else if (result.content === current) retained.push(file.path);
+      else {
+        contents.set(file.path, result.content);
+        (result.conflicts > 0 ? conflicted : merged).push(file.path);
+      }
+    } else kept.push({ path: file.path, reason: merge.reasons.get(file.path) ?? "no base is available" });
+  }
+
+  const lockFile = plan.files.find((file) => file.path === "scaffold.lock");
+  if (kept.length > 0 && lockFile) {
+    const carried = carryLockEntries(lockFile.content, previousLock, kept.map((item) => item.path));
+    contents.set("scaffold.lock", carried);
+    if (unchanged.includes("scaffold.lock") && carried !== lockFile.content) {
+      unchanged.splice(unchanged.indexOf("scaffold.lock"), 1);
+      updated.push("scaffold.lock");
+    }
   }
 
   for (const [relative, hash] of previous) {
@@ -124,7 +167,7 @@ export async function inspectUpdate(cwd, plan, { previousLock = null, force = fa
     else keptOrphans.push(relative);
   }
 
-  return { created, updated, preserved, unchanged, conflicts, removed, keptOrphans };
+  return { created, updated, preserved, unchanged, conflicts, merged, conflicted, kept, retained, removed, keptOrphans, contents };
 }
 
 async function pruneEmptyParents(cwd, relative) {
@@ -137,15 +180,15 @@ async function pruneEmptyParents(cwd, relative) {
   }
 }
 
-export async function applyUpdate(cwd, plan, { dryRun = false, previousLock = null, force = false } = {}) {
-  const result = await inspectUpdate(cwd, plan, { previousLock, force });
+export async function applyUpdate(cwd, plan, { dryRun = false, previousLock = null, force = false, merge = null } = {}) {
+  const result = await inspectUpdate(cwd, plan, { previousLock, force, merge });
   if (dryRun || result.conflicts.length > 0) return result;
 
   const byPath = new Map(plan.files.map((file) => [file.path, file]));
-  for (const relative of [...result.created, ...result.updated]) {
+  for (const relative of [...result.created, ...result.updated, ...result.merged, ...result.conflicted]) {
     const target = path.join(cwd, relative);
     await mkdir(path.dirname(target), { recursive: true });
-    await writeFile(target, byPath.get(relative).content, { encoding: "utf8" });
+    await writeFile(target, result.contents.get(relative) ?? byPath.get(relative).content, { encoding: "utf8" });
   }
   for (const relative of result.removed) {
     await unlink(path.join(cwd, relative));
