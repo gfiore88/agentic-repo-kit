@@ -4,14 +4,14 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.10.1] - 2026-11-13
 
-Documentation accuracy for the low-risk tier and the run-efficiency features. Follow-up to `ADR-0015`, `ADR-0017`, `ADR-0019`, and `ADR-0021`.
+Documentation accuracy for the low-risk tier and the run-efficiency features. Follow-up to `ADR-0015`, `ADR-0017`, `ADR-0019`, and `ADR-0021`; release recorded in `ADR-0023`.
 
 ### Fixed
 
 - The README's low-risk `verify` example ended with a stray quote.
-- The README and the generated governance text (`AGENTS.md`, `govern-development-task`, the decision gates, and the ADR README) no longer claim that CI always blocks unreviewed merges. That merge gate needs `--enforce ci` and a required check in branch protection; without CI enforcement the review is a convention.
+- The README and the generated governance text (`AGENTS.md`, `govern-development-task`, the decision gates, and the ADR README) no longer claim that CI always blocks unreviewed merges. That merge gate needs `--enforce ci` and a required check in branch protection; without CI enforcement the review is a convention. Existing repositories receive the corrected text through `update`, except in `docs/adr/README.md`, which they own; correct that sentence by hand.
 
 ### Changed
 

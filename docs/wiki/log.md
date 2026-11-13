@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.10.1
+
+- Accepted ADR-0023 and released the README and governance wording fixes as 0.10.1 (SemVer patch) through `npm version patch`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+- Before publishing, `update` from the kit on `main` ran on a repository initialized with the published 0.10.0. It updated `AGENTS.md`, the `govern-development-task` skill, and its decision-gates reference, and kept the user-owned `docs/adr/README.md`; `doctor` reported the repository healthy and `verify` compliant.
+
 ## [2026-11-13] lint | knowledge health
 
 - `knowledge lint` reports the wiki healthy, but it checks relative links only in `docs/wiki/`. A manual check of `docs/adr/`, `docs/product/`, and `docs/` found 104 relative links, all resolving. A wrong ADR-0015 link in the draft of ADR-0023 was repaired before the commit.
