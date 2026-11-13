@@ -2,7 +2,7 @@
 type: concept
 title: Governed Self-Annealing
 created: 2026-08-31
-updated: 2026-09-04
+updated: 2026-11-13
 ---
 
 # Governed Self-Annealing
@@ -17,4 +17,6 @@ The workflow separates authority across stages:
 6. Only an approved exact diff may be applied and tested on a comparable future task.
 
 This boundary prevents silent self-modification, knowledge laundering, instruction bloat, permission escalation, and test weakening.
+
+The end-of-task closure block uses four coarse classes that map onto the run-diagnosis destinations: `None` covers runs without friction and `One-Off` incidents, `Agent Method` is the only class that enters Stage 2, `Product/Domain Scope` covers `Domain Fact`, `Architectural Decision`, and `Product Defect`, and `Tooling Gap` covers `Capability` ([ADR-0015](../../adr/adr-0015-run-efficiency-hardening-of-the-generated-kernel.md)).
 
