@@ -5,9 +5,9 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPlan } from "../plugins/agentic-repo/scripts/lib/plan.mjs";
-import { applyPlan } from "../plugins/agentic-repo/scripts/lib/writer.mjs";
+import { applyPlan, isUserOwnedPath } from "../plugins/agentic-repo/scripts/lib/writer.mjs";
 import { createGovernedArtifact } from "../plugins/agentic-repo/scripts/lib/artifacts.mjs";
-import { lintKnowledge, maskFencedCode } from "../plugins/agentic-repo/scripts/lib/knowledge.mjs";
+import { lintKnowledge, maskFencedCode, scalarValue } from "../plugins/agentic-repo/scripts/lib/knowledge.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pluginRoot = path.resolve(here, "../plugins/agentic-repo");
@@ -274,21 +274,29 @@ test("a wiki page created from the shipped template passes lint once filled in",
   assert.equal(result.ok, true, JSON.stringify(result));
 });
 
-test("generated content invokes the CLI in a form that resolves without a global install", async () => {
-  const plan = await buildPlan({
+test("generated instructions pin the generating kit version", async () => {
+  const options = {
     assetsRoot: path.join(pluginRoot, "assets"),
     skillsRoot: path.join(pluginRoot, "skills"),
     runtimes: ["codex", "claude-code", "github-copilot", "antigravity", "gemini-cli", "cursor", "opencode", "kiro"],
     enforce: "hooks",
-  });
+  };
+  const plan = await buildPlan({ ...options, kitVersion: "9.9.9" });
+  const projected = plan.files.filter((file) => !file.path.startsWith(".agents/upstream/"));
+  const invocations = projected.flatMap((file) =>
+    [...file.content.matchAll(/npx (?:--yes )?agentic-repo-kit\S*/g)].map((match) => [file.path, match[0]]));
+  assert.ok(invocations.length >= 10, "kernel instructions invoke the CLI");
+  assert.deepEqual(invocations.filter(([, text]) => !text.startsWith("npx --yes agentic-repo-kit@9.9.9")), []);
+  assert.deepEqual(invocations.filter(([file]) => isUserOwnedPath(file)), [], "preserved files would keep a stale pin");
   const bare = /(?<![\w@/-])agentic-repo (?:init|update|upgrade|doctor|status|verify|knowledge|adr|prd|anneal|exclude)\b/;
-  const offending = plan.files
-    .filter((file) => !file.path.startsWith(".agents/upstream/"))
-    .flatMap((file) => file.content.split("\n").map((line, index) => [file.path, index + 1, line]))
-    .filter(([, , line]) => bare.test(line) && !/npx agentic-repo-kit|global install/.test(line))
-    .map(([file, line]) => `${file}:${line}`);
-  assert.deepEqual(offending, []);
-  assert.ok(!plan.files.some((file) => file.content.includes("<plugin-root>") && !file.content.includes("npx agentic-repo-kit")));
+  assert.deepEqual(projected.filter((file) => bare.test(file.content)).map((file) => file.path), []);
+  assert.match(plan.files.find((file) => file.path === ".agents/hooks/pre-push").content, /verifier="agentic-repo-kit@9\.9\.9"/);
+
+  const source = await readFile(path.join(pluginRoot, "skills/curate-project-knowledge/SKILL.md"), "utf8");
+  assert.match(source, /`npx agentic-repo-kit knowledge lint`/, "sources stay version-free for the plugin");
+
+  const unknown = await buildPlan({ ...options, kitVersion: null });
+  assert.match(unknown.files.find((file) => file.path === "AGENTS.md").content, /`npx --yes agentic-repo-kit status`/);
 });
 
 test("the ADR template keeps the official ADR skill's structure", async () => {
@@ -328,4 +336,32 @@ test("the curation skill's frontmatter example passes lint when copied verbatim"
   const result = await lintKnowledge(cwd);
   assert.deepEqual(result.frontmatterIssues, []);
   assert.equal(result.ok, true);
+});
+
+test("frontmatter scalars follow YAML comment rules", () => {
+  assert.equal(scalarValue("concept   # note"), "concept");
+  assert.equal(scalarValue('"Topic # one"  # note'), "Topic # one");
+  assert.equal(scalarValue("'2026-11-13'"), "2026-11-13");
+  assert.equal(scalarValue("a#b"), "a#b");
+  assert.equal(scalarValue("Unquoted # trailing"), "Unquoted");
+  assert.equal(scalarValue("# only a comment"), "");
+});
+
+test("knowledge lint reads frontmatter values with trailing YAML comments", async () => {
+  const cwd = await initializedRepository();
+  const page = (name, frontmatter) =>
+    writeFile(path.join(cwd, `docs/wiki/${name}.md`), `---\n${frontmatter}\n---\n\n# ${name}\n\n- \`[FACT]\` Claim.\n`, "utf8");
+  await page("commented", [
+    "type: concept   # source | entity | concept",
+    'title: "Topic # one"  # the quoted hash stays',
+    "created: 2026-11-13 # first draft",
+    "updated: 2026-11-13",
+    "sources: # listed below",
+    "  - docs/raw/a.md",
+  ].join("\n"));
+  await page("empty-sources", "type: concept\ntitle: Empty\ncreated: 2026-11-13\nupdated: 2026-11-13\nsources: # none yet");
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  await writeFile(indexFile, `${await readFile(indexFile, "utf8")}\n- [Commented](commented.md)\n- [Empty](empty-sources.md)\n`, "utf8");
+  const result = await lintKnowledge(cwd);
+  assert.deepEqual(result.frontmatterIssues, [{ file: "docs/wiki/empty-sources.md", issue: "fact-bearing page missing non-empty sources" }]);
 });

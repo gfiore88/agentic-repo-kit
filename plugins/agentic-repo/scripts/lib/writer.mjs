@@ -1,6 +1,9 @@
 import { access, mkdir, readFile, readdir, rmdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { isUserOwnedPath } from "./catalog.mjs";
 import { sha256 } from "./plan.mjs";
+
+export { isUserOwnedPath };
 
 async function exists(target) {
   try {
@@ -41,18 +44,6 @@ export async function applyPlan(cwd, plan, { dryRun = false } = {}) {
     await writeFile(target, file.content, { encoding: "utf8", flag: "wx" });
   }
   return result;
-}
-
-export function isUserOwnedPath(relativePath) {
-  const userPrefixes = [
-    "docs/wiki/",
-    "docs/adr/",
-    "docs/product/",
-    "docs/raw/",
-    "docs/specs/",
-    "docs/templates/",
-  ];
-  return userPrefixes.some((prefix) => relativePath.startsWith(prefix));
 }
 
 export async function readScaffoldLock(cwd) {
