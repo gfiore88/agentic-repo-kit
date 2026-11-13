@@ -25,6 +25,23 @@ function relative(cwd, target) {
 
 const FRONTMATTER_TYPES = new Set(["index", "overview", "log", "questions", "source", "entity", "concept"]);
 
+// Fenced code blocks hold examples, not wiki content. Blanking their lines keeps
+// links and `[FACT]` markers inside them out of the lint while line numbers stay
+// stable (ADR-0015). An unclosed fence runs to the end of the page, as in CommonMark.
+export function maskFencedCode(content) {
+  let fence = null;
+  return content.split("\n").map((line) => {
+    const marker = line.match(/^[ \t]*(`{3,}|~{3,})([^\n]*)$/);
+    if (!fence) {
+      if (!marker || (marker[1][0] === "`" && marker[2].includes("`"))) return line;
+      fence = marker[1];
+      return "";
+    }
+    if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) fence = null;
+    return "";
+  }).join("\n");
+}
+
 function unquote(value) {
   return value.replace(/^['"]|['"]$/g, "").trim();
 }
@@ -64,7 +81,7 @@ function validateFrontmatter(file, content, hasFact) {
 export async function lintKnowledge(cwd) {
   const wikiRoot = path.join(cwd, "docs", "wiki");
   const indexPath = path.join(wikiRoot, "index.md");
-  if (!await exists(indexPath)) throw new Error("Missing docs/wiki/index.md; run agentic-repo init first");
+  if (!await exists(indexPath)) throw new Error("Missing docs/wiki/index.md; run 'npx agentic-repo-kit init' first");
   const files = await markdownFiles(wikiRoot);
   const indexContent = await readFile(indexPath, "utf8");
   const brokenLinks = [];
@@ -76,7 +93,8 @@ export async function lintKnowledge(cwd) {
 
   for (const file of files) {
     const content = await readFile(file, "utf8");
-    for (const match of content.matchAll(linkPattern)) {
+    const prose = maskFencedCode(content);
+    for (const match of prose.matchAll(linkPattern)) {
       const href = match[1].split("#")[0];
       if (!href || /^(?:https?:|mailto:)/.test(href)) continue;
       const target = path.resolve(path.dirname(file), decodeURIComponent(href));
@@ -87,7 +105,7 @@ export async function lintKnowledge(cwd) {
       const relFromIndex = path.relative(wikiRoot, file).split(path.sep).join("/");
       if (!indexContent.includes(relFromIndex)) uncataloguedPages.push(relative(cwd, file));
     }
-    const lines = content.split("\n");
+    const lines = prose.split("\n");
     const headerSlice = lines.slice(0, 20).join("\n");
     const hasPageProvenance = /(^|\n)\s*(?:\*\*)?source(?:s)?(?:\*\*)?:\s*(?:`[^`]+`|\[[^\]]+\]\([^)]+\)|docs\/raw\/|https?:|\S+)/i.test(headerSlice);
 
@@ -99,7 +117,7 @@ export async function lintKnowledge(cwd) {
         }
       }
     });
-    frontmatterIssues.push(...validateFrontmatter(relative(cwd, file), content, content.includes("[FACT]")));
+    frontmatterIssues.push(...validateFrontmatter(relative(cwd, file), content, prose.includes("[FACT]")));
   }
 
   const orphanPages = files
@@ -155,7 +173,8 @@ async function findMalformedLogEntries(cwd, wikiRoot) {
   const content = await readFile(logPath, "utf8");
   const entryPattern = /^##\s+\[[^\]]+\]\s+\S+\s+\|\s+.+$/;
   const malformed = [];
-  content.split("\n").forEach((line, index) => {
+  // CRLF checkouts must not turn every entry into a (now blocking) malformed entry.
+  content.split(/\r?\n/).forEach((line, index) => {
     if (/^##\s/.test(line) && !entryPattern.test(line)) {
       malformed.push({ file: relative(cwd, logPath), line: index + 1 });
     }

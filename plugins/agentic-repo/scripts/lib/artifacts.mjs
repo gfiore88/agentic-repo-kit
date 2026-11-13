@@ -23,7 +23,7 @@ async function renderTemplate(cwd, templateName, replacements) {
   const templatePath = path.join(cwd, "docs", "templates", templateName);
   let content;
   try { content = await readFile(templatePath, "utf8"); } catch (error) {
-    if (error.code === "ENOENT") throw new Error(`Missing ${templatePath}; run agentic-repo init first`);
+    if (error.code === "ENOENT") throw new Error(`Missing ${templatePath}; run 'npx agentic-repo-kit init' first`);
     throw error;
   }
   for (const [pattern, replacement] of replacements) content = content.replaceAll(pattern, replacement);
