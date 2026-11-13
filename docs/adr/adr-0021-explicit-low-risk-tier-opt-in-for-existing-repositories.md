@@ -1,6 +1,6 @@
 ---
 title: "ADR-0021: Explicit Low-Risk Tier Opt-In for Existing Repositories"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["update", "adr-gate", "fast-lane", "governance"]
@@ -12,7 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed** | Accepted | Rejected | Superseded | Deprecated
+**Accepted** by Giovanni Fiore on 2026-11-13. He replied "ook" to the request to
+accept ADR-0021 together with the 0.10.0 release, the only decision pending at that
+point.
 
 ## Context
 
