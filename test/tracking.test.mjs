@@ -5,6 +5,7 @@ import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promise
 import os from "node:os";
 import path from "node:path";
 import { runCli } from "../plugins/agentic-repo/scripts/lib/cli.mjs";
+import { inspectGitExclude, MARKER_END, MARKER_START } from "../plugins/agentic-repo/scripts/lib/exclude.mjs";
 import { parseIndexPaths, resolveGitDirs } from "../plugins/agentic-repo/scripts/lib/git.mjs";
 
 async function run(argv) {
@@ -171,6 +172,33 @@ test("doctor skips the tracking check without a readable index", async (t) => {
   assert.deepEqual(json.untracked, []);
 });
 
+test("update moves exclusions that an earlier version left in a linked worktree's own directory", async (t) => {
+  const root = await tempDir(t);
+  const common = path.join(root, "main", ".git");
+  const worktreeGitDir = path.join(common, "worktrees", "wt");
+  await mkdir(worktreeGitDir, { recursive: true });
+  await writeFile(path.join(worktreeGitDir, "commondir"), "../..\n", "utf8");
+  const repo = path.join(root, "wt");
+  await mkdir(repo);
+  await writeFile(path.join(repo, ".git"), `gitdir: ${worktreeGitDir}\n`, "utf8");
+  assert.equal((await run(["init", "--yes", "--runtime", "none", "--cwd", repo])).code, 0);
+  const legacyPath = path.join(worktreeGitDir, "info", "exclude");
+  await mkdir(path.dirname(legacyPath), { recursive: true });
+  await writeFile(legacyPath, `# own rule\n\n${MARKER_START}\n/AGENTS.md\n${MARKER_END}\n`, "utf8");
+
+  const before = await inspectGitExclude(repo);
+  assert.deepEqual([before.active, before.legacy, before.patterns], [false, true, []], "Git never reads the legacy block");
+  assert.match((await run(["exclude", "--list", "--cwd", repo])).out, /Notice: an earlier version wrote exclusions/);
+
+  const update = await run(["update", "--yes", "--cwd", repo]);
+  assert.equal(update.code, 0);
+  assert.match(update.out, /Local git exclude: enabled/);
+  assert.match(await readFile(path.join(common, "info", "exclude"), "utf8"), /\/scaffold\.lock/);
+  assert.equal(await readFile(legacyPath, "utf8"), "# own rule\n", "only the managed block leaves the legacy file");
+  const after = await inspectGitExclude(repo);
+  assert.deepEqual([after.active, after.legacy], [true, false]);
+});
+
 const gitAvailable = spawnSync("git", ["--version"]).status === 0;
 
 test("doctor and exclusions agree with a real Git repository", { skip: !gitAvailable && "git is not available" }, async (t) => {
@@ -207,4 +235,15 @@ test("doctor and exclusions agree with a real Git repository", { skip: !gitAvail
   assert.equal(git(worktree, "status", "--porcelain"), "", "kit files are hidden in the linked worktree");
   assert.equal(git(worktree, "config", "core.hooksPath").trim(), ".agents/hooks");
   assert.deepEqual(JSON.parse((await run(["doctor", "--json", "--cwd", worktree])).out).untracked, []);
+
+  // The layout an earlier version left: the block in the worktree's own directory.
+  assert.equal((await run(["exclude", "--remove", "--cwd", worktree])).code, 0);
+  const legacyBlock = await readFile(path.join(client, ".git", "info", "exclude"), "utf8").catch(() => "");
+  assert.doesNotMatch(legacyBlock, /BEGIN AGENTIC REPO EXCLUDES/);
+  const worktreeGitDir = (await resolveGitDirs(worktree)).gitDir;
+  await mkdir(path.join(worktreeGitDir, "info"), { recursive: true });
+  await writeFile(path.join(worktreeGitDir, "info", "exclude"), `${MARKER_START}\n/scaffold.lock\n${MARKER_END}\n`, "utf8");
+  assert.notEqual(git(worktree, "status", "--porcelain"), "", "Git ignores the per-worktree block");
+  assert.equal((await run(["update", "--yes", "--cwd", worktree])).code, 0);
+  assert.equal(git(worktree, "status", "--porcelain"), "", "update moved the exclusions where Git reads them");
 });

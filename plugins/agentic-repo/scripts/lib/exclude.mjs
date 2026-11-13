@@ -62,6 +62,38 @@ export async function resolveGitExcludePath(cwd) {
   return dirs ? path.join(dirs.commonDir, "info", "exclude") : null;
 }
 
+// Before ADR-0026 the block went to a linked worktree's own info/exclude, which Git
+// never reads. Its presence still records that the owner chose local exclusions.
+async function legacyExcludePath(cwd) {
+  const dirs = await resolveGitDirs(cwd);
+  return dirs && dirs.gitDir !== dirs.commonDir ? path.join(dirs.gitDir, "info", "exclude") : null;
+}
+
+async function readManagedPatterns(file) {
+  let content;
+  try {
+    content = await readFile(file, "utf8");
+  } catch {
+    return null;
+  }
+  const startIndex = content.indexOf(MARKER_START);
+  const endIndex = content.indexOf(MARKER_END);
+  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) return null;
+  return content
+    .slice(startIndex + MARKER_START.length, endIndex)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+}
+
+async function removeLegacyBlock(cwd) {
+  const legacyPath = await legacyExcludePath(cwd);
+  if (!legacyPath || (await readManagedPatterns(legacyPath)) === null) return false;
+  const cleaned = stripManagedBlock(await readFile(legacyPath, "utf8"));
+  await writeFile(legacyPath, cleaned.length > 0 ? `${cleaned}\n` : "", "utf8");
+  return true;
+}
+
 function stripManagedBlock(content) {
   const startIndex = content.indexOf(MARKER_START);
   const endIndex = content.indexOf(MARKER_END);
@@ -105,6 +137,7 @@ export async function applyGitExclude(cwd, customPatterns = null) {
 
   await mkdir(path.dirname(excludePath), { recursive: true });
   await writeFile(excludePath, newContent, "utf8");
+  await removeLegacyBlock(cwd);
 
   return { ok: true, path: excludePath, patterns };
 }
@@ -114,12 +147,13 @@ export async function removeGitExclude(cwd) {
   if (!excludePath) {
     return { ok: false, reason: "no-git", path: null };
   }
+  const legacyRemoved = await removeLegacyBlock(cwd);
 
   let existing = "";
   try {
     existing = await readFile(excludePath, "utf8");
   } catch {
-    return { ok: true, path: excludePath, removed: false };
+    return { ok: true, path: excludePath, removed: legacyRemoved };
   }
 
   const cleaned = stripManagedBlock(existing);
@@ -129,26 +163,15 @@ export async function removeGitExclude(cwd) {
   return { ok: true, path: excludePath, removed: true };
 }
 
+// `patterns` are the exclusions Git applies; `legacy` reports a block that an
+// earlier version left where Git does not read it, so `update` moves it.
 export async function inspectGitExclude(cwd) {
   const excludePath = await resolveGitExcludePath(cwd);
   if (!excludePath) {
-    return { ok: false, reason: "no-git", active: false, patterns: [] };
+    return { ok: false, reason: "no-git", active: false, legacy: false, patterns: [] };
   }
-
-  try {
-    const content = await readFile(excludePath, "utf8");
-    const startIndex = content.indexOf(MARKER_START);
-    const endIndex = content.indexOf(MARKER_END);
-    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-      const block = content.slice(startIndex + MARKER_START.length, endIndex);
-      const patterns = block
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line && !line.startsWith("#"));
-      return { ok: true, path: excludePath, active: true, patterns };
-    }
-    return { ok: true, path: excludePath, active: false, patterns: [] };
-  } catch {
-    return { ok: true, path: excludePath, active: false, patterns: [] };
-  }
+  const patterns = await readManagedPatterns(excludePath);
+  const legacyPath = await legacyExcludePath(cwd);
+  const legacy = legacyPath ? (await readManagedPatterns(legacyPath)) !== null : false;
+  return { ok: true, path: excludePath, active: patterns !== null, legacy, patterns: patterns ?? [] };
 }

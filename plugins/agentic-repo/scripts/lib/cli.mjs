@@ -223,7 +223,7 @@ async function runUpdate(options) {
   const inspection = await inspectUpdate(cwd, plan, { previousLock: baseline, force: options.force });
   const lowRiskTier = await inspectLowRiskOptIn(cwd, options.enableLowRisk);
   const excludeState = await inspectGitExclude(cwd);
-  const shouldGitExclude = options.gitExclude || excludeState.active;
+  const shouldGitExclude = options.gitExclude || excludeState.active || excludeState.legacy;
 
   if (options.json) {
     output.write(`${JSON.stringify({ cwd, adopt: adopting, runtimes, profile, enforcement: enforce, gitExclude: shouldGitExclude, lowRiskTier, ...inspection }, null, 2)}\n`);
@@ -290,6 +290,7 @@ async function excludeCommand(options) {
     else {
       output.write(`Target: ${cwd}\n`);
       output.write(`Active: ${result.active ? "yes" : "no"}\n`);
+      if (result.legacy) output.write("Notice: an earlier version wrote exclusions to this linked worktree's own info/exclude, which Git ignores. Run `npx agentic-repo-kit exclude` or `update` to move them.\n");
       output.write(`Excluded patterns: ${result.patterns.length}\n`);
       for (const pattern of result.patterns) output.write(`  - ${pattern}\n`);
     }

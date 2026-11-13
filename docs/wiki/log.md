@@ -11,6 +11,7 @@ updated: 2026-11-13
 
 - Accepted and implemented ADR-0026. `doctor` warns, without failing, about kit files that are on disk, absent from the Git index, and outside the managed exclude block, and `status` shows the count. A new reader parses the index without running Git (versions 2 to 4, SHA-1 and SHA-256); a split or sparse index skips the check.
 - The managed exclude block and `core.hooksPath` now go to the common Git directory, so local exclusions and the hook gate work in linked worktrees. Tests cover synthetic indexes and worktree layouts, plus a real Git repository and worktree when `git` is available.
+- A pre-release check on a worktree initialized with the published 0.11.0 found that `update` fixed the hooks path but not the exclusions: it looked for the block only where Git reads it. `update` and `exclude` now also recognize a block that an earlier version left in the worktree's own `info/exclude` and move it, while `doctor` still counts only the exclusions Git applies.
 
 ## [2026-11-13] decision | Untracked kernel warning and worktree-aware Git metadata proposed
 

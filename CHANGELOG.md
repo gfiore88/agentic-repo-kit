@@ -20,7 +20,7 @@ Kit files can no longer sit unnoticed outside Git, and local exclusions and the 
 
 ### Upgrade notes
 
-- In a linked worktree, run `npx agentic-repo-kit exclude` once, and `update` if you use the hook gate, to write the exclusions and the hooks path where Git reads them. The copies that earlier versions left in the per-worktree directory are never read by Git and can be deleted.
+- In a linked worktree, run `npx agentic-repo-kit update` once. It moves the exclusions that earlier versions left in the worktree's own `info/exclude` to the shared Git directory, and rewrites the hooks path there. `exclude` moves the exclusions too, and `exclude --list` reports a block left behind.
 - Only the managed exclude block counts as an exclusion. If you ignore kit files with your own `.gitignore` rules, `doctor` still reports them; run `exclude` to clear the warning.
 
 ## [0.11.0] - 2026-11-13
