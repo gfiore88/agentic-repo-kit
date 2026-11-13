@@ -1,6 +1,6 @@
 ---
 title: "ADR-0024: Lock Diagnostics and Explicit Adoption for Repositories Without scaffold.lock"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["update", "doctor", "scaffold-lock", "recovery"]
@@ -12,7 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed**. Implementation waits for explicit acceptance by Giovanni Fiore.
+**Accepted** by Giovanni Fiore on 2026-11-13. He replied "ok" to the message that
+implementation would start once he accepted ADR-0024, the only decision pending at
+that point.
 
 ## Context
 
