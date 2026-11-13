@@ -131,13 +131,14 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     npx --yes "$verifier" verify < /dev/null || fail=1
     continue
   fi
-  changed="$(git diff --name-only "$base" "$local_sha" | paste -sd, -)"
+  changed="$(git diff --name-only --no-renames "$base" "$local_sha" | paste -sd, -)"
   [ -z "$changed" ] && continue
+  lines="$(git diff --numstat --no-renames "$base" "$local_sha" | awk -F '\\t' '{ n = ($1 == "-") ? 1 : $1 + $2; printf "%s%d:%s", (NR > 1 ? "," : ""), n, $3 }')"
   messages="$(git log --format=%B "$base..$local_sha")"
   adrs="$(printf '%s\\n' "$messages" | grep -oE 'ADR-[0-9]{4}' | sort -u | paste -sd, -)"
   routine=""
   printf '%s\\n' "$messages" | grep -qiE '^ADR:[[:space:]]*routine[[:space:]]*$' && routine="--routine"
-  npx --yes "$verifier" verify --changed "$changed" \${adrs:+--adr "$adrs"} $routine < /dev/null || fail=1
+  npx --yes "$verifier" verify --changed "$changed" --lines "$lines" \${adrs:+--adr "$adrs"} $routine < /dev/null || fail=1
 done
 exit $fail
 `;
@@ -173,6 +174,8 @@ jobs:
           PR_BASE: \${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE: \${{ github.event.before }}
           DEFAULT_BRANCH: \${{ github.event.repository.default_branch }}
+          BASE_REF: \${{ github.base_ref }}
+          REF_NAME: \${{ github.ref_name }}
           PR_TITLE: \${{ github.event.pull_request.title }}
           PR_BODY: \${{ github.event.pull_request.body }}
         run: |
@@ -185,16 +188,21 @@ jobs:
             npx --yes "$VERIFIER" verify
             exit $?
           fi
-          CHANGED="$(git diff --name-only "$BASE" HEAD | paste -sd, -)"
+          CHANGED="$(git diff --name-only --no-renames "$BASE" HEAD | paste -sd, -)"
           if [ -z "$CHANGED" ]; then
             npx --yes "$VERIFIER" verify
             exit $?
           fi
           TEXT="$(git log --format=%B "$BASE..HEAD"; printf '%s\\n%s\\n' "$PR_TITLE" "$PR_BODY")"
           ADRS="$(printf '%s\\n' "$TEXT" | grep -oE 'ADR-[0-9]{4}' | sort -u | paste -sd, - || true)"
-          set -- verify --changed "$CHANGED"
+          LINES="$(git diff --numstat --no-renames "$BASE" HEAD | awk -F '\\t' '{ n = ($1 == "-") ? 1 : $1 + $2; printf "%s%d:%s", (NR > 1 ? "," : ""), n, $3 }')"
+          set -- verify --changed "$CHANGED" --lines "$LINES"
           if [ -n "$ADRS" ]; then set -- "$@" --adr "$ADRS"; fi
           if printf '%s\\n' "$TEXT" | grep -qiE '^ADR:[[:space:]]*routine[[:space:]]*$'; then set -- "$@" --routine; fi
+          # Merges into the default branch need an approved review for low-risk ADRs.
+          TARGET="$REF_NAME"
+          if [ "$EVENT_NAME" = "pull_request" ]; then TARGET="$BASE_REF"; fi
+          if [ "$TARGET" = "$DEFAULT_BRANCH" ]; then set -- "$@" --require-reviews; fi
           npx --yes "$VERIFIER" "$@"
 `;
 }

@@ -10,7 +10,7 @@ import { buildPlan } from "./plan.mjs";
 import { applyPlan, applyUpdate, inspectPlan, inspectUpdate, readScaffoldLock } from "./writer.mjs";
 import { runDoctor } from "./doctor.mjs";
 import { verifyGovernance } from "./verify.mjs";
-import { createGovernedArtifact } from "./artifacts.mjs";
+import { createGovernedArtifact, recordAdrReview } from "./artifacts.mjs";
 import { lintKnowledge } from "./knowledge.mjs";
 import { collectStatus, formatStatus } from "./status.mjs";
 import { applyGitExclude, inspectGitExclude, removeGitExclude } from "./exclude.mjs";
@@ -28,10 +28,11 @@ Usage:
   agentic-repo update [options]
   agentic-repo doctor [options]
   agentic-repo status [--limit <n>] [options]
-  agentic-repo verify [--changed <paths>] [--adr <ids>] [--routine] [options]
+  agentic-repo verify [--changed <paths>] [--adr <ids>] [--routine] [--lines <n|count:path,...>] [--require-reviews] [options]
   agentic-repo exclude [options]
   agentic-repo knowledge lint [options]
-  agentic-repo adr new --title <title> [options]
+  agentic-repo adr new --title <title> [--tier low-risk] [options]
+  agentic-repo adr review --adr <id> --decision <approved|rejected> --by <name> --quote <text> [options]
   agentic-repo prd new --title <title> [options]
   agentic-repo anneal new --title <title> --target <file> [options]
 
@@ -56,6 +57,12 @@ Options:
   --adr <ids>                Comma-separated ADR references (e.g. ADR-0013) governing the change
   --routine                  verify: declare routine work (paths must match docs/adr/gate.json "routine"; log entry required)
   --limit <n>                status: number of latest log entries to show (default 5)
+  --lines <n|count:path,...> verify: changed line counts for the low-risk tier (a total, or numstat-derived counts per path)
+  --require-reviews          verify: low-risk tier ADRs in the change set must have an approved human review
+  --tier low-risk            adr new: accept the ADR through the low-risk tier in docs/adr/gate.json (review pending)
+  --decision <decision>      adr review: approved or rejected (rejected also rejects the ADR)
+  --by <name>                adr review: the human reviewer
+  --quote <text>             adr review: the reviewer's own words, naming the task or ADR
   --enforce <mode>           Enforcement projection: ci, hooks, or none (default none)
   --help, -h                 Show help
 
@@ -278,12 +285,17 @@ async function verifyCommand(options) {
   const adrReferences = options.adr === null
     ? []
     : options.adr.split(",").map((entry) => entry.trim()).filter(Boolean);
-  const result = await verifyGovernance(cwd, { changedFiles, adrReferences, routine: options.routine });
+  const result = await verifyGovernance(cwd, {
+    changedFiles, adrReferences, routine: options.routine, lines: options.lines, requireReviews: options.requireReviews,
+  });
   if (options.json) output.write(`${JSON.stringify({ cwd, ...result }, null, 2)}\n`);
   else {
     output.write(`Target: ${cwd}\n`);
     output.write(`ADR gate: ${result.adrGateApplied ? (result.routine ? "applied (routine tier)" : "applied") : "skipped (pass --changed to enable)"}\n`);
     for (const reference of result.adrReferences) output.write(`ADR reference: ${reference.reference} -> ${reference.status ?? reference.detail}\n`);
+    if (result.lowRiskAdrs.length > 0) {
+      output.write(`Low-risk tier: ${result.lowRiskAdrs.join(", ")}${result.reviewsRequired ? " (reviews required)" : ""}\n`);
+    }
     output.write(`Violations: ${result.violations.length}\n`);
     for (const violation of result.violations) output.write(`  ${violation.kind}: ${violation.detail}\n`);
     output.write(result.ok ? "Status: compliant\n" : "Status: non-compliant\n");
@@ -312,15 +324,32 @@ async function knowledgeCommand(options) {
   return result.ok ? 0 : 1;
 }
 
+async function reviewCommand(options) {
+  const cwd = path.resolve(options.cwd);
+  const result = await recordAdrReview(cwd, options);
+  const relative = path.relative(cwd, result.file).split(path.sep).join("/");
+  if (options.json) output.write(`${JSON.stringify({ cwd, adr: result.id, path: relative, review: result.review, status: result.status }, null, 2)}\n`);
+  else {
+    output.write(`Recorded ${result.review} review for ${result.id} (${relative}).\n`);
+    if (result.review === "rejected") output.write("Status: Rejected. Revert the change unless the reviewer asked to fix it forward with a follow-up ADR.\n");
+  }
+  return 0;
+}
+
 async function artifactCommand(options) {
   const cwd = path.resolve(options.cwd);
+  if (options.command === "adr" && options.subcommand === "review") return reviewCommand(options);
+  if (options.tier && options.command !== "adr") throw new Error("--tier applies only to adr new");
   const created = await createGovernedArtifact(cwd, options.command, options);
   const relative = path.relative(cwd, created).split(path.sep).join("/");
-  const status = options.command === "adr" ? "Proposed" : options.command === "prd" ? "Draft" : "PENDING";
-  if (options.json) output.write(`${JSON.stringify({ cwd, created: relative, status }, null, 2)}\n`);
-  else {
+  const lowRisk = options.command === "adr" && options.tier === "low-risk";
+  const status = options.command === "adr" ? (lowRisk ? "Accepted" : "Proposed") : options.command === "prd" ? "Draft" : "PENDING";
+  if (options.json) {
+    output.write(`${JSON.stringify({ cwd, created: relative, status, ...(lowRisk ? { tier: "low-risk", review: "pending" } : {}) }, null, 2)}\n`);
+  } else {
     output.write(`Created ${relative}.\n`);
-    if (options.command === "adr") output.write("Status: Proposed. Implementation remains blocked until explicit human acceptance.\n");
+    if (lowRisk) output.write("Status: Accepted by the low-risk tier; human review pending. Implement now, fill in the eligibility section, and record the review before merging to the default branch.\n");
+    else if (options.command === "adr") output.write("Status: Proposed. Implementation remains blocked until explicit human acceptance.\n");
     else if (options.command === "prd") output.write("Status: Draft. Complete discovery and obtain human approval for important decisions.\n");
     else output.write("Status: PENDING. The target directive has not been modified.\n");
   }

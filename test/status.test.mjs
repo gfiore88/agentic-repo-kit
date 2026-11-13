@@ -49,7 +49,7 @@ test("status reports an uninitialized directory without failing", async () => {
   const payload = JSON.parse(out);
   assert.deepEqual(payload.kernel, { initialized: false });
   assert.deepEqual(payload.knowledge, { initialized: false });
-  for (const key of ["adrs", "prds", "pendingProposals", "adrCollisions", "log"]) assert.deepEqual(payload[key], []);
+  for (const key of ["pendingReviews", "adrs", "prds", "pendingProposals", "adrCollisions", "log"]) assert.deepEqual(payload[key], []);
 });
 
 test("status summarizes a generated repository within its size budget", async () => {
