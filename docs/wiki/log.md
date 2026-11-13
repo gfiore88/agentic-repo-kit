@@ -7,6 +7,10 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | Customized kernel files reported, not unhealthy, proposed
+
+- Since ADR-0028, customizing kernel files is supported, but `doctor` still reports every customized repository as unhealthy. The client repository showed `divergent: 10` after a successful update. Proposed ADR-0030: customized files stay listed but no longer fail `doctor`, pending kit changes are reported, and `doctor --strict` keeps the old rule.
+
 ## [2026-11-13] annealing | Product-gap escalation added to the development contract
 
 - Diagnosis (`Agent Method`): while recovering a client repository, the agent treated a long manual three-way merge as an acceptable fix. It did not report that every user of the published package would repeat that workaround after each update; the owner had to raise it, which led to ADR-0028.

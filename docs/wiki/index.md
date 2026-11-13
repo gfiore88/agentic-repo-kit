@@ -50,6 +50,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Minor release 0.12.0](../adr/adr-0027-minor-release-0-12-0.md): accepted SemVer minor release of the ADR-0026 work.
 - [Automatic three-way merge of customized kernel files on update](../adr/adr-0028-automatic-three-way-merge-of-customized-kernel-files-on-update.md): accepted merge of customized kernel files against a base rebuilt from the version in the lock, with conflict markers instead of an aborted update.
 - [Minor release 0.13.0](../adr/adr-0029-minor-release-0-13-0.md): accepted SemVer minor release of the ADR-0028 work.
+- [Customized kernel files are reported, not unhealthy](../adr/adr-0030-customized-kernel-files-are-reported-not-unhealthy.md): proposed `doctor` health that ignores customized kernel files (still listed), pending kit changes, and `doctor --strict`.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.
