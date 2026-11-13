@@ -1,8 +1,8 @@
 # Governed Task Lifecycle
 
-1. Bootstrap context from the index, recent log, active specs, and decisions.
+1. Bootstrap context with `npx agentic-repo-kit status`, then the index, active specs, and decisions it points to.
 2. Run PRD eligibility; important undecided product scope enters Draft PRD discovery.
-3. Create the mandatory task ADR with the official skill, set it to `Proposed`, and pause for human acceptance. Follow-up work inside an already `Accepted` ADR's scope cites it as `ADR-NNNN` instead.
+3. Create the mandatory task ADR with the official skill, starting from `npx agentic-repo-kit adr new --title "<title>"`, set it to `Proposed`, and pause for human acceptance. Follow-up work inside an already `Accepted` ADR's scope cites it as `ADR-NNNN` instead.
 4. Define acceptance criteria and verification evidence.
 5. Plan small dependency-ordered slices.
 6. Implement with appropriate lifecycle skills and continuous verification.

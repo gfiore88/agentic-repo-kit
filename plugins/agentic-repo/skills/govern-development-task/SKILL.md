@@ -10,8 +10,16 @@ Before implementation:
 1. Read `AGENTS.md`, `docs/wiki/index.md`, and only the relevant linked knowledge.
 2. Classify the request using [references/decision-gates.md](references/decision-gates.md).
 3. Draft a PRD when material product scope, user outcomes, or success measures remain undecided.
-4. For every new development task, execute the official `create-architectural-decision-record` skill and create a dedicated task ADR. Existing ADRs may govern or constrain it but do not replace it. Follow-up work inside the scope of an already `Accepted` ADR cites it as `ADR-NNNN` instead of creating a duplicate (see `references/decision-gates.md`).
+4. For every new development task, create a dedicated task ADR: run `npx agentic-repo-kit adr new --title "<title>"` to create the next-numbered file in `docs/adr/`, then complete every section with the official `create-architectural-decision-record` skill. Derive the context, decision, alternatives, and stakeholders from the conversation and the repository, and ask the human only for what you cannot derive. Existing ADRs may govern or constrain it but do not replace it. Follow-up work inside the scope of an already `Accepted` ADR cites it as `ADR-NNNN` instead of creating a duplicate (see `references/decision-gates.md`).
 5. Keep the task ADR `Proposed` and stop before implementation until the human explicitly approves it. Cite approval from the current conversation only when it unambiguously names or covers that exact task ADR.
+
+Load lifecycle skills proportionally: load a skill only when its trigger matches the task, and treat the `using-agent-skills` Lifecycle Sequence as a menu, not a checklist. Typical sets when the full skill profile is installed:
+
+- Bug fix: `debugging-and-error-recovery`, then `test-driven-development` for the regression test.
+- Small change: `incremental-implementation` and `test-driven-development`.
+- New feature: `spec-driven-development` and `planning-and-task-breakdown` first, then `incremental-implementation`, `test-driven-development`, and `code-review-and-quality`.
+
+Add a skill when the task needs it, for example `security-and-hardening` for authentication or untrusted input. Acceptance criteria, tests, verification, and the Definition of Done (`.agents/references/definition-of-done.md`) are never skipped.
 
 After implementation:
 

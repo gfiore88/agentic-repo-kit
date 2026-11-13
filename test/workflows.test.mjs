@@ -258,3 +258,62 @@ for (const profile of ["full", "core"]) test(`${profile} generated repository ha
     assert.deepEqual(dangling, []);
   }
 });
+
+test("a wiki page created from the shipped template passes lint once filled in", async () => {
+  const cwd = await initializedRepository();
+  const template = await readFile(path.join(cwd, "docs/templates/wiki-page-template.md"), "utf8");
+  const page = template
+    .replaceAll("[Topic]", "Auth flow")
+    .replaceAll("YYYY-MM-DD", "2026-11-13")
+    .replace("sources: []", 'sources: ["docs/raw/auth.md"]');
+  await mkdir(path.join(cwd, "docs/wiki/concepts"), { recursive: true });
+  await writeFile(path.join(cwd, "docs/wiki/concepts/auth-flow.md"), page, "utf8");
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  await writeFile(indexFile, `${await readFile(indexFile, "utf8")}\n- [Auth flow](concepts/auth-flow.md)\n`, "utf8");
+  const result = await lintKnowledge(cwd);
+  assert.equal(result.ok, true, JSON.stringify(result));
+});
+
+test("generated content invokes the CLI in a form that resolves without a global install", async () => {
+  const plan = await buildPlan({
+    assetsRoot: path.join(pluginRoot, "assets"),
+    skillsRoot: path.join(pluginRoot, "skills"),
+    runtimes: ["codex", "claude-code", "github-copilot", "antigravity", "gemini-cli", "cursor", "opencode", "kiro"],
+    enforce: "hooks",
+  });
+  const bare = /(?<![\w@/-])agentic-repo (?:init|update|upgrade|doctor|status|verify|knowledge|adr|prd|anneal|exclude)\b/;
+  const offending = plan.files
+    .filter((file) => !file.path.startsWith(".agents/upstream/"))
+    .flatMap((file) => file.content.split("\n").map((line, index) => [file.path, index + 1, line]))
+    .filter(([, , line]) => bare.test(line) && !/npx agentic-repo-kit|global install/.test(line))
+    .map(([file, line]) => `${file}:${line}`);
+  assert.deepEqual(offending, []);
+  assert.ok(!plan.files.some((file) => file.content.includes("<plugin-root>") && !file.content.includes("npx agentic-repo-kit")));
+});
+
+test("the ADR template keeps the official ADR skill's structure", async () => {
+  const skill = await readFile(path.join(pluginRoot, "skills/create-architectural-decision-record/SKILL.md"), "utf8");
+  const official = skill.match(/```md\n([\s\S]*?)\n```/)[1];
+  const template = await readFile(path.join(pluginRoot, "assets/blueprints/base/docs/templates/adr-template.md"), "utf8");
+  const keys = (content) => content.match(/^---\n([\s\S]*?)\n---/)[1].split("\n").map((line) => line.split(":")[0]);
+  const sections = (content) => content.split("\n").filter((line) => /^## /.test(line));
+  assert.deepEqual(keys(template), keys(official));
+  assert.deepEqual(sections(template), sections(official));
+});
+
+test("annealing classes map consistently across the closure block, process, and prompt", async () => {
+  const blueprint = path.join(pluginRoot, "assets/blueprints/base");
+  const contract = await readFile(path.join(blueprint, "AGENTS.md"), "utf8");
+  const process = await readFile(path.join(pluginRoot, "skills/anneal-agent-directives/references/annealing-process.md"), "utf8");
+  const prompt = await readFile(path.join(blueprint, ".agents/prompts/analyze-agent-run.prompt.md"), "utf8");
+  const closure = contract.match(/\*\*Classification\*\*: (.+)/)[1].match(/`[^`]+`/g);
+  assert.deepEqual(closure, ["`None`", "`Agent Method`", "`Product/Domain Scope`", "`Tooling Gap`"]);
+  for (const name of closure) {
+    assert.match(process, new RegExp(`^\\| ${name.replace("/", "\\/")} \\|`, "m"), `${name} missing from the mapping table`);
+    assert.ok(prompt.includes(name), `${name} missing from the analysis prompt`);
+  }
+  for (const stage1 of ["Domain Fact", "Architectural Decision", "Agent Method", "Capability", "Product Defect", "One-Off"]) {
+    assert.ok(process.includes(`\`${stage1}\``) && prompt.includes(`\`${stage1}\``), `${stage1} must be named in both files`);
+  }
+  assert.ok(!`${process}${prompt}`.includes("One-Off Incident"));
+});
