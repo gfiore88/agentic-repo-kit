@@ -7,6 +7,10 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.8.0
+
+- Accepted ADR-0016 and released the ADR-0015 work as 0.8.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+
 ## [2026-11-13] decision | Fast-lane task approval PRD drafted
 
 - Drafted PRD-0007 (`Draft`) for the question that ADR-0015 deferred: letting a human pre-approve a task ADR in the request so that small tasks skip the approval stop. The discovery questions went unanswered, so the mechanism, problem focus, and metric use the offered defaults and are marked `[ASSUMPTION]`. Nothing is authorized until the owner approves.
