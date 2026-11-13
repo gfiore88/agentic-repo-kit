@@ -19,7 +19,7 @@ A repository that lost its `scaffold.lock` can be updated again, and every lock 
 ### Fixed
 
 - `update` reported every unusable lock as "not found" and claimed that the repository was never initialized. It now tells a missing lock apart from an unreadable one and from invalid content (for example merge-conflict markers). A repository with kernel files but no lock is pointed to restoring the lock or to `update --adopt`, instead of `init`, which stops on the first file that differs.
-- `doctor` reports the same lock state and the next step (`lockState` and `hint` in `--json`).
+- `doctor` reports the same lock state and the next step (`lockState` and `hint` in `--json`). An unreadable or invalid lock is no longer listed under `missing`, and a lock that is valid JSON but not an object (for example `[]`), which `doctor` reported as healthy, is now invalid.
 
 ### Upgrade notes
 
