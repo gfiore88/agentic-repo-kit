@@ -16,7 +16,7 @@ Faster, more reliable agent runs: fewer lint repair loops, session context from 
 ### Fixed
 
 - `knowledge lint` ignores links and `[FACT]` markers inside fenced code blocks, and accepts well-formed log entries in CRLF checkouts.
-- The wiki page template now carries the ADR-0012 frontmatter and no longer links to `../wiki/index.md`, which broke in subfolders. A page created from it passes `knowledge lint`.
+- The wiki page template now carries the ADR-0012 frontmatter and no longer links to `../wiki/index.md`, which broke in subfolders. A page created from it passes `knowledge lint`, and so does the frontmatter example in `curate-project-knowledge`, which no longer carries inline YAML comments that made `type` invalid.
 - Generated skills, `AGENTS.md`, gate documentation, and error messages use `npx agentic-repo-kit <command>`, which works without a global install, instead of the bare `agentic-repo` binary.
 - The annealing closure classes now map to the run-diagnosis destinations, and `One-Off` replaces `One-Off Incident`.
 

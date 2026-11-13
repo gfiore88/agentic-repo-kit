@@ -317,3 +317,15 @@ test("annealing classes map consistently across the closure block, process, and 
   }
   assert.ok(!`${process}${prompt}`.includes("One-Off Incident"));
 });
+
+test("the curation skill's frontmatter example passes lint when copied verbatim", async () => {
+  const cwd = await initializedRepository();
+  const skill = await readFile(path.join(pluginRoot, "skills/curate-project-knowledge/SKILL.md"), "utf8");
+  const example = skill.match(/```yaml\n([\s\S]*?)\n```/)[1];
+  await writeFile(path.join(cwd, "docs/wiki/example.md"), `${example}\n\n# Example\n\n- \`[FACT]\` Sourced claim.\n`, "utf8");
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  await writeFile(indexFile, `${await readFile(indexFile, "utf8")}\n- [Example](example.md)\n`, "utf8");
+  const result = await lintKnowledge(cwd);
+  assert.deepEqual(result.frontmatterIssues, []);
+  assert.equal(result.ok, true);
+});

@@ -25,12 +25,12 @@ non-empty `sources:` list. `tags` and `aliases` are optional.
 
 ```yaml
 ---
-type: concept          # index | overview | log | questions | source | entity | concept
+type: concept
 title: Human-readable page title
 created: 2026-01-15
 updated: 2026-01-15
-sources: ["docs/raw/spec.md"]   # required and non-empty on any page that asserts a [FACT]
-tags: ["optional", "labels"]     # optional
+sources: ["docs/raw/spec.md"]
+tags: ["optional", "labels"]
 ---
 ```
 
