@@ -127,11 +127,38 @@ npx agentic-repo-kit update
 
 > **Zero Knowledge Loss:** `update` exclusively refreshes the operating kernel (`.agents/skills/`, `.agents/workflows/`, `AGENTS.md`, adapters) and preserves all your project wiki pages and decisions. If you use `--git-exclude`, your local Git exclusions are refreshed automatically.
 
-> **Your edits are never overwritten silently:** `update` compares every kernel file with the hash recorded in `scaffold.lock`. Files you modified (for example project rules added to `AGENTS.md`) are reported as conflicts and nothing is written; move your changes into project files or re-run with `--force`. Files the kit no longer generates (a dropped runtime, a changed enforcement mode, a retired agent) are removed when unmodified and kept when you changed them. `update` requires an initialized repository (`scaffold.lock`); use `init` first.
+> **Your edits are never overwritten silently:** `update` compares every kernel file with the hash recorded in `scaffold.lock`. Files you modified (for example project rules added to `AGENTS.md`) are reported as conflicts and nothing is written; move your changes into project files or re-run with `--force`. Files the kit no longer generates (a dropped runtime, a changed enforcement mode, a retired agent) are removed when unmodified and kept when you changed them. `update` requires `scaffold.lock`: run `init` on a new repository, and keep the lock committed. If it is lost, see [Recover a repository without `scaffold.lock`](#recover-without-lock).
 
 > **Safe by design:** During `init`, existing files with identical content are safely skipped. If any file has divergent content, `init` stops before writing anything and reports the conflicts. Use `update` to upgrade the kernel while preserving user knowledge.
 
 > **Enterprise / Local-first ready:** Use `--git-exclude` (or `agentic-repo exclude`) to automatically manage `.git/info/exclude`. This lets you use AI agents on strict client repositories without modifying `.gitignore` or pushing files upstream. The root-anchored patterns are derived from the files listed in `scaffold.lock`, so every generated adapter file stays hidden.
+
+<a id="recover-without-lock"></a>
+
+#### Recover a repository without `scaffold.lock`
+
+`update` and `doctor` tell a missing lock apart from an unreadable one and from invalid content (for example merge-conflict markers), and name the next step. When the kernel files exist but `scaffold.lock` is gone, recover in this order:
+
+1. **Restore the lock** from version control or from the machine that initialized the repository, then run `update` as usual.
+2. **Rebuild the original lock** when you know the kit version that generated the kernel and the runtimes it used (add `--enforce ci` or `--enforce hooks` if the repository used one). Only the files you changed are then reported as conflicts:
+
+   ```bash
+   npx --yes agentic-repo-kit@<version> init --yes --runtime <ids|none> --cwd /tmp/original-kernel
+   cp /tmp/original-kernel/scaffold.lock .
+   npx agentic-repo-kit update --dry-run
+   ```
+
+3. **Adopt the kernel** otherwise:
+
+   ```bash
+   npx agentic-repo-kit update --adopt --runtime <ids|none> --dry-run
+   ```
+
+   Without a lock, the kit cannot tell its older files from your edits, so every kernel file that differs from the current version is a conflict and nothing is written. Back up the files you customized (for example project rules in `AGENTS.md`), then run the command again with `--yes --force` instead of `--dry-run`. User-owned documentation is preserved as in every update, and the update writes a new `scaffold.lock` and `scaffold.yaml`.
+
+   You can omit `--runtime` when `scaffold.yaml` still lists the runtimes. Auto-detection is not used, because the kernel's own `.agents/agents/` and `.agents/rules/` match the Antigravity markers. `--adopt` never replaces an existing lock. Files that an older version generated and the current version no longer does stay on disk for you to remove.
+
+Commit `scaffold.lock` and `scaffold.yaml` (or keep the local copies with `--git-exclude`), and keep them out of clean-up scripts.
 
 <a id="enforce-governance"></a>
 
@@ -305,6 +332,7 @@ agentic-repo init
 agentic-repo update
 agentic-repo update --force          # also overwrite kernel files you modified
 agentic-repo update --enable-low-risk # opt in: add the default low-risk tier policy to docs/adr/gate.json
+agentic-repo update --adopt --runtime <ids|none> # recover a kernel whose scaffold.lock was lost
 
 # Verify repository integrity and detect drifted managed files
 agentic-repo doctor

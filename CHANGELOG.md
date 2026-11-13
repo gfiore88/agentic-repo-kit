@@ -4,6 +4,27 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+A repository that lost its `scaffold.lock` can be updated again, and every lock error names its cause. Decisions recorded in `ADR-0024`.
+
+### Added
+
+- `update --adopt` updates a repository that has the kernel but no `scaffold.lock`:
+  - Without a lock the kit cannot tell its older files from your edits, so every kernel file that differs from this version is a conflict, and nothing is written until you re-run with `--force`.
+  - User-owned documentation is preserved, and the update writes a new `scaffold.lock` and `scaffold.yaml`.
+  - The runtimes, enforcement, and profile come from the flags, then from `scaffold.yaml`. Without either, `--runtime <ids|none>` is required, because auto-detection mistakes the kernel's own `.agents/` folders for Antigravity.
+  - `--adopt` never replaces an existing lock.
+
+### Fixed
+
+- `update` reported every unusable lock as "not found" and claimed that the repository was never initialized. It now tells a missing lock apart from an unreadable one and from invalid content (for example merge-conflict markers). A repository with kernel files but no lock is pointed to restoring the lock or to `update --adopt`, instead of `init`, which stops on the first file that differs.
+- `doctor` reports the same lock state and the next step (`lockState` and `hint` in `--json`).
+
+### Upgrade notes
+
+- Commit `scaffold.lock` and `scaffold.yaml`, or keep the local copies with `--git-exclude`. If the lock is gone, follow the recovery order in the README: restore it, rebuild the original lock with the generating version, or run `update --adopt`.
+
 ## [0.10.1] - 2026-11-13
 
 Documentation accuracy for the low-risk tier and the run-efficiency features. Follow-up to `ADR-0015`, `ADR-0017`, `ADR-0019`, and `ADR-0021`; release recorded in `ADR-0023`.

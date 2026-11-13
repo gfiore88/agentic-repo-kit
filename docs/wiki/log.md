@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] implementation | Lock diagnostics and explicit kernel adoption
+
+- Accepted and implemented ADR-0024. `update` and `doctor` tell a missing, unreadable, or invalid `scaffold.lock` apart and name the next step; a kernel without a lock is pointed to restoring it or to `update --adopt` instead of `init`.
+- `update --adopt` compares against an empty baseline, so every differing kernel file is a conflict unless `--force` is given. It takes the configuration from the flags, then `scaffold.yaml`, and requires `--runtime` without either.
+- The README documents the recovery order: restore the lock, rebuild the original lock with the generating version, or adopt. The kit wiki records that runtime detection is unreliable in an initialized repository.
+
 ## [2026-11-13] decision | Recovery for repositories without scaffold.lock proposed
 
 - `update` with 0.10.0 failed in a repository initialized with 0.6.0 whose `scaffold.lock` and `scaffold.yaml` were never committed. The error claimed that the repository was never initialized and pointed to `init`, which aborts on the first divergent file, so the kit offered no recovery path.
