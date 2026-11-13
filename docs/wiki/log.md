@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] implementation | Untracked kernel warning and worktree-aware Git metadata
+
+- Accepted and implemented ADR-0026. `doctor` warns, without failing, about kit files that are on disk, absent from the Git index, and outside the managed exclude block, and `status` shows the count. A new reader parses the index without running Git (versions 2 to 4, SHA-1 and SHA-256); a split or sparse index skips the check.
+- The managed exclude block and `core.hooksPath` now go to the common Git directory, so local exclusions and the hook gate work in linked worktrees. Tests cover synthetic indexes and worktree layouts, plus a real Git repository and worktree when `git` is available.
+
 ## [2026-11-13] decision | Untracked kernel warning and worktree-aware Git metadata proposed
 
 - In a client repository, the kit's files were neither committed nor excluded and showed as untracked, which most likely led to deleting `scaffold.lock`. The owner approved the idea of a warning. Proposed ADR-0026: `doctor` and `status` report kit files that are neither in the Git index nor in the managed exclude block, through a subprocess-free index reader.

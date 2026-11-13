@@ -4,6 +4,25 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Kit files can no longer sit unnoticed outside Git, and local exclusions and the hook gate work in linked worktrees. Decisions recorded in `ADR-0026`.
+
+### Added
+
+- `doctor` warns about kit files that are neither committed nor excluded. It lists the ones that exist on disk, are absent from the Git index, and are outside the managed exclude block, then gives the next step: commit them, or run `exclude` when they must stay out of Git, as in a client repository. The warning does not make the kernel unhealthy, and `status` shows the count. Untracked kit files tend to be deleted to clean `git status`, which loses `scaffold.lock`, or committed by mistake.
+  - `doctor --json` gains `untracked` and `trackingChecked`.
+  - The CLI still runs no subprocess: it reads the Git index directly (versions 2 to 4, SHA-1 and SHA-256). With a split or sparse index, the check is skipped and reported as not performed.
+
+### Fixed
+
+- In a linked worktree (`git worktree add`), `--git-exclude` and `exclude` wrote the managed block to the per-worktree `info/exclude`, and `--enforce hooks` wrote `core.hooksPath` to the per-worktree `config`. Git reads neither, so the kit files stayed visible and the pre-push gate never ran, although the CLI reported success. Both now go to the shared Git directory.
+
+### Upgrade notes
+
+- In a linked worktree, run `npx agentic-repo-kit exclude` once, and `update` if you use the hook gate, to write the exclusions and the hooks path where Git reads them. The copies that earlier versions left in the per-worktree directory are never read by Git and can be deleted.
+- Only the managed exclude block counts as an exclusion. If you ignore kit files with your own `.gitignore` rules, `doctor` still reports them; run `exclude` to clear the warning.
+
 ## [0.11.0] - 2026-11-13
 
 A repository that lost its `scaffold.lock` can be updated again, and every lock error names its cause. Decisions recorded in `ADR-0024`; release recorded in `ADR-0025`.

@@ -131,7 +131,7 @@ npx agentic-repo-kit update
 
 > **Safe by design:** During `init`, existing files with identical content are safely skipped. If any file has divergent content, `init` stops before writing anything and reports the conflicts. Use `update` to upgrade the kernel while preserving user knowledge.
 
-> **Enterprise / Local-first ready:** Use `--git-exclude` (or `agentic-repo exclude`) to automatically manage `.git/info/exclude`. This lets you use AI agents on strict client repositories without modifying `.gitignore` or pushing files upstream. The root-anchored patterns are derived from the files listed in `scaffold.lock`, so every generated adapter file stays hidden.
+> **Enterprise / Local-first ready:** Use `--git-exclude` (or `agentic-repo exclude`) to automatically manage `.git/info/exclude`. This lets you use AI agents on strict client repositories without modifying `.gitignore` or pushing files upstream. The root-anchored patterns are derived from the files listed in `scaffold.lock`, so every generated adapter file stays hidden. In a linked worktree (`git worktree add`), the exclusions and the hooks path are written to the shared Git directory, where Git reads them. Kit files must be either committed or excluded: `doctor` warns about any that are neither, because untracked files tend to be deleted to clean `git status` (losing `scaffold.lock`) or committed by mistake.
 
 <a id="recover-without-lock"></a>
 
@@ -334,7 +334,8 @@ agentic-repo update --force          # also overwrite kernel files you modified
 agentic-repo update --enable-low-risk # opt in: add the default low-risk tier policy to docs/adr/gate.json
 agentic-repo update --adopt --runtime <ids|none> # recover a kernel whose scaffold.lock was lost
 
-# Verify repository integrity and detect drifted managed files
+# Verify repository integrity and detect drifted managed files; also warns about
+# kit files that are neither committed nor excluded (read from the Git index)
 agentic-repo doctor
 
 # Read-only session digest for agents: kernel and knowledge health, every ADR and
