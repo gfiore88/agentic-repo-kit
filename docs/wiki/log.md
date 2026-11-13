@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | Low-risk tier opt-in for existing repositories proposed
+
+- The owner asked how existing repositories could adopt the low-risk tier automatically. Proposed ADR-0021: `update --enable-low-risk` adds the default policy as an explicit, scriptable opt-in, and `update` never enables the tier without it.
+- A reproduction found that `update` with 0.9.0 creates a missing `gate.json` with `lowRisk` in repositories that predate 0.7.0, which enables the tier without opt-in. ADR-0021 fixes this.
+
 ## [2026-11-13] release | 0.9.0 publication check
 
 - npm reports `latest` 0.9.0 with an SLSA v1 provenance attestation. A repository initialized with `npx agentic-repo-kit@0.9.0` pins 0.9.0 in its pre-push hook and in `AGENTS.md`, and ships the `lowRisk` policy (5 files, 200 lines, five excluded categories).
