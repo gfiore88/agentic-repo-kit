@@ -1,6 +1,6 @@
 ---
 title: "ADR-0030: Customized Kernel Files Are Reported, Not Unhealthy"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["doctor", "status", "update", "customization"]
@@ -12,8 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed**. Giovanni Fiore asked to proceed with this change ("ok procedi").
-Implementation waits for his explicit acceptance of this ADR.
+**Accepted** by Giovanni Fiore on 2026-11-13. He asked to proceed ("ok procedi"),
+then, asked how to proceed with this ADR, chose "Accetto l'ADR-0030 insieme al
+rilascio 0.14.0" ("I accept ADR-0030 together with the 0.14.0 release").
 
 ## Context
 
