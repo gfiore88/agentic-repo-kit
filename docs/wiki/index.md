@@ -37,6 +37,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Minor release 0.7.0](../adr/adr-0014-minor-release-0-7-0.md): accepted SemVer minor release of the ADR-0013 work.
 - [Run-efficiency hardening of the generated kernel](../adr/adr-0015-run-efficiency-hardening-of-the-generated-kernel.md): accepted lint accuracy, verify/lint parity, ADR number integrity, resolvable `npx` invocation, consistent directives, proportional skill loading, and a read-only `status` digest.
 - [Minor release 0.8.0](../adr/adr-0016-minor-release-0-8-0.md): accepted SemVer minor release of the ADR-0015 work.
+- [Version-pinned projected invocation and tolerant frontmatter parsing](../adr/adr-0017-version-pinned-projected-invocation-and-tolerant-frontmatter-parsing.md): proposed pinning of generated CLI instructions to the generating version, plus CRLF- and comment-tolerant frontmatter parsing.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.
