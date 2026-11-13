@@ -1,6 +1,6 @@
 ---
 title: "ADR-0016: Minor Release 0.8.0"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore and implementation agent"
 tags: ["release", "npm", "semver"]
@@ -12,7 +12,8 @@ superseded_by: ""
 
 ## Status
 
-**Proposed** | Accepted | Rejected | Superseded | Deprecated
+**Accepted** by Giovanni Fiore on 2026-11-13, who asked to align the repository with
+the ADR-0015 work and then to "provvedere al rilascio" (proceed with the release).
 
 ## Context
 
