@@ -7,6 +7,10 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.8.1
+
+- Accepted ADR-0018 and released the ADR-0017 work as 0.8.1 (SemVer patch) through `npm version patch`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+
 ## [2026-11-13] implementation | Version-pinned projected invocation and tolerant frontmatter parsing
 
 - Accepted ADR-0017 to resolve the open question from the 0.8.0 publication check. Generation now pins every CLI invocation in kernel-owned files to the generating version (`npx --yes agentic-repo-kit@<version>`), as hooks and CI already do. Projected content drops the global alias, and the user-owned ADR README names commands instead of invoking them.
