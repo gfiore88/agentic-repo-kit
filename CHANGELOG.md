@@ -4,6 +4,34 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Faster, more reliable agent runs: fewer lint repair loops, session context from a single command, and consistent directives. Decisions recorded in `ADR-0015`.
+
+### Added
+
+- `status` (`npx agentic-repo-kit status [--json] [--limit <n>]`): a read-only digest of kernel version, profile, enforcement, adapters, and integrity; knowledge health; every ADR and PRD with its status, open records first; pending annealing proposals; ADR number collisions; and the latest log entries. The generated `AGENTS.md` starts each session with it.
+- `verify` reports ADR numbers used by more than one file, for example after merging parallel branches. An `--adr` reference to a duplicated number is ambiguous and never satisfies the gate.
+
+### Fixed
+
+- `knowledge lint` ignores links and `[FACT]` markers inside fenced code blocks, and accepts well-formed log entries in CRLF checkouts.
+- The wiki page template now carries the ADR-0012 frontmatter and no longer links to `../wiki/index.md`, which broke in subfolders. A page created from it passes `knowledge lint`.
+- Generated skills, `AGENTS.md`, gate documentation, and error messages use `npx agentic-repo-kit <command>`, which works without a global install, instead of the bare `agentic-repo` binary.
+- The annealing closure classes now map to the run-diagnosis destinations, and `One-Off` replaces `One-Off Incident`.
+
+### Changed
+
+- `verify` enforces every `knowledge lint` category: frontmatter issues, orphan pages, uncovered raw sources, and malformed log entries now block hooks and CI once `update` refreshes the pinned verifier. Run `knowledge lint` to see the same findings first.
+- The knowledge lint workflow runs the engine first and limits manual review to conflicting decisions, stale assumptions or proposals, and unrecorded contradictions.
+- The ADR template follows the official `create-architectural-decision-record` structure, and `govern-development-task` creates task ADRs with `adr new`, asking only for inputs it cannot derive.
+- Lifecycle skills load only when their trigger matches the task; `govern-development-task` lists typical skill sets for a bug fix, a small change, and a new feature.
+- Log tags add `decision`, `implementation`, `routine`, and `release` for lifecycle work.
+
+### Upgrade notes
+
+- `docs/templates/` and `docs/adr/README.md` are user-owned, so `update` keeps your copies. To adopt the new wiki page and ADR templates and the renumbering guidance, delete those files and rerun `npx agentic-repo-kit update`, which recreates missing files.
+
 ## [0.7.0] - 2026-11-03
 
 Generated hook and CI projections now pin the generating kit version and pass the new `verify --adr` and `--routine` options. Decisions recorded in `ADR-0013`; release recorded in `ADR-0014`.

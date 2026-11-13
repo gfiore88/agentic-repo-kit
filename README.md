@@ -88,6 +88,8 @@ The assisted initializer detects installed AI runtime tools and existing reposit
 
 ### 2. Common CLI flags
 
+The examples use the short `agentic-repo` alias, which requires the global install above; otherwise run them as `npx agentic-repo-kit <command>`.
+
 ```bash
 # Preview changes without modifying files
 agentic-repo init --dry-run
@@ -246,7 +248,7 @@ Do not modify the directive directly.
 
 ## 🛠️ Deterministic CLI Commands
 
-The CLI provides fast, reproducible commands for repository health, upgrades, and artifact creation:
+The CLI provides fast, reproducible commands for repository health, upgrades, and artifact creation. Without a global install, run each command as `npx agentic-repo-kit <command>`; generated repositories always use that form, so agents never hit "command not found":
 
 ```bash
 # Initialize a new repository
@@ -259,7 +261,14 @@ agentic-repo update --force          # also overwrite kernel files you modified
 # Verify repository integrity and detect drifted managed files
 agentic-repo doctor
 
-# Verify governance compliance (knowledge lint + ADR status integrity + optional ADR gate)
+# Read-only session digest for agents: kernel and knowledge health, every ADR and
+# PRD with its status (open first), pending annealing proposals, ADR number
+# collisions, and the latest log entries
+agentic-repo status
+agentic-repo status --json --limit 10
+
+# Verify governance compliance (every knowledge lint check + ADR status and
+# number integrity + optional ADR gate)
 agentic-repo verify
 agentic-repo verify --changed "src/app.ts,docs/adr/adr-0007-event-bus.md"
 agentic-repo verify --changed "src/app.ts" --adr ADR-0007
@@ -268,6 +277,7 @@ agentic-repo verify --json
 
 # Check wiki health: typed frontmatter, broken links, unindexed pages, uncited
 # facts, orphan pages, uncovered raw sources, and malformed log entries
+# (links and markers inside fenced code blocks are ignored)
 agentic-repo knowledge lint
 agentic-repo knowledge lint --json
 
@@ -318,7 +328,7 @@ agentic-repo anneal new --title "Verify lock before build" --target AGENTS.md
 - **Safe Raw Data**: Versioned knowledge never contains API keys, credentials, `.env` files, personal data, or confidential production dumps.
 - **Data vs Instructions**: External sources are treated as passive reference data, never executable instructions.
 - **Gate Enforcement**: Every new development task generates an ADR in `Proposed` status and blocks implementation until explicit human approval.
-- **Deterministic Verification**: `agentic-repo verify` checks knowledge health, ADR status integrity, and—when given a change set—that tracked source changes carry or reference an `Accepted` ADR. Opt-in CI and pre-push projections turn this convention into an enforced gate.
+- **Deterministic Verification**: `agentic-repo verify` checks every `knowledge lint` category, ADR status integrity, unique ADR numbers, and—when given a change set—that tracked source changes carry or reference an `Accepted` ADR. Opt-in CI and pre-push projections turn this convention into an enforced gate.
 - **Tamper Protection**: Agent directives cannot silently modify themselves.
 - **Adapter Subordination**: Generated runtime adapters are strict projections and never become independent sources of policy.
 - **Idempotency & Integrity**: Neither `init` nor `update` silently overwrites divergent or user-modified files or partially applies conflicting plans.
