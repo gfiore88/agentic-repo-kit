@@ -47,6 +47,7 @@ Options:
   --profile <full|core>      Skill profile: every bundled skill or the governance kernel only (default full)
   --force                    update: overwrite kernel files you modified (default: stop and report)
   --adopt                    update: adopt a kernel whose scaffold.lock is lost (differing kernel files are conflicts)
+  --strict                   doctor: count customized kernel files as unhealthy
   --git-exclude, --exclude   Add generated paths to .git/info/exclude
   --remove                   Remove managed excludes from .git/info/exclude
   --list                     List active local exclusions
@@ -329,16 +330,24 @@ async function excludeCommand(options) {
 
 async function doctorCommand(options) {
   const cwd = path.resolve(options.cwd);
-  const result = await runDoctor(cwd);
+  const result = await runDoctor(cwd, { strict: options.strict });
   if (options.json) output.write(`${JSON.stringify({ cwd, ...result }, null, 2)}\n`);
   else {
     output.write(`Target: ${cwd}\n`);
     output.write(`Adapters: ${result.runtimes.length > 0 ? result.runtimes.join(", ") : "none"}\n`);
     output.write(`Missing: ${result.missing.length}; divergent: ${result.divergent.length}\n`);
     for (const missing of result.missing) output.write(`  missing: ${missing}\n`);
-    for (const divergent of result.divergent) output.write(`  divergent: ${divergent}\n`);
+    for (const divergent of result.divergent) output.write(`  ${options.strict ? "divergent" : "customized"}: ${divergent}\n`);
+    if (!options.strict && result.divergent.length > 0) {
+      output.write("Customized kernel files are supported: update merges your changes with the kit's (doctor --strict counts them as unhealthy).\n");
+    }
     for (const conflicted of result.conflicted ?? []) output.write(`  conflict markers: ${conflicted}\n`);
     if (result.conflicted?.length > 0) output.write("Next step: resolve the conflict markers that update left (<<<<<<< yours ... >>>>>>> agentic-repo-kit).\n");
+    if (result.pending?.length > 0) {
+      const sample = result.pending.slice(0, 3).join(", ");
+      output.write(`Pending kit changes: ${result.pending.length} kernel file(s) kept at an older kit version (${sample}${result.pending.length > 3 ? ", ..." : ""})\n`);
+      output.write("Next step: run update when the npm registry is reachable, to merge the kit's changes.\n");
+    }
     if (result.untracked.length > 0) {
       const sample = result.untracked.slice(0, 3).join(", ");
       output.write(`Untracked: ${result.untracked.length} kernel file(s) are neither committed nor excluded (${sample}${result.untracked.length > 3 ? ", ..." : ""})\n`);

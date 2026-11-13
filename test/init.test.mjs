@@ -86,9 +86,10 @@ test("initialization is idempotent and doctor detects divergence", async () => {
 
   assert.equal((await runDoctor(cwd)).ok, true);
   await writeFile(path.join(cwd, "AGENTS.md"), "local divergent content\n", "utf8");
-  const unhealthy = await runDoctor(cwd);
-  assert.equal(unhealthy.ok, false);
-  assert.deepEqual(unhealthy.divergent, ["AGENTS.md"]);
+  const customized = await runDoctor(cwd);
+  assert.equal(customized.ok, true, "a customized kernel file is supported (ADR-0030)");
+  assert.deepEqual(customized.divergent, ["AGENTS.md"]);
+  assert.equal((await runDoctor(cwd, { strict: true })).ok, false);
 });
 
 test("doctor ignores expected drift in preserved user-owned paths", async () => {
@@ -104,11 +105,12 @@ test("doctor ignores expected drift in preserved user-owned paths", async () => 
   assert.equal(afterCustomization.ok, true);
   assert.deepEqual(afterCustomization.divergent, []);
 
-  // Kernel infrastructure divergence is still detected.
+  // Kernel infrastructure divergence is still detected and listed.
   await writeFile(path.join(cwd, "AGENTS.md"), "tampered kernel contract\n", "utf8");
   const tampered = await runDoctor(cwd);
-  assert.equal(tampered.ok, false);
+  assert.equal(tampered.ok, true);
   assert.deepEqual(tampered.divergent, ["AGENTS.md"]);
+  assert.equal((await runDoctor(cwd, { strict: true })).ok, false);
 });
 
 test("preflight conflicts prevent partial writes", async () => {

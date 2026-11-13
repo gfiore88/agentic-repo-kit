@@ -36,6 +36,7 @@ export function parseArgs(argv) {
     requireReviews: false,
     enableLowRisk: false,
     adopt: false,
+    strict: false,
     gitExclude: false,
     remove: false,
     list: false,
@@ -59,6 +60,7 @@ export function parseArgs(argv) {
     else if (arg === "--require-reviews") options.requireReviews = true;
     else if (arg === "--enable-low-risk") options.enableLowRisk = true;
     else if (arg === "--adopt") options.adopt = true;
+    else if (arg === "--strict") options.strict = true;
     else if (arg === "--cwd") {
       options.cwd = takeValue(args, index, arg);
       index += 1;
@@ -126,6 +128,9 @@ export function parseArgs(argv) {
   }
   if (options.adopt && options.command !== "update") {
     throw new Error("--adopt applies only to update");
+  }
+  if (options.strict && options.command !== "doctor") {
+    throw new Error("--strict applies only to doctor");
   }
   if (options.tier !== null && options.tier !== "low-risk") {
     throw new Error(`Unknown tier: ${options.tier} (use low-risk)`);

@@ -28,7 +28,7 @@ async function inspectTracking(cwd, paths) {
   return { trackingChecked: true, untracked };
 }
 
-export async function runDoctor(cwd) {
+export async function runDoctor(cwd, { strict = false } = {}) {
   const inspection = await inspectScaffoldLock(cwd);
   if (inspection.state !== "ok") {
     const markers = inspection.state === "missing" ? await findKernelMarkers(cwd) : [];
@@ -40,6 +40,8 @@ export async function runDoctor(cwd) {
       runtimes: [],
       missing: inspection.state === "missing" ? ["scaffold.lock"] : [],
       divergent: [],
+      conflicted: [],
+      pending: [],
       trackingChecked: false,
       untracked: [],
       error: problem,
@@ -51,10 +53,14 @@ export async function runDoctor(cwd) {
   const missing = [];
   const divergent = [];
   const conflicted = [];
+  const pending = [];
   for (const managed of lock.managedFiles ?? []) {
     // User-owned paths are authored by the repository owner and preserved by
     // `update`; expected drift there must not mark the kernel unhealthy.
     if (isUserOwnedPath(managed.path)) continue;
+    // An entry carrying its own kit version was kept by update without a base, so
+    // the kit's changes for that file are still to be merged (ADR-0028, ADR-0030).
+    if (typeof managed.kitVersion === "string") pending.push(managed.path);
     try {
       const content = await readFile(path.join(cwd, managed.path), "utf8");
       if (sha256(content) !== managed.sha256) divergent.push(managed.path);
@@ -66,13 +72,16 @@ export async function runDoctor(cwd) {
 
   const managedPaths = (lock.managedFiles ?? []).map((entry) => entry?.path).filter((entry) => typeof entry === "string");
   const tracking = await inspectTracking(cwd, ["scaffold.lock", ...managedPaths]);
+  // Customized kernel files are supported, so they count against health only in
+  // strict mode (ADR-0030).
   return {
-    ok: missing.length === 0 && divergent.length === 0 && conflicted.length === 0,
+    ok: missing.length === 0 && conflicted.length === 0 && (!strict || divergent.length === 0),
     lockState: "ok",
     runtimes: lock.runtimes ?? [],
     missing,
     divergent,
     conflicted,
+    pending,
     ...tracking,
   };
 }

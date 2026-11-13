@@ -121,6 +121,7 @@ async function kernelStatus(cwd) {
     trackingChecked: doctor.trackingChecked,
     untracked: doctor.untracked.length,
     conflicted: doctor.conflicted?.length ?? 0,
+    pending: doctor.pending?.length ?? 0,
   };
 }
 
@@ -159,9 +160,11 @@ export function formatStatus(cwd, status) {
   if (kernel.initialized) {
     lines.push(`Kernel: agentic-repo-kit ${kernel.kitVersion ?? "(unknown version)"}, profile ${kernel.profile}, enforcement ${kernel.enforcement}`);
     lines.push(`Adapters: ${kernel.runtimes.length > 0 ? kernel.runtimes.join(", ") : "none"}`);
-    lines.push(`Integrity: ${kernel.integrity.ok ? "healthy" : `unhealthy (missing ${kernel.integrity.missing}, divergent ${kernel.integrity.divergent}; run doctor)`}`);
+    const { ok, missing, divergent } = kernel.integrity;
+    lines.push(`Integrity: ${ok ? `healthy${divergent > 0 ? ` (${divergent} customized)` : ""}` : `unhealthy (missing ${missing}, conflict markers ${kernel.conflicted}; run doctor)`}`);
     if (kernel.untracked > 0) lines.push(`Git: ${kernel.untracked} kernel file(s) neither committed nor excluded; commit them or run exclude (see doctor)`);
     if (kernel.conflicted > 0) lines.push(`Merge: ${kernel.conflicted} kernel file(s) with unresolved conflict markers from update; resolve them (see doctor)`);
+    if (kernel.pending > 0) lines.push(`Pending: ${kernel.pending} kernel file(s) wait for the kit's changes; run update when the npm registry is reachable`);
   } else lines.push("Kernel: not initialized (no readable scaffold.lock)");
   if (knowledge.initialized) {
     const failing = Object.entries(knowledge.issues)
