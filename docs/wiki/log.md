@@ -10,7 +10,7 @@ updated: 2026-11-13
 ## [2026-11-13] implementation | README clarity and merge-gate wording
 
 - A full review of the README after the 0.8.0–0.10.0 releases found a stray quote in the low-risk `verify` example, which the published 0.9.0 and 0.10.0 READMEs also contain. It also found an overstated guarantee: the merge gate for low-risk reviews exists only with `--enforce ci` and a required check in branch protection.
-- Fixed both in the README and in the generated governance text, as follow-up work within ADR-0019. The README also gained a run-efficiency pillar, low-risk tier prompts, and a fuller generated layout.
+- Fixed both in the README, the generated governance text, and the kit wiki, as follow-up work within ADR-0019. The README also gained a run-efficiency pillar, low-risk tier prompts, and a fuller generated layout.
 
 ## [2026-11-13] release | 0.10.0 publication check
 
