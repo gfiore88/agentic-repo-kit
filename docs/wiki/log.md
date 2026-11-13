@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] implementation | Explicit low-risk tier opt-in for existing repositories
+
+- Implemented ADR-0021. `update --enable-low-risk` adds the default policy to `gate.json`: it keeps the other keys, never overwrites an existing `lowRisk` section, refuses invalid JSON, and honors `--dry-run`. The update plan reports the tier state.
+- Fixed the 0.9.0 gap: a `gate.json` created by `update` no longer includes `lowRisk` without the flag. Six regression tests fail on the previous code.
+
 ## [2026-11-13] decision | Low-risk tier opt-in for existing repositories proposed
 
 - The owner asked how existing repositories could adopt the low-risk tier automatically. Proposed ADR-0021: `update --enable-low-risk` adds the default policy as an explicit, scriptable opt-in, and `update` never enables the tier without it.
