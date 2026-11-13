@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.12.0 publication check
+
+- The npm registry lists `latest` 0.12.0 with an SLSA v1 provenance attestation. The publish workflow succeeded about seven minutes before the registry served the version; querying the version endpoint showed when it was available.
+- With `npx agentic-repo-kit@0.12.0`, a repository whose kit files are neither committed nor excluded gets the `doctor` warning, and `exclude` clears it and empties `git status`. A linked worktree that 0.11.0 had initialized with `--git-exclude` and `--enforce hooks` listed 7 kit entries and had no hooks path; one `update` emptied `git status`, set the hooks path that Git reads, and pinned `AGENTS.md` to 0.12.0.
+
 ## [2026-11-13] release | 0.12.0
 
 - Accepted ADR-0027 and released the ADR-0026 untracked kernel warning and the worktree-aware Git metadata as 0.12.0 (SemVer minor), through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
