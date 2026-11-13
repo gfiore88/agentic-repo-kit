@@ -9,7 +9,7 @@ updated: 2026-11-13
 
 ## Session context
 
-Generated repositories start each session with the read-only `npx agentic-repo-kit status` digest: kernel and knowledge health, every ADR and PRD with its status (open records first), pending annealing proposals, ADR number collisions, and the latest log entries. Agents then open only the documents that the digest and `index.md` point to, and load a lifecycle skill only when its trigger matches the task ([ADR-0015](../../adr/adr-0015-run-efficiency-hardening-of-the-generated-kernel.md)).
+Generated repositories start each session with the read-only `status` digest, invoked with the generating kit version pinned ([ADR-0017](../../adr/adr-0017-version-pinned-projected-invocation-and-tolerant-frontmatter-parsing.md)): kernel and knowledge health, every ADR and PRD with its status (open records first), pending annealing proposals, ADR number collisions, and the latest log entries. Agents then open only the documents that the digest and `index.md` point to, and load a lifecycle skill only when its trigger matches the task ([ADR-0015](../../adr/adr-0015-run-efficiency-hardening-of-the-generated-kernel.md)).
 
 ## Knowledge
 

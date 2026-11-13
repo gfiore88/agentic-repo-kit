@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] implementation | Version-pinned projected invocation and tolerant frontmatter parsing
+
+- Accepted ADR-0017 to resolve the open question from the 0.8.0 publication check. Generation now pins every CLI invocation in kernel-owned files to the generating version (`npx --yes agentic-repo-kit@<version>`), as hooks and CI already do. Projected content drops the global alias, and the user-owned ADR README names commands instead of invoking them.
+- `verify` reads ADR status in CRLF checkouts, and `knowledge lint`, `verify`, and `status` share a YAML-aware scalar helper, so trailing comments no longer cause false gate failures.
+
 ## [2026-11-13] release | 0.8.0 publication check
 
 - npm reports `latest` 0.8.0 with an SLSA v1 provenance attestation. With an empty npm cache, `npx agentic-repo-kit@0.8.0` initializes a repository whose pre-push hook pins `agentic-repo-kit@0.8.0`, and its `doctor`, `knowledge lint`, `status`, and `verify --adr` checks pass.
