@@ -12,6 +12,13 @@ Before implementation:
 3. Draft a PRD when material product scope, user outcomes, or success measures remain undecided.
 4. For every new development task, create a dedicated task ADR: run `npx agentic-repo-kit adr new --title "<title>"` to create the next-numbered file in `docs/adr/`, then complete every section with the official `create-architectural-decision-record` skill. Derive the context, decision, alternatives, and stakeholders from the conversation and the repository, and ask the human only for what you cannot derive. Existing ADRs may govern or constrain it but do not replace it. Follow-up work inside the scope of an already `Accepted` ADR cites it as `ADR-NNNN` instead of creating a duplicate (see `references/decision-gates.md`).
 5. Keep the task ADR `Proposed` and stop before implementation until the human explicitly approves it. Cite approval from the current conversation only when it unambiguously names or covers that exact task ADR.
+6. Low-risk tier: if `docs/adr/gate.json` defines `lowRisk`, check the task against it before you create the ADR:
+   - at most `maxFiles` changed source files and `maxLines` changed lines, documentation excluded;
+   - tests changed with any code;
+   - no path in an excluded category (security, dependencies, public APIs, migrations, governance);
+   - nothing that paths cannot reveal, such as a public-interface or security impact. If you find one, or are unsure, use the normal stop.
+
+   When the task qualifies, create the ADR with `npx agentic-repo-kit adr new --tier low-risk --title "<title>"`, implement without stopping, and fill in its eligibility section. Confirm with `npx agentic-repo-kit verify --changed <paths> --lines <count:path,...>`.
 
 Load lifecycle skills proportionally: load a skill only when its trigger matches the task, and treat the `using-agent-skills` Lifecycle Sequence as a menu, not a checklist. Typical sets when the full skill profile is installed:
 
@@ -25,7 +32,11 @@ After implementation:
 
 1. Run proportionate tests and static checks.
 2. Update durable knowledge in `docs/wiki/`, `docs/wiki/index.md`, and `docs/wiki/log.md`.
-3. Conclude every completed ADR task with the mandatory **End-of-Task Annealing Diagnosis** block:
+3. For a low-risk tier ADR, ask the human to review it.
+   - Record the review only when the human's own message explicitly approves or rejects and names the task or ADR, using `npx agentic-repo-kit adr review --adr ADR-NNNN --decision approved|rejected --by "<name>" --quote "<their words>"`. A vague reply leaves the review pending.
+   - One review covers one ADR. CI blocks merges to the default branch until it is approved.
+   - On rejection, revert the change. Fix it forward with a follow-up ADR only when the reviewer asks for that.
+4. Conclude every completed ADR task with the mandatory **End-of-Task Annealing Diagnosis** block:
    ```markdown
    ### 🔬 End-of-Task Annealing Diagnosis
    - **Observable Friction / Errors**: Summary of any friction/redundant steps, or None.
