@@ -25,6 +25,7 @@ export function parseArgs(argv) {
     enforce: null,
     profile: null,
     adr: null,
+    limit: null,
     force: false,
     routine: false,
     gitExclude: false,
@@ -79,10 +80,14 @@ export function parseArgs(argv) {
       options.adr = takeValue(args, index, arg);
       index += 1;
     } else if (arg.startsWith("--adr=")) options.adr = arg.slice(6);
+    else if (arg === "--limit") {
+      options.limit = takeValue(args, index, arg);
+      index += 1;
+    } else if (arg.startsWith("--limit=")) options.limit = arg.slice(8);
     else throw new Error(`Unknown option: ${arg}`);
   }
 
-  if (!["init", "update", "doctor", "knowledge", "verify", "adr", "prd", "anneal", "exclude", "help"].includes(options.command)) {
+  if (!["init", "update", "doctor", "status", "knowledge", "verify", "adr", "prd", "anneal", "exclude", "help"].includes(options.command)) {
     throw new Error(`Unknown command: ${options.command}`);
   }
   const allowedSubcommands = { knowledge: "lint", adr: "new", prd: "new", anneal: "new" };
@@ -96,6 +101,11 @@ export function parseArgs(argv) {
 
   if (options.profile !== null && !PROFILES.includes(options.profile)) {
     throw new Error(`Unknown profile: ${options.profile} (use ${PROFILES.join(" or ")})`);
+  }
+
+  if (options.limit !== null) {
+    if (!/^\d+$/.test(options.limit)) throw new Error(`--limit must be a non-negative integer: ${options.limit}`);
+    options.limit = Number(options.limit);
   }
 
   return options;

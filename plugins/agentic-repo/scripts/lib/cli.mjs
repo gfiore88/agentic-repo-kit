@@ -12,6 +12,7 @@ import { runDoctor } from "./doctor.mjs";
 import { verifyGovernance } from "./verify.mjs";
 import { createGovernedArtifact } from "./artifacts.mjs";
 import { lintKnowledge } from "./knowledge.mjs";
+import { collectStatus, formatStatus } from "./status.mjs";
 import { applyGitExclude, inspectGitExclude, removeGitExclude } from "./exclude.mjs";
 import { installGitHooks, uninstallGitHooks } from "./hooks.mjs";
 
@@ -26,12 +27,17 @@ Usage:
   agentic-repo init [options]
   agentic-repo update [options]
   agentic-repo doctor [options]
+  agentic-repo status [--limit <n>] [options]
   agentic-repo verify [--changed <paths>] [--adr <ids>] [--routine] [options]
   agentic-repo exclude [options]
   agentic-repo knowledge lint [options]
   agentic-repo adr new --title <title> [options]
   agentic-repo prd new --title <title> [options]
   agentic-repo anneal new --title <title> --target <file> [options]
+
+The bare "agentic-repo" command requires a global install (npm i -g agentic-repo-kit).
+Otherwise run every command as "npx agentic-repo-kit <command>", for example
+"npx agentic-repo-kit status".
 
 Options:
   --runtime <ids|auto|none>  Override runtime selection (default: auto)
@@ -49,6 +55,7 @@ Options:
   --changed <paths>          Comma-separated changed paths for the ADR gate
   --adr <ids>                Comma-separated ADR references (e.g. ADR-0013) governing the change
   --routine                  verify: declare routine work (paths must match docs/adr/gate.json "routine"; log entry required)
+  --limit <n>                status: number of latest log entries to show (default 5)
   --enforce <mode>           Enforcement projection: ci, hooks, or none (default none)
   --help, -h                 Show help
 
@@ -255,6 +262,14 @@ async function doctorCommand(options) {
   return result.ok ? 0 : 1;
 }
 
+async function statusCommand(options) {
+  const cwd = path.resolve(options.cwd);
+  const result = await collectStatus(cwd, { limit: options.limit ?? 5 });
+  if (options.json) output.write(`${JSON.stringify({ cwd, ...result }, null, 2)}\n`);
+  else output.write(formatStatus(cwd, result));
+  return 0;
+}
+
 async function verifyCommand(options) {
   const cwd = path.resolve(options.cwd);
   const changedFiles = options.changed === null
@@ -323,6 +338,7 @@ export async function runCli(argv) {
     if (options.command === "update") return await runUpdate(options);
     if (options.command === "exclude") return await excludeCommand(options);
     if (options.command === "doctor") return await doctorCommand(options);
+    if (options.command === "status") return await statusCommand(options);
     if (options.command === "verify") return await verifyCommand(options);
     if (options.command === "knowledge") return await knowledgeCommand(options);
     return await artifactCommand(options);

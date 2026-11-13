@@ -37,3 +37,11 @@ test("init recognizes --git-exclude and exclude command", () => {
   assert.equal(parseArgs(["exclude", "--list"]).list, true);
 });
 
+test("status accepts a non-negative --limit", () => {
+  assert.equal(parseArgs(["status"]).command, "status");
+  assert.equal(parseArgs(["status"]).limit, null);
+  assert.equal(parseArgs(["status", "--limit", "3"]).limit, 3);
+  assert.equal(parseArgs(["status", "--limit=0"]).limit, 0);
+  assert.throws(() => parseArgs(["status", "--limit", "x"]), /--limit must be a non-negative integer/);
+  assert.throws(() => parseArgs(["status", "--limit", "-1"]), /--limit must be a non-negative integer/);
+});
