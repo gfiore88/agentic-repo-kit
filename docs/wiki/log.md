@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] lint | knowledge health
+
+- `knowledge lint` reports the wiki healthy, but it checks relative links only in `docs/wiki/`. A manual check of `docs/adr/`, `docs/product/`, and `docs/` found 104 relative links, all resolving. A wrong ADR-0015 link in the draft of ADR-0023 was repaired before the commit.
+- Unresolved: links in ADRs and PRDs have no automated check, so a broken one can ship unnoticed. Extending the check changes `knowledge lint` and `verify`, so it needs its own task ADR.
+
 ## [2026-11-13] implementation | README clarity and merge-gate wording
 
 - A full review of the README after the 0.8.0–0.10.0 releases found a stray quote in the low-risk `verify` example, which the published 0.9.0 and 0.10.0 READMEs also contain. It also found an overstated guarantee: the merge gate for low-risk reviews exists only with `--enforce ci` and a required check in branch protection.
