@@ -7,6 +7,10 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | Fast-lane task approval PRD drafted
+
+- Drafted PRD-0007 (`Draft`) for the question that ADR-0015 deferred: letting a human pre-approve a task ADR in the request so that small tasks skip the approval stop. The discovery questions went unanswered, so the mechanism, problem focus, and metric use the offered defaults and are marked `[ASSUMPTION]`. Nothing is authorized until the owner approves.
+
 ## [2026-11-13] implementation | Run-efficiency hardening of the generated kernel
 
 - A review of GitHub `main` at `4ec33cd` measured CLI commands at 40–130 ms and found that run time goes to model turns, human round trips, lint repair loops, and context loading. Accepted ADR-0015 to remove the kernel causes without weakening any gate; it supersedes the unpublished local ADR-0013/ADR-0014 commits (`296caa1`, `0b73ffd`).

@@ -17,6 +17,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Mandatory Annealing Closure and Provenance Inheritance PRD](../product/prd-0004-mandatory-annealing-closure-and-provenance-inheritance.md): closing annealing blocks and page-level source inheritance.
 - [Kernel Update and Upgrade Command PRD](../product/prd-0005-kernel-update-and-upgrade-command.md): non-destructive upgrades preserving project documentation.
 - [Governance Enforcement Modes PRD](../product/prd-0006-governance-enforcement-modes.md): turning advisory PRD/ADR discipline into an opt-in deterministic guarantee.
+- [Fast-Lane Task Approval PRD](../product/prd-0007-fast-lane-task-approval.md): draft, with discovery pending, for pre-approving task ADRs to remove the per-task approval stop.
 
 ## Architecture
 
