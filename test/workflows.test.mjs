@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { buildPlan } from "../plugins/agentic-repo/scripts/lib/plan.mjs";
 import { applyPlan } from "../plugins/agentic-repo/scripts/lib/writer.mjs";
 import { createGovernedArtifact } from "../plugins/agentic-repo/scripts/lib/artifacts.mjs";
-import { lintKnowledge } from "../plugins/agentic-repo/scripts/lib/knowledge.mjs";
+import { lintKnowledge, maskFencedCode } from "../plugins/agentic-repo/scripts/lib/knowledge.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pluginRoot = path.resolve(here, "../plugins/agentic-repo");
@@ -155,6 +155,61 @@ test("knowledge lint accepts conformant frontmatter with sources provenance", as
   assert.deepEqual(result.frontmatterIssues, []);
   assert.equal(result.uncitedFacts.length, 0);
   assert.equal(result.ok, true);
+});
+
+test("knowledge lint ignores links and facts inside fenced code blocks", async () => {
+  const cwd = await initializedRepository();
+  const page = path.join(cwd, "docs/wiki/conventions.md");
+  const lines = [
+    "---",
+    "type: concept",
+    "title: Wiki conventions",
+    "created: 2026-11-13",
+    "updated: 2026-11-13",
+    "---",
+    "",
+    "# Wiki conventions",
+    "",
+    "```markdown",
+    "- [FACT] The API uses OAuth. (see the auth page)",
+    "- See [Auth flow](concepts/auth-flow.md).",
+    "```",
+    "",
+    "~~~~",
+    "~~~",
+    "- [Still code](missing.md)",
+    "~~~~",
+    "",
+  ];
+  await writeFile(page, lines.join("\n"), "utf8");
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  await writeFile(indexFile, `${await readFile(indexFile, "utf8")}\n- [Conventions](conventions.md)\n`, "utf8");
+  assert.equal((await lintKnowledge(cwd)).ok, true, "fenced examples are not wiki content");
+
+  await writeFile(page, [...lines, "- `[FACT]` Visible claim without a citation.", ""].join("\n"), "utf8");
+  const result = await lintKnowledge(cwd);
+  assert.deepEqual(result.brokenLinks, []);
+  assert.deepEqual(result.uncitedFacts, [{ file: "docs/wiki/conventions.md", line: 20 }]);
+  assert.deepEqual(result.frontmatterIssues, [{ file: "docs/wiki/conventions.md", issue: "fact-bearing page missing non-empty sources" }]);
+});
+
+test("fenced code masking keeps line numbers and follows fence rules", () => {
+  assert.equal(maskFencedCode("a\n```js\n[x](y.md)\n```\nb"), "a\n\n\n\nb");
+  assert.equal(maskFencedCode("a\n``` not `a fence`\n[x](y.md)"), "a\n``` not `a fence`\n[x](y.md)");
+  assert.equal(maskFencedCode("```\n``` trailing text does not close\n```\nafter"), "\n\n\nafter");
+  assert.equal(maskFencedCode("```\r\n[x](y.md)\r\n```\r\nafter"), "\n\n\nafter");
+  assert.equal(maskFencedCode("a\n   ```\n- [FACT] unclosed fences run to the end"), "a\n\n");
+});
+
+test("knowledge lint accepts well-formed log entries in CRLF checkouts", async () => {
+  const cwd = await initializedRepository();
+  const logFile = path.join(cwd, "docs/wiki/log.md");
+  const crlf = (await readFile(logFile, "utf8")).replace(/\n/g, "\r\n");
+  const content = `${crlf}\r\n## [2026-11-13] implementation | CRLF entry\r\n\r\n## Not a valid entry\r\n`;
+  await writeFile(logFile, content, "utf8");
+  const result = await lintKnowledge(cwd);
+  assert.equal(result.malformedLogEntries.length, 1);
+  assert.equal(result.malformedLogEntries[0].line, content.split("\r\n").indexOf("## Not a valid entry") + 1);
 });
 
 test("ADR, PRD, and annealing commands create gated artifacts", async () => {

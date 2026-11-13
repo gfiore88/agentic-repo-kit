@@ -27,7 +27,7 @@ function isAdrPath(relativePath) {
   return /^docs\/adr\/adr-\d{4}-.+\.md$/.test(normalize(relativePath));
 }
 
-function adrStatus(content) {
+export function adrStatus(content) {
   const frontMatter = content.match(/^---\n([\s\S]*?)\n---/);
   if (!frontMatter) return null;
   const match = frontMatter[1].match(/^status:\s*["']?([A-Za-z]+)["']?\s*$/m);
@@ -89,19 +89,45 @@ function parseAdrReference(reference) {
   return digits ? digits.padStart(4, "0") : null;
 }
 
+// Every failing `knowledge lint` category is a governance violation, so `verify`
+// and `knowledge lint` always agree on knowledge health (ADR-0015).
+export const KNOWLEDGE_FINDINGS = Object.freeze({
+  brokenLinks: (link) => `broken link in ${link.file} -> ${link.href}`,
+  uncataloguedPages: (page) => `uncatalogued page ${page}`,
+  uncitedFacts: (fact) => `uncited fact ${fact.file}:${fact.line}`,
+  orphanPages: (page) => `orphan page ${page}`,
+  uncoveredSources: (source) => `uncovered raw source ${source}`,
+  malformedLogEntries: (entry) => `malformed log entry ${entry.file}:${entry.line}`,
+  frontmatterIssues: (issue) => `frontmatter: ${issue.file} -> ${issue.issue}`,
+});
+
+// Parallel branches can each create "the next" ADR number. A duplicate makes an
+// `ADR-NNNN` reference ambiguous, so every shared number is reported (ADR-0015).
+export function adrNumberCollisions(names) {
+  const byNumber = new Map();
+  for (const name of [...names].sort()) {
+    const number = name.match(/^adr-(\d{4})-.+\.md$/)?.[1];
+    if (number) byNumber.set(number, [...(byNumber.get(number) ?? []), `docs/adr/${name}`]);
+  }
+  return [...byNumber]
+    .filter(([, paths]) => paths.length > 1)
+    .map(([number, paths]) => ({ id: `ADR-${number}`, paths }));
+}
+
 // Deterministic governance check. Pure: no network and no subprocess. The set of
 // changed files is supplied by the caller (a CI wrapper computes the git diff),
 // keeping this engine portable and testable.
 export async function verifyGovernance(cwd, { changedFiles = null, adrReferences = [], routine = false } = {}) {
   const violations = [];
 
-  try {
-    const knowledge = await lintKnowledge(cwd);
-    for (const link of knowledge.brokenLinks) violations.push({ kind: "knowledge", detail: `broken link in ${link.file} -> ${link.href}` });
-    for (const page of knowledge.uncataloguedPages) violations.push({ kind: "knowledge", detail: `uncatalogued page ${page}` });
-    for (const fact of knowledge.uncitedFacts) violations.push({ kind: "knowledge", detail: `uncited fact ${fact.file}:${fact.line}` });
-  } catch {
+  let knowledge = null;
+  try { knowledge = await lintKnowledge(cwd); } catch {
     // No knowledge base to lint is not a governance violation on its own.
+  }
+  if (knowledge) {
+    for (const [category, describe] of Object.entries(KNOWLEDGE_FINDINGS)) {
+      for (const finding of knowledge[category]) violations.push({ kind: "knowledge", detail: describe(finding) });
+    }
   }
 
   const adrDirectory = path.join(cwd, "docs", "adr");
@@ -114,6 +140,9 @@ export async function verifyGovernance(cwd, { changedFiles = null, adrReferences
       violations.push({ kind: "adr", detail: `docs/adr/${name} has a missing or invalid status` });
     }
   }
+  for (const collision of adrNumberCollisions(adrNames)) {
+    violations.push({ kind: "adr", detail: `${collision.id} is used by more than one file (${collision.paths.join(", ")}); renumber the later ADR` });
+  }
 
   // Explicit references (for example `ADR-0013` in commit messages) let follow-up
   // work cite the Accepted ADR that governs it instead of duplicating decisions.
@@ -124,7 +153,13 @@ export async function verifyGovernance(cwd, { changedFiles = null, adrReferences
       references.push({ reference: String(raw), status: null, detail: "unrecognized ADR reference" });
       continue;
     }
-    const name = adrNames.find((candidate) => candidate.startsWith(`adr-${number}-`) && candidate.endsWith(".md"));
+    const matches = adrNames.filter((candidate) => candidate.startsWith(`adr-${number}-`) && candidate.endsWith(".md")).sort();
+    if (matches.length > 1) {
+      // An ambiguous reference never satisfies the gate, even if one match is Accepted.
+      references.push({ reference: `ADR-${number}`, status: null, detail: `ambiguous: ${matches.map((match) => `docs/adr/${match}`).join(", ")}` });
+      continue;
+    }
+    const name = matches[0];
     const status = name ? adrStatus(await readFile(path.join(adrDirectory, name), "utf8")) : null;
     references.push({ reference: `ADR-${number}`, status, detail: name ? `docs/adr/${name}` : "not found" });
   }

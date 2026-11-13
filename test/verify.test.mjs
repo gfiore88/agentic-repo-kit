@@ -1,13 +1,30 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { verifyGovernance } from "../plugins/agentic-repo/scripts/lib/verify.mjs";
+import { fileURLToPath } from "node:url";
+import { KNOWLEDGE_FINDINGS, verifyGovernance } from "../plugins/agentic-repo/scripts/lib/verify.mjs";
 import { runCli } from "../plugins/agentic-repo/scripts/lib/cli.mjs";
+import { buildPlan } from "../plugins/agentic-repo/scripts/lib/plan.mjs";
+import { applyPlan } from "../plugins/agentic-repo/scripts/lib/writer.mjs";
+import { lintKnowledge } from "../plugins/agentic-repo/scripts/lib/knowledge.mjs";
+
+const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../plugins/agentic-repo");
 
 async function tempDir() {
   return mkdtemp(path.join(os.tmpdir(), "agentic-repo-verify-"));
+}
+
+async function initializedRepository() {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "agentic-repo-verify-init-"));
+  const plan = await buildPlan({
+    assetsRoot: path.join(pluginRoot, "assets"),
+    skillsRoot: path.join(pluginRoot, "skills"),
+    runtimes: [],
+  });
+  await applyPlan(cwd, plan);
+  return cwd;
 }
 
 async function writeAdr(dir, name, status) {
@@ -164,4 +181,61 @@ test("verify CLI accepts --routine", async () => {
   const dir = await tempDir();
   await writeGate(dir, { routine: ["yarn.lock"] });
   assert.equal(await runCli(["verify", "--json", "--cwd", dir, "--changed", "yarn.lock,docs/wiki/log.md", "--routine"]), 0);
+});
+
+test("verify maps every knowledge lint category", async () => {
+  const lint = await lintKnowledge(await initializedRepository());
+  const categories = Object.keys(lint).filter((key) => Array.isArray(lint[key])).sort();
+  assert.deepEqual(Object.keys(KNOWLEDGE_FINDINGS).sort(), categories);
+});
+
+test("verify enforces every knowledge lint category", async () => {
+  const cwd = await initializedRepository();
+  // Catalogued by path text but linked from nowhere, and without frontmatter.
+  await writeFile(path.join(cwd, "docs/wiki/loner.md"), "# Loner\n\nNo inbound links.\n", "utf8");
+  const indexFile = path.join(cwd, "docs/wiki/index.md");
+  await writeFile(indexFile, `${await readFile(indexFile, "utf8")}\n<!-- loner.md -->\n`, "utf8");
+  await mkdir(path.join(cwd, "docs/raw"), { recursive: true });
+  await writeFile(path.join(cwd, "docs/raw/2026-09-04-note.md"), "raw note\n", "utf8");
+  const logFile = path.join(cwd, "docs/wiki/log.md");
+  await writeFile(logFile, `${await readFile(logFile, "utf8")}\n## Not a valid entry\n`, "utf8");
+
+  const result = await verifyGovernance(cwd, {});
+  assert.equal(result.ok, false);
+  const details = result.violations.filter((violation) => violation.kind === "knowledge").map((violation) => violation.detail);
+  assert.ok(details.includes("orphan page docs/wiki/loner.md"));
+  assert.ok(details.includes("uncovered raw source docs/raw/2026-09-04-note.md"));
+  assert.ok(details.some((detail) => /^malformed log entry docs\/wiki\/log\.md:\d+$/.test(detail)));
+  assert.ok(details.includes("frontmatter: docs/wiki/loner.md -> missing frontmatter"));
+});
+
+test("verify passes on a healthy initialized knowledge base", async () => {
+  const result = await verifyGovernance(await initializedRepository(), {});
+  assert.equal(result.adrGateApplied, false);
+  assert.deepEqual(result.violations, []);
+  assert.equal(result.ok, true);
+});
+
+test("duplicate ADR numbers are violations and make references ambiguous", async () => {
+  const dir = await tempDir();
+  await writeAdr(dir, "adr-0001-use-redis-cache.md", "Accepted");
+  await writeAdr(dir, "adr-0001-switch-to-postgres.md", "Proposed");
+  await writeAdr(dir, "adr-0002-unique.md", "Accepted");
+
+  const plain = await verifyGovernance(dir, {});
+  assert.equal(plain.ok, false);
+  assert.deepEqual(plain.violations, [{
+    kind: "adr",
+    detail: "ADR-0001 is used by more than one file (docs/adr/adr-0001-switch-to-postgres.md, docs/adr/adr-0001-use-redis-cache.md); renumber the later ADR",
+  }]);
+
+  const ambiguous = await verifyGovernance(dir, { changedFiles: ["src/db.js"], adrReferences: ["ADR-0001"] });
+  assert.equal(ambiguous.ok, false);
+  assert.equal(ambiguous.adrReferences[0].status, null);
+  assert.match(ambiguous.adrReferences[0].detail, /^ambiguous: docs\/adr\/adr-0001-switch-to-postgres\.md, docs\/adr\/adr-0001-use-redis-cache\.md$/);
+  assert.ok(ambiguous.violations.some((violation) => violation.kind === "adr-gate"));
+
+  const unique = await verifyGovernance(dir, { changedFiles: ["src/db.js"], adrReferences: ["ADR-0002"] });
+  assert.equal(unique.adrReferences[0].status, "Accepted");
+  assert.ok(!unique.violations.some((violation) => violation.kind === "adr-gate"));
 });
