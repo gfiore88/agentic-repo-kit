@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.13.0 publication check
+
+- The npm registry lists `latest` 0.13.0 with an SLSA v1 provenance attestation.
+- On a repository initialized with 0.10.1 and customized like the client repository (rules added after an item the kit later rewrote, plus client lines in `.github/copilot-instructions.md`), one `npx agentic-repo-kit@0.13.0 update --yes` downloaded and verified the 0.10.1 base and merged `AGENTS.md`. It kept every customization, pinned 0.13.0, and exited 0; `verify` was compliant.
+
 ## [2026-11-13] release | 0.13.0
 
 - Accepted ADR-0029 and released the ADR-0028 automatic three-way merge on update as 0.13.0 (SemVer minor), through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
