@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.8.1] - 2026-11-13
 
-Generated instructions now run the kit version that produced them, and frontmatter parsing tolerates CRLF line endings and YAML comments. Decisions recorded in `ADR-0017`.
+Generated instructions now run the kit version that produced them, and frontmatter parsing tolerates CRLF line endings and YAML comments. Decisions recorded in `ADR-0017`; release recorded in `ADR-0018`.
 
 ### Fixed
 
