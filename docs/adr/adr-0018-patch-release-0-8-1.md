@@ -1,6 +1,6 @@
 ---
 title: "ADR-0018: Patch Release 0.8.1"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore and implementation agent"
 tags: ["release", "npm", "semver"]
@@ -12,7 +12,8 @@ superseded_by: ""
 
 ## Status
 
-**Proposed** | Accepted | Rejected | Superseded | Deprecated
+**Accepted** by Giovanni Fiore on 2026-11-13. He replied "si approvo" ("yes, I
+approve") to the request to accept ADR-0018 and publish 0.8.1.
 
 ## Context
 
