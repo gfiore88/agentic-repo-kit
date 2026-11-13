@@ -7,6 +7,10 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] decision | PRD-0007 approved and ADR-0019 accepted
+
+- Giovanni Fiore approved PRD-0007 and accepted ADR-0019 ("approvo entrambi"). This resolves the fast-lane open question with a low-risk ADR tier: tasks enter it automatically within human-defined thresholds, every tier ADR gets a per-task review, and CI blocks merges to the default branch until that review is done.
+
 ## [2026-11-13] decision | Fast-lane PRD completed and ADR-0019 proposed
 
 - Giovanni Fiore settled the remaining PRD-0007 questions: tasks enter the tier automatically, the thresholds are at most 5 changed files and 200 changed lines with tests whenever code changes, CI blocks merges to the default branch while a review is pending, and a rejected review reverts the change by default. The PRD has no open questions left and stays `Draft` until approved.

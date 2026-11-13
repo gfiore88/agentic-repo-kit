@@ -11,4 +11,3 @@ updated: 2026-11-13
 - `[OPEN QUESTION]` Which secondary runtimes enter the first certified compatibility matrix after the P0 group?
 - `[OPEN QUESTION]` Should generated adapter files be committed, regenerated in CI, or support both policies?
 - `[OPEN QUESTION]` What public license should govern the project itself?
-- `[OPEN QUESTION]` Should a tracked upfront approval or a wider routine tier let a task ADR be accepted when it is created, removing the per-task stop that dominates wall-clock time? It would change the governance promise, so it needs a PRD ([ADR-0015](../adr/adr-0015-run-efficiency-hardening-of-the-generated-kernel.md)); drafted as [PRD-0007](../product/prd-0007-fast-lane-task-approval.md), which proposes a low-risk tier with per-task review; [ADR-0019](../adr/adr-0019-low-risk-adr-tier-with-per-task-review.md) proposes the implementation, and both await approval.
