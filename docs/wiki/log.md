@@ -7,6 +7,11 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.8.0 publication check
+
+- npm reports `latest` 0.8.0 with an SLSA v1 provenance attestation. With an empty npm cache, `npx agentic-repo-kit@0.8.0` initializes a repository whose pre-push hook pins `agentic-repo-kit@0.8.0`, and its `doctor`, `knowledge lint`, `status`, and `verify --adr` checks pass.
+- Unpinned `npx agentic-repo-kit status` runs a globally installed copy when one exists, so a stale global install shadows the release; logged as an open question about pinning projected instructions.
+
 ## [2026-11-13] release | 0.8.0
 
 - Accepted ADR-0016 and released the ADR-0015 work as 0.8.0 (SemVer minor) through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
