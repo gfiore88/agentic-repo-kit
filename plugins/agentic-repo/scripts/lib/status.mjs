@@ -118,6 +118,8 @@ async function kernelStatus(cwd) {
     enforcement: typeof lock.enforcement === "string" ? lock.enforcement : "none",
     runtimes: Array.isArray(lock.runtimes) ? lock.runtimes : [],
     integrity: { ok: doctor.ok, missing: doctor.missing.length, divergent: doctor.divergent.length },
+    trackingChecked: doctor.trackingChecked,
+    untracked: doctor.untracked.length,
   };
 }
 
@@ -157,6 +159,7 @@ export function formatStatus(cwd, status) {
     lines.push(`Kernel: agentic-repo-kit ${kernel.kitVersion ?? "(unknown version)"}, profile ${kernel.profile}, enforcement ${kernel.enforcement}`);
     lines.push(`Adapters: ${kernel.runtimes.length > 0 ? kernel.runtimes.join(", ") : "none"}`);
     lines.push(`Integrity: ${kernel.integrity.ok ? "healthy" : `unhealthy (missing ${kernel.integrity.missing}, divergent ${kernel.integrity.divergent}; run doctor)`}`);
+    if (kernel.untracked > 0) lines.push(`Git: ${kernel.untracked} kernel file(s) neither committed nor excluded; commit them or run exclude (see doctor)`);
   } else lines.push("Kernel: not initialized (no readable scaffold.lock)");
   if (knowledge.initialized) {
     const failing = Object.entries(knowledge.issues)

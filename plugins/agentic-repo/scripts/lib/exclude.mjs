@@ -1,5 +1,6 @@
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveGitDirs } from "./git.mjs";
 
 export const MARKER_START = "# --- BEGIN AGENTIC REPO EXCLUDES ---";
 export const MARKER_END = "# --- END AGENTIC REPO EXCLUDES ---";
@@ -57,24 +58,8 @@ export async function managedExcludePatterns(cwd) {
 }
 
 export async function resolveGitExcludePath(cwd) {
-  const gitPath = path.join(cwd, ".git");
-  try {
-    const gitStat = await stat(gitPath);
-    if (gitStat.isDirectory()) {
-      return path.join(gitPath, "info", "exclude");
-    }
-    if (gitStat.isFile()) {
-      const content = await readFile(gitPath, "utf8");
-      const match = content.match(/^gitdir:\s*(.+)$/m);
-      if (match) {
-        const resolvedGitDir = path.resolve(cwd, match[1].trim());
-        return path.join(resolvedGitDir, "info", "exclude");
-      }
-    }
-  } catch {
-    return null;
-  }
-  return null;
+  const dirs = await resolveGitDirs(cwd);
+  return dirs ? path.join(dirs.commonDir, "info", "exclude") : null;
 }
 
 function stripManagedBlock(content) {

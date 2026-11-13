@@ -315,6 +315,11 @@ async function doctorCommand(options) {
     output.write(`Missing: ${result.missing.length}; divergent: ${result.divergent.length}\n`);
     for (const missing of result.missing) output.write(`  missing: ${missing}\n`);
     for (const divergent of result.divergent) output.write(`  divergent: ${divergent}\n`);
+    if (result.untracked.length > 0) {
+      const sample = result.untracked.slice(0, 3).join(", ");
+      output.write(`Untracked: ${result.untracked.length} kernel file(s) are neither committed nor excluded (${sample}${result.untracked.length > 3 ? ", ..." : ""})\n`);
+      output.write("Next step: commit them, or run `npx agentic-repo-kit exclude` if they must stay out of Git (for example in a client repository).\n");
+    } else if (result.lockState === "ok" && !result.trackingChecked) output.write("Git tracking: not checked (no readable Git index)\n");
     if (result.error) output.write(`Lock: ${result.error}\n`);
     if (result.hint) output.write(`Next step: ${result.hint}\n`);
     output.write(result.ok ? "Status: healthy\n" : "Status: unhealthy\n");

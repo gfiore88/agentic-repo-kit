@@ -1,24 +1,14 @@
 import { access, chmod, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { stat } from "node:fs/promises";
+import { resolveGitDirs } from "./git.mjs";
 
 export const HOOKS_DIR = ".agents/hooks";
 export const MANAGED_HOOKS = ["pre-push"];
 
+// Git reads core.hooksPath from the common directory's config, also in a linked
+// worktree (ADR-0026).
 async function resolveGitDir(cwd) {
-  const gitPath = path.join(cwd, ".git");
-  try {
-    const gitStat = await stat(gitPath);
-    if (gitStat.isDirectory()) return gitPath;
-    if (gitStat.isFile()) {
-      const content = await readFile(gitPath, "utf8");
-      const match = content.match(/^gitdir:\s*(.+)$/m);
-      if (match) return path.resolve(cwd, match[1].trim());
-    }
-  } catch {
-    return null;
-  }
-  return null;
+  return (await resolveGitDirs(cwd))?.commonDir ?? null;
 }
 
 // Minimal git-config editor scoped to the core.hooksPath key. Keeps the kit
