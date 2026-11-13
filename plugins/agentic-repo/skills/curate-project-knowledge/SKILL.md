@@ -97,8 +97,9 @@ Append one entry per operation to `docs/wiki/log.md`, using a fixed greppable he
 ## [YYYY-MM-DD] <tag> | <description>
 ```
 
-`<tag>` is one of `ingest`, `query`, `lint`, `rename`, or `delete`. Follow the header
-with one bullet per file created or updated.
+`<tag>` is one of `ingest`, `query`, `lint`, `rename`, or `delete`; lifecycle work uses
+`decision`, `implementation`, `routine`, or `release`. Follow the header with one
+bullet per file created or updated.
 
 ## Workflows
 
@@ -109,7 +110,9 @@ with one bullet per file created or updated.
   pages backing each claim. If the answer is a durable synthesis (comparison,
   trade-off, derived decision), offer to promote it to a `concepts/` page — create it
   only after human confirmation, then log it under `query`.
-- **Lint** — run `agentic-repo knowledge lint` and resolve what it reports. Do not
+- **Lint** — run `npx agentic-repo-kit knowledge lint` (or `agentic-repo knowledge lint`
+  with a global install) and resolve what it reports. Never re-implement its checks by
+  hand: if the command cannot run, report the knowledge base as unverified. Do not
   auto-fix contradictions; surface them for a human decision.
 
 ## House style
@@ -127,4 +130,5 @@ with one bullet per file created or updated.
 missing required keys, non-date `created`/`updated`, empty `sources:` on fact-bearing
 pages), broken relative links, uncatalogued pages, uncited facts, orphan pages (no
 inbound links), raw sources without a `sources/` summary, and malformed `log.md`
-entries.
+entries. Links and `[FACT]` markers inside fenced code blocks are ignored, so
+documented examples do not trip it. `verify` enforces the same checks.

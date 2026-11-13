@@ -1,11 +1,14 @@
 ---
+type: concept
 title: "[Topic]"
-status: "Active"
-last_updated: "YYYY-MM-DD"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
 sources: []
 ---
 
 # [Topic]
+
+<!-- Set type to source, entity, or concept. List every source behind a fact in sources. Link pages with relative links only. -->
 
 ## Overview
 
@@ -31,4 +34,4 @@ sources: []
 
 ## Cross-References
 
-- [Knowledge index](../wiki/index.md)
+- [Relative link to a related page or source]
