@@ -34,7 +34,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Mandatory per-page wiki frontmatter](../adr/adr-0012-mandatory-per-page-wiki-frontmatter.md): accepted structured frontmatter and its lint validation (deferred follow-up to ADR-0011).
 - [Lock-aware update and governance gate hardening](../adr/adr-0013-lock-aware-update-and-governance-gate-hardening.md): accepted conflict-safe `update`, orphan cleanup, lock-derived git excludes, ADR references and pinned enforcement, registry consolidation, and skill profiles.
 - [Minor release 0.7.0](../adr/adr-0014-minor-release-0-7-0.md): accepted SemVer minor release of the ADR-0013 work.
-- [Run-efficiency hardening of the generated kernel](../adr/adr-0015-run-efficiency-hardening-of-the-generated-kernel.md): proposed lint accuracy, verify/lint parity, ADR number integrity, resolvable `npx` invocation, consistent directives, proportional skill loading, and a read-only `status` digest.
+- [Run-efficiency hardening of the generated kernel](../adr/adr-0015-run-efficiency-hardening-of-the-generated-kernel.md): accepted lint accuracy, verify/lint parity, ADR number integrity, resolvable `npx` invocation, consistent directives, proportional skill loading, and a read-only `status` digest.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.

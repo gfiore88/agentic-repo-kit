@@ -1,6 +1,6 @@
 ---
 title: "ADR-0015: Run-Efficiency Hardening of the Generated Kernel"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-13"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["agent-runs", "performance", "knowledge-lint", "verify", "cli", "directives", "consistency"]
@@ -12,9 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed** | Accepted | Rejected | Superseded | Deprecated
-
-Implementation is blocked until Giovanni Fiore explicitly accepts this ADR.
+**Accepted** by Giovanni Fiore on 2026-11-13. He replied "ok" to the request to
+accept ADR-0015 as proposed, with delivery as a Draft PR on GitHub. All eleven
+decisions are in scope.
 
 ## Context
 
