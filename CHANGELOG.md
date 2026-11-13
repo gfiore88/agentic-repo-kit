@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.13.0] - 2026-11-13
 
-Customized kernel files no longer block updates: `update` merges your changes with the kit's. Decisions recorded in `ADR-0028`.
+Customized kernel files no longer block updates: `update` merges your changes with the kit's. Decisions recorded in `ADR-0028`; release recorded in `ADR-0029`.
 
 ### Changed
 

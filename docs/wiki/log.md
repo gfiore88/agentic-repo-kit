@@ -7,6 +7,12 @@ updated: 2026-11-13
 
 # Knowledge Log
 
+## [2026-11-13] release | 0.13.0
+
+- Accepted ADR-0029 and released the ADR-0028 automatic three-way merge on update as 0.13.0 (SemVer minor), through `npm version minor`, which also syncs `plugin.json`; published via the GitHub release and the Trusted Publishing workflow.
+- Before publishing, the kit on `main` updated repositories initialized with the published 0.10.1 and 0.7.0 and customized like the client repository, with one `update --yes` each. The bases came from the real registry and were verified and cached. `AGENTS.md` merged, the other customizations were kept, the update exited 0, and `verify` was compliant.
+- A new repository with all 8 adapters and `--enforce ci` passes `doctor`, `knowledge lint`, and `verify`, and its generated links resolve.
+
 ## [2026-11-13] implementation | Automatic three-way merge on update
 
 - Accepted and implemented ADR-0028. `update` merges customized kernel files against the content the kit wrote, rebuilt from the version in the lock: the package is downloaded from the configured registry, verified against its sha512 integrity, cached, and used only for files that match the lock hashes. Overlapping edits get conflict markers while the rest updates; `doctor`, `verify`, and `status` report unresolved markers.
