@@ -40,7 +40,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Version-pinned projected invocation and tolerant frontmatter parsing](../adr/adr-0017-version-pinned-projected-invocation-and-tolerant-frontmatter-parsing.md): accepted pinning of generated CLI instructions to the generating version, plus CRLF- and comment-tolerant frontmatter parsing.
 - [Patch release 0.8.1](../adr/adr-0018-patch-release-0-8-1.md): accepted SemVer patch release of the ADR-0017 work.
 - [Low-risk ADR tier with per-task review](../adr/adr-0019-low-risk-adr-tier-with-per-task-review.md): accepted implementation of PRD-0007: `gate.json` policy, `verify` eligibility and review checks, tier ADRs, and the CI merge gate.
-- [Minor release 0.9.0](../adr/adr-0020-minor-release-0-9-0.md): proposed SemVer minor release of the ADR-0019 work.
+- [Minor release 0.9.0](../adr/adr-0020-minor-release-0-9-0.md): accepted SemVer minor release of the ADR-0019 work.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.
