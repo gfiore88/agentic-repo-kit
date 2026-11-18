@@ -1,6 +1,6 @@
 ---
 title: "ADR-0032: Branded Interactive Console for init, update, and help"
-status: "Proposed"
+status: "Accepted"
 date: "2026-11-18"
 authors: "Giovanni Fiore (decision owner) and implementation agent"
 tags: ["cli", "ux", "branding", "terminal"]
@@ -12,7 +12,9 @@ superseded_by: ""
 
 ## Status
 
-**Proposed**. Implementation waits for explicit acceptance by Giovanni Fiore.
+**Accepted** by Giovanni Fiore on 2026-11-18. Asked to decide on the proposal, he
+chose "Accetto l'ADR-0032: procedi con l'implementazione" ("I accept ADR-0032:
+proceed with the implementation") and the `electric` palette.
 
 ## Context
 
