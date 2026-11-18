@@ -2,10 +2,14 @@
 type: log
 title: Knowledge Log
 created: 2026-08-31
-updated: 2026-11-13
+updated: 2026-11-18
 ---
 
 # Knowledge Log
+
+## [2026-11-18] decision | Branded interactive console proposed
+
+- The owner asked for a nicer console during `init` and the npm installation. On npm 11.16.0, a probe package's `postinstall` output was hidden during `npm i` and `npm i -g`, which also warned about its install scripts, and `npx` printed only the binary's output. Proposed ADR-0032: no install-time banner, and a dependency-free branded layout for `init`, `update`, and help that appears only in an interactive terminal, so `--json`, pipes, CI, and agents keep today's output.
 
 ## [2026-11-13] operations | History rewritten without co-author trailers
 
