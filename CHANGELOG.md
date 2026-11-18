@@ -4,6 +4,20 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+A branded console for the commands that people run by hand. Decisions recorded in `ADR-0032`.
+
+### Added
+
+- In an interactive terminal, `init`, `update` (and `upgrade`), and `--help` open with the kit's wordmark, painted from amber to rose where the terminal supports it. The plan is shown as aligned fields, with counts and files colored by meaning, and a successful `init` ends with the next steps: `doctor`, `status`, and starting your coding agent.
+- Colors follow the terminal: truecolor, 256 colors, 16 colors, or none. `NO_COLOR`, `NODE_DISABLE_COLORS`, `FORCE_COLOR`, and `TERM=dumb` are honored. Narrow terminals get a text header, and terminals without Unicode also get ASCII symbols.
+
+### Upgrade notes
+
+- Nothing to change. Pipes, CI (`CI` set), `TERM=dumb`, `--json`, and every other command keep the previous plain output byte for byte, with the same prompts and exit codes. Agent runtimes that run `init` or `update` in a terminal see the branded layout; `--json`, `TERM=dumb`, or `CI=1` keep plain text.
+- The package still has no dependencies and no install scripts, so `npm install` stays silent.
+
 ## [0.14.0] - 2026-11-13
 
 Customized kernel files no longer make the repository look broken. Decisions recorded in `ADR-0030`; release recorded in `ADR-0031`.

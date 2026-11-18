@@ -7,6 +7,12 @@ updated: 2026-11-18
 
 # Knowledge Log
 
+## [2026-11-18] implementation | Branded interactive console
+
+- Accepted and implemented ADR-0032 with the `electric` palette. A new module, `ui.mjs`, with no dependencies, renders the wordmark, plan, prompt, and next steps for `init`, `update`, and help. It is used only when stdout is a TTY, `CI` is unset, `TERM` is not `dumb`, and `--json` is absent.
+- With `cli.mjs` and `ui.mjs` applied to a copy of `HEAD`, the plain output of 15 commands matched the previous version byte for byte: stdout, stderr, and exit codes. Under a pseudo-terminal, the expected variant rendered for truecolor, 256 colors, 16 colors, `NO_COLOR`, 50 columns, and `TERM=linux`; `CI` and `TERM=dumb` gave plain output, and `--json` stayed parseable.
+- The CLI tests' `run()` helper now yields once before patching stdout. Without it, a test that patched stdout immediately captured the previous test's report, which the runner sends through stdout, and that test went uncounted.
+
 ## [2026-11-18] decision | Branded interactive console proposed
 
 - The owner asked for a nicer console during `init` and the npm installation. On npm 11.16.0, a probe package's `postinstall` output was hidden during `npm i` and `npm i -g`, which also warned about its install scripts, and `npx` printed only the binary's output. Proposed ADR-0032: no install-time banner, and a dependency-free branded layout for `init`, `update`, and help that appears only in an interactive terminal, so `--json`, pipes, CI, and agents keep today's output.

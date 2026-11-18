@@ -87,6 +87,8 @@ agentic-repo init
 
 The assisted initializer detects installed AI runtime tools and existing repository markers, presents a plan, and requests confirmation before writing files.
 
+In an interactive terminal, `init`, `update`, and `--help` open with the kit's wordmark. The plan is shown with counts and files colored by meaning, and a successful `init` ends with the next steps. Colors follow what the terminal supports, and `NO_COLOR` removes them. Pipes, CI, `TERM=dumb`, and `--json` get the plain text that scripts and agents rely on.
+
 ### 2. Common CLI flags
 
 The examples use the short `agentic-repo` alias, which requires the global install above; otherwise run them as `npx agentic-repo-kit <command>`.
