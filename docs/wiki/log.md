@@ -7,6 +7,12 @@ updated: 2026-11-18
 
 # Knowledge Log
 
+## [2026-11-18] release | 0.15.0 publication check
+
+- The npm registry lists `latest` 0.15.0 with an SLSA v1 provenance attestation, published by the Trusted Publishing workflow from the `v0.15.0` GitHub release. The package has no dependencies and no install scripts.
+- Under a pseudo-terminal, `npx agentic-repo-kit@0.15.0 init --yes` showed the wordmark with the version, the plan, and the next steps.
+- On a repository initialized with 0.14.0, piped `npx agentic-repo-kit@0.15.0 update --yes` printed plain text without escape codes and exited 0. It moved all 18 version pins in the generated instructions from 0.14.0 to 0.15.0, and `doctor` and `verify` passed.
+
 ## [2026-11-18] release | 0.15.0
 
 - Accepted ADR-0033 and released the ADR-0032 branded interactive console as 0.15.0 (SemVer minor), through `npm version minor`, which also syncs `plugin.json`, and the GitHub release that triggers the Trusted Publishing workflow.
