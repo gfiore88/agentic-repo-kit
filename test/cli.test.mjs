@@ -21,6 +21,9 @@ async function fileExists(target) {
 // Runs the CLI while capturing stdout/stderr so we can assert on machine output
 // and exit codes without touching the real process streams.
 async function run(argv) {
+  // The test runner reports results through stdout; let it flush the previous
+  // test's report before stdout is patched, or the capture swallows it.
+  await new Promise((resolve) => setImmediate(resolve));
   const out = [];
   const err = [];
   const originalOut = process.stdout.write;
@@ -149,4 +152,69 @@ test("exclude command reports non-git targets and manages a git repository", asy
   assert.equal((await run(["exclude", "--cwd", gitDir])).code, 0);
   assert.equal((await run(["exclude", "--list", "--cwd", gitDir])).code, 0);
   assert.equal((await run(["exclude", "--remove", "--cwd", gitDir])).code, 0);
+});
+
+// Runs the CLI as if stdout were an interactive truecolor terminal (ADR-0032).
+// CI is cleared because the branded layout never renders under CI.
+async function runInTerminal(argv) {
+  const stdout = process.stdout;
+  const saved = [
+    [stdout, "isTTY", true],
+    [stdout, "columns", 100],
+    [stdout, "getColorDepth", () => 24],
+    [process.env, "CI", undefined],
+    [process.env, "TERM", "xterm-256color"],
+  ].map(([target, key, value]) => {
+    const previous = target[key];
+    if (value === undefined) delete target[key];
+    else target[key] = value;
+    return [target, key, previous];
+  });
+  try {
+    return await run(argv);
+  } finally {
+    for (const [target, key, previous] of saved) {
+      if (previous === undefined) delete target[key];
+      else target[key] = previous;
+    }
+  }
+}
+
+const stripAnsi = (text) => text.replace(/\u001b\[[0-9;]*m/g, "");
+
+test("an interactive terminal gets the branded init layout, and --json stays plain", async () => {
+  const dir = await tempDir();
+  const preview = await runInTerminal(["init", "--dry-run", "--cwd", dir, "--runtime", "none"]);
+  assert.equal(preview.code, 0);
+  assert.notEqual(preview.out, stripAnsi(preview.out));
+  const text = stripAnsi(preview.out);
+  assert.match(text, /▄▀█ █▀▀ █▀▀/);
+  assert.match(text, /Adapters +none\n/);
+  assert.match(text, /Plan +\d+ to create · 0 unchanged · 0 conflicts\n/);
+  assert.match(text, /· Dry run: no files written\.\n/);
+
+  const json = await runInTerminal(["init", "--dry-run", "--json", "--cwd", dir, "--runtime", "none"]);
+  assert.equal(json.out.includes("▄▀█"), false);
+  assert.deepEqual(JSON.parse(json.out).runtimes, []);
+
+  const applied = await runInTerminal(["init", "--yes", "--cwd", dir, "--runtime", "none"]);
+  assert.equal(applied.code, 0);
+  assert.match(stripAnsi(applied.out), /✔ Initialization complete: created \d+ files\n\n {2}Next steps\n {2}→ npx agentic-repo-kit doctor/);
+});
+
+test("update in an interactive terminal lists each file with its action", async () => {
+  const dir = await tempDir();
+  await run(["init", "--yes", "--cwd", dir, "--runtime", "none"]);
+  await writeFile(path.join(dir, "AGENTS.md"), "# Project contract\n", "utf8");
+  const { code, out } = await runInTerminal(["update", "--dry-run", "--cwd", dir]);
+  assert.equal(code, 0);
+  assert.match(stripAnsi(out), /Low-risk tier +enabled/);
+  assert.match(stripAnsi(out), /keep +AGENTS\.md \(your changes, no kit changes\)\n/);
+});
+
+test("help in an interactive terminal keeps every line of the plain help", async () => {
+  const plain = (await run(["--help"])).out;
+  const rich = stripAnsi((await runInTerminal(["--help"])).out);
+  assert.match(rich, /▄▀█/);
+  for (const line of plain.split("\n").slice(1).filter(Boolean)) assert.ok(rich.includes(line), line);
 });

@@ -17,6 +17,7 @@ import { lintKnowledge } from "./knowledge.mjs";
 import { collectStatus, formatStatus } from "./status.mjs";
 import { applyGitExclude, inspectGitExclude, removeGitExclude } from "./exclude.mjs";
 import { installGitHooks, uninstallGitHooks } from "./hooks.mjs";
+import { createUi, plural, renderHelp, renderInitPlan, renderNextSteps, renderUpdatePlan } from "./ui.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const assetsRoot = path.resolve(moduleDir, "../../assets");
@@ -76,13 +77,16 @@ Runtime IDs:
 `;
 }
 
+function runtimeEvidence(item) {
+  return [...item.executableHits.map((hit) => `command:${hit}`), ...item.markerHits.map((hit) => `marker:${hit}`)];
+}
+
 function printPlan({ cwd, runtimes, detected, inspection, detectionMode, gitExclude, enforce, profile }) {
   output.write(`Target: ${cwd}\n`);
   if (detected.length > 0) {
     output.write("Detected runtimes:\n");
     for (const item of detected) {
-      const evidence = [...item.executableHits.map((hit) => `command:${hit}`), ...item.markerHits.map((hit) => `marker:${hit}`)];
-      output.write(`  - ${RUNTIME_CATALOG[item.id].displayName} (${evidence.join(", ")})\n`);
+      output.write(`  - ${RUNTIME_CATALOG[item.id].displayName} (${runtimeEvidence(item).join(", ")})\n`);
     }
   } else if (detectionMode === "auto") output.write("Detected runtimes: none; universal kernel only.\n");
   else output.write("Runtime detection: skipped because selection is explicit.\n");
@@ -122,10 +126,14 @@ function printUpdatePlan({ cwd, runtimes, inspection, gitExclude, enforce, profi
   for (const item of inspection.conflicts) output.write(`  conflict (${adopting ? "differs from this version" : "modified by you"}): ${item}\n`);
 }
 
-async function confirm(message) {
+async function confirm(message, ui) {
   const readline = createInterface({ input, output });
   try {
-    const answer = (await readline.question(`${message} [Y/n] `)).trim().toLowerCase();
+    const prompt = ui.rich
+      ? `  ${ui.style.accent("?")} ${ui.style.bold(message)} ${ui.style.dim("[Y/n]")} `
+      : `${message} [Y/n] `;
+    const answer = (await readline.question(prompt)).trim().toLowerCase();
+    if (ui.rich) output.write("\n");
     return answer === "" || answer === "y" || answer === "yes";
   } finally {
     readline.close();
@@ -134,6 +142,7 @@ async function confirm(message) {
 
 async function runInit(options) {
   const cwd = path.resolve(options.cwd);
+  const ui = createUi(output, { json: options.json });
   const enforce = options.enforce ?? "none";
   const profile = options.profile ?? "full";
   const selection = parseRuntimeSelection(options.runtime);
@@ -144,18 +153,33 @@ async function runInit(options) {
 
   if (options.json) {
     output.write(`${JSON.stringify({ cwd, detected, runtimes, profile, enforcement: enforce, gitExclude: options.gitExclude, ...inspection }, null, 2)}\n`);
+  } else if (ui.rich) {
+    output.write(renderInitPlan(ui, {
+      cwd,
+      version: await readKitVersion(assetsRoot),
+      detected: detected.map((item) => ({ name: RUNTIME_CATALOG[item.id].displayName, evidence: runtimeEvidence(item) })),
+      detectionMode: selection.mode,
+      runtimes,
+      profile,
+      enforce,
+      gitExclude: options.gitExclude,
+      inspection,
+    }));
   } else printPlan({ cwd, runtimes, detected, inspection, detectionMode: selection.mode, gitExclude: options.gitExclude, enforce, profile });
 
   if (inspection.conflicts.length > 0) {
-    if (!options.json) output.write("No files written because preflight found conflicts.\n");
+    if (!options.json) output.write(ui.line("error", "No files written because preflight found conflicts."));
     return 1;
   }
-  if (options.dryRun) return 0;
+  if (options.dryRun) {
+    if (ui.rich) output.write(ui.line("info", "Dry run: no files written."));
+    return 0;
+  }
 
   let approved = options.yes;
-  if (!approved && input.isTTY && output.isTTY) approved = await confirm("Apply this initialization plan?");
+  if (!approved && input.isTTY && output.isTTY) approved = await confirm("Apply this initialization plan?", ui);
   if (!approved) {
-    if (!options.json) output.write("No files written. Re-run with --yes for non-interactive initialization.\n");
+    if (!options.json) output.write(ui.line("warning", "No files written. Re-run with --yes for non-interactive initialization."));
     return input.isTTY ? 0 : 2;
   }
 
@@ -163,32 +187,36 @@ async function runInit(options) {
   if (options.gitExclude) {
     const excludeResult = await applyGitExclude(cwd);
     if (!options.json) {
-      if (excludeResult.ok) output.write("Applied local exclusions to .git/info/exclude.\n");
-      else output.write("Notice: .git directory not found; skipped .git/info/exclude.\n");
+      if (excludeResult.ok) output.write(ui.line("success", "Applied local exclusions to .git/info/exclude."));
+      else output.write(ui.line("warning", "Notice: .git directory not found; skipped .git/info/exclude.", ".git directory not found; skipped .git/info/exclude."));
     }
   }
-  await applyHookEnforcement(cwd, enforce, options);
-  if (!options.json) output.write(`Initialization complete. Created ${result.created.length} file(s).\n`);
+  await applyHookEnforcement(cwd, enforce, options, ui);
+  if (!options.json) {
+    output.write(ui.line("success", `Initialization complete. Created ${result.created.length} file(s).`, `Initialization complete: created ${plural(result.created.length, "file")}`));
+    if (ui.rich) output.write(renderNextSteps(ui));
+  }
   return 0;
 }
 
-async function applyHookEnforcement(cwd, enforce, options) {
+async function applyHookEnforcement(cwd, enforce, options, ui) {
   if (enforce === "hooks") {
     const result = await installGitHooks(cwd);
     if (!options.json) {
-      if (result.ok) output.write(`Installed local governance hooks via core.hooksPath (${result.hooksPath}).\n`);
-      else output.write("Notice: .git directory not found; skipped hook installation.\n");
+      if (result.ok) output.write(ui.line("success", `Installed local governance hooks via core.hooksPath (${result.hooksPath}).`));
+      else output.write(ui.line("warning", "Notice: .git directory not found; skipped hook installation.", ".git directory not found; skipped hook installation."));
     }
     return;
   }
   const result = await uninstallGitHooks(cwd);
   if (result.ok && result.removed && !options.json) {
-    output.write("Reset core.hooksPath: local governance hooks disabled.\n");
+    output.write(ui.line("success", "Reset core.hooksPath: local governance hooks disabled."));
   }
 }
 
 async function runUpdate(options) {
   const cwd = path.resolve(options.cwd);
+  const ui = createUi(output, { json: options.json });
   const adopting = options.adopt;
   const lockInspection = await inspectScaffoldLock(cwd);
   if (adopting && lockInspection.state === "ok") {
@@ -247,6 +275,18 @@ async function runUpdate(options) {
 
   if (options.json) {
     output.write(`${JSON.stringify({ cwd, adopt: adopting, runtimes, profile, enforcement: enforce, gitExclude: shouldGitExclude, lowRiskTier, ...report }, null, 2)}\n`);
+  } else if (ui.rich) {
+    output.write(renderUpdatePlan(ui, {
+      cwd,
+      version: await readKitVersion(assetsRoot),
+      adopting,
+      runtimes,
+      profile,
+      enforce,
+      gitExclude: shouldGitExclude,
+      lowRisk: LOW_RISK_PLAN[lowRiskTier],
+      inspection,
+    }));
   } else {
     printUpdatePlan({ cwd, runtimes, inspection, gitExclude: shouldGitExclude, enforce, profile, lowRiskTier, adopting });
   }
@@ -258,38 +298,50 @@ async function runUpdate(options) {
 
   if (inspection.conflicts.length > 0) {
     if (!options.json) {
-      output.write("No files written: without scaffold.lock the kit cannot tell its older files from your edits, so every kernel file that differs from this version is a conflict. Back up the files you customized, then re-run with --force to overwrite them.\n");
+      output.write(ui.line("error", "No files written: without scaffold.lock the kit cannot tell its older files from your edits, so every kernel file that differs from this version is a conflict. Back up the files you customized, then re-run with --force to overwrite them."));
     }
     return 1;
   }
-  if (options.dryRun) return attention > 0 ? 1 : 0;
+  if (options.dryRun) {
+    if (ui.rich) output.write(ui.line("info", "Dry run: no files written."));
+    return attention > 0 ? 1 : 0;
+  }
 
   let approved = options.yes;
-  if (!approved && input.isTTY && output.isTTY) approved = await confirm(adopting ? "Adopt the kernel and apply this update?" : "Apply this kernel update?");
+  if (!approved && input.isTTY && output.isTTY) approved = await confirm(adopting ? "Adopt the kernel and apply this update?" : "Apply this kernel update?", ui);
   if (!approved) {
-    if (!options.json) output.write("No files written. Re-run with --yes for non-interactive update.\n");
+    if (!options.json) output.write(ui.line("warning", "No files written. Re-run with --yes for non-interactive update."));
     return input.isTTY ? 0 : 2;
   }
 
   const result = await applyUpdate(cwd, plan, { previousLock: baseline, force: options.force, merge });
   if (lowRiskTier === "will-enable") {
     await enableLowRiskTier(cwd, await blueprintLowRiskPolicy(assetsRoot));
-    if (!options.json) output.write("Enabled the low-risk tier in docs/adr/gate.json.\n");
+    if (!options.json) output.write(ui.line("success", "Enabled the low-risk tier in docs/adr/gate.json."));
   }
   if (shouldGitExclude) {
     const excludeResult = await applyGitExclude(cwd);
     if (!options.json) {
-      if (excludeResult.ok) output.write("Refreshed local exclusions in .git/info/exclude.\n");
-      else output.write("Notice: .git directory not found; skipped .git/info/exclude.\n");
+      if (excludeResult.ok) output.write(ui.line("success", "Refreshed local exclusions in .git/info/exclude."));
+      else output.write(ui.line("warning", "Notice: .git directory not found; skipped .git/info/exclude.", ".git directory not found; skipped .git/info/exclude."));
     }
   }
-  await applyHookEnforcement(cwd, enforce, options);
+  await applyHookEnforcement(cwd, enforce, options, ui);
   if (!options.json) {
-    output.write(`${adopting ? "Kernel adoption" : "Kernel update"} complete. Updated ${result.updated.length}, created ${result.created.length}, merged ${result.merged.length}, removed ${result.removed.length}, preserved ${result.preserved.length} file(s).\n`);
+    const action = adopting ? "Kernel adoption" : "Kernel update";
+    const counts = [
+      `${result.updated.length} updated`,
+      `${result.created.length} created`,
+      `${result.merged.length} merged`,
+      `${result.removed.length} removed`,
+      `${result.preserved.length} preserved`,
+    ].join(ui.style.dim(` ${ui.symbols.dot} `));
+    output.write(ui.line("success", `${action} complete. Updated ${result.updated.length}, created ${result.created.length}, merged ${result.merged.length}, removed ${result.removed.length}, preserved ${result.preserved.length} file(s).`, `${action} complete: ${counts}`));
     if (result.conflicted.length > 0) {
-      output.write(`Resolve the conflict markers (<<<<<<< yours ... >>>>>>> agentic-repo-kit) in: ${result.conflicted.join(", ")}. doctor and verify report them until they are gone.\n`);
+      output.write(ui.line("warning", `Resolve the conflict markers (<<<<<<< yours ... >>>>>>> agentic-repo-kit) in: ${result.conflicted.join(", ")}. doctor and verify report them until they are gone.`));
     }
-    for (const item of result.kept) output.write(`Kept your version of ${item.path}; the kit's changes were not applied (${item.reason}). Re-run update when it can be merged, or use --force to take the kit's version.\n`);
+    for (const item of result.kept) output.write(ui.line("warning", `Kept your version of ${item.path}; the kit's changes were not applied (${item.reason}). Re-run update when it can be merged, or use --force to take the kit's version.`));
+    if (ui.rich) output.write("\n");
   }
   return result.conflicted.length + result.kept.length > 0 ? 1 : 0;
 }
@@ -451,7 +503,8 @@ export async function runCli(argv) {
   try {
     const options = parseArgs(argv);
     if (options.help || options.command === "help") {
-      output.write(helpText());
+      const ui = createUi(output, { json: options.json });
+      output.write(ui.rich ? renderHelp(ui, helpText(), await readKitVersion(assetsRoot)) : helpText());
       return 0;
     }
     if (options.command === "init") return await runInit(options);
