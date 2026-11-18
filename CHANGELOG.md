@@ -4,9 +4,9 @@ All notable changes to Agentic Repository Kit are documented here.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.15.0] - 2026-11-18
 
-A branded console for the commands that people run by hand. Decisions recorded in `ADR-0032`.
+A branded console for the commands that people run by hand. Decisions recorded in `ADR-0032`; release recorded in `ADR-0033`.
 
 ### Added
 

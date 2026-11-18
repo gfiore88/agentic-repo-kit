@@ -53,7 +53,7 @@ Read this page first and open only the documents relevant to the active task.
 - [Customized kernel files are reported, not unhealthy](../adr/adr-0030-customized-kernel-files-are-reported-not-unhealthy.md): accepted `doctor` health that ignores customized kernel files (still listed), pending kit changes, and `doctor --strict`.
 - [Minor release 0.14.0](../adr/adr-0031-minor-release-0-14-0.md): accepted SemVer minor release of the ADR-0030 work.
 - [Branded interactive console for init, update, and help](../adr/adr-0032-branded-interactive-console-for-init-update-and-help.md): accepted dependency-free branded terminal layout (block wordmark, colored plan, next steps) shown only in interactive terminals, with no install-time banner.
-- [Minor release 0.15.0](../adr/adr-0033-minor-release-0-15-0.md): proposed SemVer minor release of the ADR-0032 work.
+- [Minor release 0.15.0](../adr/adr-0033-minor-release-0-15-0.md): accepted SemVer minor release of the ADR-0032 work.
 - [Overview](overview.md): concise system model and terminology.
 - [Kernel and adapters](architecture/kernel-and-adapters.md): canonical kernel, generated projections, selection, and integrity.
 - [Upstream content and provenance](architecture/upstream-content-and-provenance.md): imported sources, pins, licenses, and refresh policy.

@@ -7,6 +7,12 @@ updated: 2026-11-18
 
 # Knowledge Log
 
+## [2026-11-18] release | 0.15.0
+
+- Accepted ADR-0033 and released the ADR-0032 branded interactive console as 0.15.0 (SemVer minor), through `npm version minor`, which also syncs `plugin.json`, and the GitHub release that triggers the Trusted Publishing workflow.
+- Before publishing, `npm run validate` passed on `main` (145 tests, 31 skills, and the plugin). A repository initialized with the published 0.14.0, with `AGENTS.md` customized, showed the branded plan under a pseudo-terminal. Piped, `update --yes` printed plain text, exited 0, and kept the customization, and `doctor` and `verify` passed.
+- A new repository with all 8 adapters and `--enforce ci` is healthy under `doctor` and `doctor --strict` and passes `knowledge lint` and `verify`. A `.DS_Store` that Finder left in the local `plugins/agentic-repo/skills/` was deleted: with the default profile, `init` run from a working tree copies every file in that directory, but npm leaves `.DS_Store` out of the package.
+
 ## [2026-11-18] implementation | Branded interactive console
 
 - Accepted and implemented ADR-0032 with the `electric` palette. A new module, `ui.mjs`, with no dependencies, renders the wordmark, plan, prompt, and next steps for `init`, `update`, and help. It is used only when stdout is a TTY, `CI` is unset, `TERM` is not `dumb`, and `--json` is absent.
